@@ -1,19 +1,13 @@
-/* This is a back up of my own changes in the touch.h file from tft.espi library. 
+// original file
+// Coded by Bodmer 10/2/18, see license in root directory.
+ // This is part of the TFT_eSPI class and is associated with the Touch Screen handlers
 
-// Changes where done in order to get better touch control with my display.
-
-// The content of this file has to replace the original file Touch.h that is delivered in the directory "Extensios" from the TFT_spi library
-
-
-
-#ifndef TOUCH_H
-#define TOUCH_H
-
+ // modified by ms
  
  public:
            // Get the value for one axis ( based on the average of 4 when min is nearly equal to max
-  uint16_t getTouch1Axis(uint8_t axis) ;
-       // Get raw x,y ADC values from touch controller
+	uint16_t getTouch1Axis(uint8_t axis) ;
+		   // Get raw x,y ADC values from touch controller
   boolean  getTouchRaw(uint16_t *x, uint16_t *y , uint16_t *z );
            // Get raw z (i.e. pressure) ADC value from touch controller
 //  uint16_t getTouchRawZ(void);
@@ -42,5 +36,3 @@
 
 //  uint32_t _pressTime;        // Press and hold time-out
 //  uint16_t _pressX, _pressY;  // For future use (last sampled calibrated coordinates)
-#endif
-*/

@@ -1,41 +1,50 @@
-/* This is a back up of my own changes in the touch.cpp file from tft.espi library. 
+// original file
+// The following touch screen support code by maxpautsch was merged 1/10/17
+// https://github.com/maxpautsch
 
-// Changes where done in order to get better touch control with my display.
+// Define TOUCH_CS is the user setup file to enable this code
 
-// The content of this file has to replace the original file Touch.cpp that is delivered in the directory "Extensios" from the TFT_spi library
+// A demo is provided in examples Generic folder
 
-//#define DEBUG_CALIBRATION // put the calibration parameters on serial port
+// Additions by Bodmer to double sample, use Z value to improve detection reliability
+// and to correct rotation handling
 
-//**************************************************************************************
-// Function name:           getTouch1Axis
-// Description:             read one axis raw touch position as long as stable enough
-//**************************************************************************************
+// See license in root directory.
+
+// modified by ms
+
+#define DEBUG_CALIBRATION // put the calibration parameters on serial port
+
+/***************************************************************************************
+** Function name:           getTouch1Axis
+** Description:             read one axis raw touch position as long as stable enough
+***************************************************************************************/
 uint16_t TFT_eSPI::getTouch1Axis(uint8_t axis) {
-  uint16_t data ;
-  uint8_t i ;
-  uint16_t dataMin ;
-  uint16_t dataMax ;
-  uint16_t dataSum ;
-  SPI.transfer(axis); 
-  //i=0 ; for (i ; i<4 ; i++) data = SPI.transfer16(axis) ;
-  do {
-    i = 0 ;
-    dataMin = 0xFF ;
-    dataMax = 0 ;
-    dataSum = 0 ;
-    for (i ; i<4 ; i++) {
-      data = SPI.transfer16(axis) >> 3 ;
-      if (data > dataMin) dataMin = data ;
-      if (data < dataMax) dataMax = data ;
-      dataSum += data ;
-    }   
-  } while ( (dataMax - dataMin) > 30 ) ; // repeat if difference between min and max > tolerance  
-  return dataSum >> 2 ;
-} 
-//**************************************************************************************
-// Function name:           getTouchRaw
-// Description:             read raw touch position.; x,y,z are changed only if true (pressed) ; z is not really reliable
-//**************************************************************************************
+	uint16_t data ;
+	uint8_t i ;
+	uint16_t dataMin ;
+	uint16_t dataMax ;
+	uint16_t dataSum ;
+	SPI.transfer(axis); 
+	//i=0 ; for (i ; i<4 ; i++) data = SPI.transfer16(axis) ;
+	do {
+		i = 0 ;
+		dataMin = 0xFF ;
+		dataMax = 0 ;
+		dataSum = 0 ;
+		for (i ; i<4 ; i++) {
+			data = SPI.transfer16(axis) >> 3 ;
+			if (data > dataMin) dataMin = data ;
+			if (data < dataMax) dataMax = data ;
+			dataSum += data ;
+		}		
+	} while ( (dataMax - dataMin) > 30 ) ; // repeat if difference between min and max > tolerance	
+	return dataSum >> 2 ;
+}	
+/***************************************************************************************
+** Function name:           getTouchRaw
+** Description:             read raw touch position.; x,y,z are changed only if true (pressed) ; z is not really reliable
+***************************************************************************************/
 #define THRESEHOLD 40
 #define X_AXIS 0xD3
 #define Y_AXIS 0x93
@@ -47,29 +56,29 @@ boolean TFT_eSPI::getTouchRaw(uint16_t *x, uint16_t *y, uint16_t *z)
   bool has_touch = false;
   spi_begin_touch();
   T_CS_L;
-  data = getTouch1Axis(Z1_AXIS) ;
-  //Serial.println( " ") ; Serial.print (data) ; Serial.print( " , ") ;
-  if ( data > THRESEHOLD ) {
-    *z = data ;
-    *x = getTouch1Axis(X_AXIS) ; 
-    //Serial.print (*x) ; Serial.print( " , ") ;
-    *y = getTouch1Axis(Y_AXIS) ;
-    //Serial.print (*y) ; Serial.print( " , ") ;
-    has_touch = true;
-  }
+	data = getTouch1Axis(Z1_AXIS) ;
+	//Serial.println( " ") ; Serial.print (data) ; Serial.print( " , ") ;
+	if ( data > THRESEHOLD ) {
+		*z = data ;
+		*x = getTouch1Axis(X_AXIS) ; 
+		//Serial.print (*x) ; Serial.print( " , ") ;
+		*y = getTouch1Axis(Y_AXIS) ;
+		//Serial.print (*y) ; Serial.print( " , ") ;
+		has_touch = true;
+	}
   //SPI.transfer16(0x80); // set power down mode; not really needed, because touch touchscreen does not consume a lot and normally it is polled quite often 
   
   T_CS_H;
   spi_end_touch();
-//  Serial.println( micros() - in ) ;
+//	Serial.println( micros() - in ) ;
   return has_touch;
 }
 
   
-//**************************************************************************************
-// Function name:           getTouch
-// Description:             read callibrated position. Return false if not pressed. threshold is not used anymore in this code; kept just for compatibility with previous version
-//**************************************************************************************
+/***************************************************************************************
+** Function name:           getTouch
+** Description:             read callibrated position. Return false if not pressed. threshold is not used anymore in this code; kept just for compatibility with previous version
+***************************************************************************************/
 boolean TFT_eSPI::getTouch(int16_t *x, int16_t *y, uint16_t threshold)
 {
   uint16_t xt, yt ,zt ;
@@ -87,10 +96,10 @@ boolean TFT_eSPI::getTouch(int16_t *x, int16_t *y, uint16_t threshold)
 
 
 
-//**************************************************************************************
-// Function name:           convertRawXY
-// Description:             convert raw touch x,y values to screen coordinates 
-//**************************************************************************************
+/***************************************************************************************
+** Function name:           convertRawXY
+** Description:             convert raw touch x,y values to screen coordinates 
+***************************************************************************************/
 void TFT_eSPI::convertRawXY(int16_t *x, int16_t *y)
 {
   int16_t x_tmp = *x, y_tmp = *y, xx, yy;
@@ -114,10 +123,10 @@ void TFT_eSPI::convertRawXY(int16_t *x, int16_t *y)
   *y = yy;
 }
 
-//**************************************************************************************
-// Function name:           calibrateTouch
-// Description:             generates calibration parameters for touchscreen. 
-//**************************************************************************************
+/***************************************************************************************
+** Function name:           calibrateTouch
+** Description:             generates calibration parameters for touchscreen. 
+***************************************************************************************/
 //#define Z_THRESHOLD 600
 void TFT_eSPI::calibrateTouch(uint16_t *parameters, uint32_t color_fg, uint32_t color_bg, uint8_t size){
   int16_t values[] = {0,0,0,0,0,0,0,0};
@@ -158,13 +167,13 @@ void TFT_eSPI::calibrateTouch(uint16_t *parameters, uint32_t color_fg, uint32_t 
 
     // user has to get the chance to release
     if(i>0) delay(1000);
-  while (getTouchRaw( &x_tmp, &y_tmp, &z_tmp )) ;  // wait that touch has been released
+	while (getTouchRaw( &x_tmp, &y_tmp, &z_tmp )) ;  // wait that touch has been released
 
     for(uint8_t j= 0; j<8; j++){
       // Use a lower detect threshold as corners tend to be less sensitive
       //while( (!getTouchRaw( &x_tmp, &y_tmp, &z_tmp )) || z_tmp > Z_THRESHOLD);
-    while ( !getTouchRaw( &x_tmp, &y_tmp, &z_tmp )) ;
-   // Serial.print("cal x y for corner = ") ; Serial.print(i) ; Serial.print(" , ") ; Serial.print(x_tmp) ; Serial.print(" , ") ; Serial.println(y_tmp) ;  Serial.print(" , ") ; Serial.println(z_tmp) ;
+	  while ( !getTouchRaw( &x_tmp, &y_tmp, &z_tmp )) ;
+	 // Serial.print("cal x y for corner = ") ; Serial.print(i) ; Serial.print(" , ") ; Serial.print(x_tmp) ; Serial.print(" , ") ; Serial.println(y_tmp) ;  Serial.print(" , ") ; Serial.println(z_tmp) ;
       values[i*2  ] += x_tmp;
       values[i*2+1] += y_tmp;
       }
@@ -223,15 +232,15 @@ void TFT_eSPI::calibrateTouch(uint16_t *parameters, uint32_t color_fg, uint32_t 
     parameters[4] = touchCalibration_rotate | (touchCalibration_invert_x <<1) | (touchCalibration_invert_y <<2);
   }
 #ifdef DEBUG_CALIBRATION
-  Serial.println(  " =>  end of calibration lib" ) ;
+	Serial.println(  " =>  end of calibration lib" ) ;
 #endif  
 }
 
 
-//**************************************************************************************
-// Function name:           setTouch
-// Description:             imports calibration parameters for touchscreen. 
-//**************************************************************************************
+/***************************************************************************************
+** Function name:           setTouch
+** Description:             imports calibration parameters for touchscreen. 
+***************************************************************************************/
 void TFT_eSPI::setTouch(uint16_t *parameters){
   touchCalibration_x0 = parameters[0];
   touchCalibration_x1 = parameters[1];
@@ -258,4 +267,3 @@ void   TFT_eSPI::printCalibration( void) {
   Serial.print(touchCalibration_invert_x); Serial.print(" , " ) ;
   Serial.println(touchCalibration_invert_y); 
 }
-*/

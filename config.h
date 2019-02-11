@@ -3,7 +3,10 @@
 
 // pins for touch screen are defined in tft_espi User_Setup.h file
 //#define TS_CS_PIN  15
+
+// Note: SPI is currently hardcoded for using following pins
 // MOSI=13, MISO=12, SCK=14
+// Those are used for the display, the touch panel and the SD card reader.
 
 #define TFT_LED_PIN 25       // pin connected to led of lcd; pin has to be high to set led ON
 
