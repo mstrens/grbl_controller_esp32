@@ -1,0 +1,312 @@
+#include "config.h"
+#include "draw.h"
+#include <TFT_eSPI.h>
+#include "FS.h"
+#include "actions.h"
+#include "menu_file.h"
+
+// create for touchscreeen
+extern TFT_eSPI tft ;
+extern uint8_t prevPage  ;     
+extern uint8_t currentPage  ;
+extern boolean updateFullPage ;
+extern boolean updatePartPage ;
+extern boolean waitReleased ;
+extern uint8_t statusPrinting ;
+extern char machineStatus[9];           // Iddle, Run, Alarm, ...
+extern char lastMsg[23]  ;  
+
+extern uint16_t firstFileToDisplay ;
+extern uint16_t sdFileDirCnt ;
+
+extern uint8_t cmdToSend ;
+extern M_Page mPages[_P_MAX_PAGES] ;
+extern uint8_t currentBtn ;
+extern uint8_t justPressedBtn;
+extern uint8_t justReleasedBtn;
+extern uint8_t longPressedBtn;
+extern uint32_t beginChangeBtnMillis ;
+
+extern uint32_t cntSameMove ;
+extern uint8_t jog_status  ;
+extern boolean jogCancelFlag ;
+extern boolean jogCmdFlag  ; 
+
+extern int8_t prevMoveX ;
+extern int8_t prevMoveY ;
+extern int8_t prevMoveZ ;
+extern float moveMultiplier ;
+
+uint32_t prevAutoMoveMillis ;
+
+#define SOFT_RESET 0x18 
+
+void fGoToPage(uint8_t param) {
+//  Serial.print( "go to page : " ) ; Serial.println( param) ; // just for testing // to do
+  prevPage = currentPage ;
+  currentPage = param ;
+  updateFullPage = true ; 
+  waitReleased = true ;          // discard "pressed" until a release 
+//  delay(10000);
+}
+
+void fGoBack(uint8_t param) {
+  Serial.print( "go back : " ) ; Serial.println( prevPage) ; // just for testing // to do
+  
+  if (prevPage >= _P_INFO && prevPage < _P_MAX_PAGES ) {       // if there are sevral back, prevPage = 0 and we will go back to _P_INFO
+    currentPage = prevPage ;
+  } else {
+    currentPage = _P_INFO ;
+    prevPage = _P_INFO ;
+  }
+  updateFullPage = true ;               
+  waitReleased = true ;          // discard "pressed" until a release 
+}
+
+void fHome(uint8_t param) {
+  if( machineStatus[0] == 'I' || machineStatus[0] == 'A' ) {
+#define HOME_CMD "$H"
+    Serial2.println(HOME_CMD) ;  
+  } else {
+    memccpy ( lastMsg , "Invalid btn (Home)" , '\0' , 22);
+  }
+  waitReleased = true ;          // discard "pressed" until a release 
+}
+
+void fUnlock(uint8_t param) {
+  if( machineStatus[0] == 'A') {  // if grbl is in alarm
+    Serial2.println("$X") ;    // send command to unlock
+    //Serial.println("$X has been sent");
+  }
+// Stay on current page
+  waitReleased = true ;          // discard "pressed" until a release 
+}
+
+void fReset(uint8_t param) {
+  Serial2.print( (char) SOFT_RESET) ;
+  waitReleased = true ;          // discard "pressed" until a release 
+}
+
+void fCancel(uint8_t param) {
+  if( statusPrinting == PRINTING_FROM_SD || statusPrinting == PRINTING_PAUSED  ) {
+    statusPrinting = PRINTING_STOPPED ;
+    closeFileToRead() ;    
+    Serial2.print( (char) SOFT_RESET) ;
+  }  
+  currentPage = _P_INFO ;  // go to page Info
+  updateFullPage = true ;  // force a redraw even if current page does not change
+  waitReleased = true ;          // discard "pressed" until a release 
+}
+
+void fPause(uint8_t param) {
+  if( statusPrinting == PRINTING_FROM_SD  && machineStatus[0] == 'R') {
+  #define PAUSE_CMD "!" 
+    Serial2.print(PAUSE_CMD) ;
+    statusPrinting = PRINTING_PAUSED ;
+  }
+  waitReleased = true ;          // discard "pressed" until a release   
+}
+
+void fResume(uint8_t param) {
+  if( statusPrinting == PRINTING_PAUSED && machineStatus[0] == 'H') {
+  #define RESUME_CMD "~" 
+    Serial2.print(RESUME_CMD) ;
+    statusPrinting = PRINTING_FROM_SD ;
+  }
+  waitReleased = true ;          // discard "pressed" until a release 
+}
+
+void fDist( uint8_t param ) {
+  uint8_t newDist =  mPages[_P_MOVE].boutons[3] ;       // convertit la position du bouton en type de bouton 
+  Serial.print("newDist=") ; Serial.println(newDist) ;
+  if ( ++newDist > _D10 ) newDist = _D_AUTO ; // increase and reset to min value if to big
+  mPages[_P_MOVE].boutons[3] = newDist ;   // update the button to display
+  mButtonDraw( 4 , newDist ) ;  // draw a button at position (from 1 to 8)
+  //updateFullPage = true ;                     // force a redraw of buttons
+  waitReleased = true ;          // discard "pressed" until a release 
+}  
+
+void fMove( uint8_t param ) {
+  // ToDo ajouter une détection des appuis répétés sur la touche
+    float distance ;
+    uint32_t moveMillis = millis() ;
+    static uint32_t prevMoveMillis ;
+    if ( mPages[_P_MOVE].boutons[3] == _D_AUTO ) {
+      handleAutoMove(param) ; // process in a similar way as Nunchuk
+    } else if (justPressedBtn) {                      // just pressed in non auto mode
+      switch ( mPages[_P_MOVE].boutons[3] ) {         //  we suppose that the distance is defined by the 4th button on first line so idx = 3
+      case _D0_01 :
+        distance = 0.01;
+        break ;
+      case _D0_1 :
+        distance = 0.1;
+        break ;
+      case _D1:
+        distance = 1 ;
+        break ;
+      case _D10 :
+        distance = 10 ;
+        break ;
+      }
+      Serial2.print("$J=G91 G21 ") ;
+      switch ( justPressedBtn ) {  // we convert the position of the button into the type of button
+        case _XP :  Serial2.print("X")  ;  break ;
+        case _XM :  Serial2.print("X-") ;  break ;
+        case _YP :  Serial2.print("Y")  ;  break ;
+        case _YM :  Serial2.print("Y-") ;  break ;
+        case _ZP :  Serial2.print("Z")  ;  break ;
+        case _ZM :  Serial2.print("Z-") ;  break ;
+      }
+      Serial2.print(distance) ; Serial2.println (" F100") ;
+      Serial.print("move for button") ; Serial.print(justPressedBtn) ;Serial.print(" ") ;  Serial.print(distance) ; Serial.println (" F100") ;
+      
+      updatePartPage = true ;                     // force a redraw of data
+      waitReleased = true ;          // discard "pressed" until a release // todo change to allow repeated press on the same button
+    }   
+}
+
+void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to increase speed progressively, we cancel jog when released 
+                                      // param contains the touch being pressed or the released if no touch has been pressed
+#define AUTO_MOVE_REPEAT_DELAY 100
+  uint8_t pressedBtn  = 0 ;
+  uint32_t autoMoveMillis = millis() ;
+  if ( justReleasedBtn )  {
+      jogCancelFlag = true ;                                // cancel any previous move when a button is released (even before asking for another jog
+      cntSameMove = 0 ;             // reset the counter
+       //Serial.println("cancel jog") ;
+  } else {
+        jogCancelFlag = false ;
+  }
+  if ( ( autoMoveMillis - prevAutoMoveMillis ) <  AUTO_MOVE_REPEAT_DELAY ) {
+    return ;   
+  }
+  if ( justPressedBtn) {
+    cntSameMove = 0 ;                    // reset the counter when we just press the button
+    pressedBtn = justPressedBtn ;
+    prevAutoMoveMillis = autoMoveMillis ;
+  } else if ( longPressedBtn  ) {
+      pressedBtn = longPressedBtn ; 
+      prevAutoMoveMillis = autoMoveMillis ;
+    }
+  if ( pressedBtn ) {
+    if (cntSameMove == 0 ) { 
+      moveMultiplier = 0.01 ; 
+    } else if (cntSameMove < 5 ) {   // avoid to send to fast a new move
+      moveMultiplier = 0.0 ;
+    } else if (cntSameMove < 10 ) {
+      moveMultiplier = 0.01 ;
+    } else if (cntSameMove < 15 ) {
+      moveMultiplier = 0.1 ;
+    } else if (cntSameMove < 20 ) {
+      moveMultiplier = 1 ;
+    } else {
+      moveMultiplier = 1 ;
+    } 
+    cntSameMove++ ;
+    prevMoveX = 0 ;           // reset all deplacements
+    prevMoveY = 0 ;
+    prevMoveZ = 0 ;
+    switch ( pressedBtn ) {  // fill one direction of move
+      case 1 :  prevMoveX = 1  ;  break ;
+      case 5 :  prevMoveX = -1 ;  break ;
+      case 2 :  prevMoveY = 1  ;  break ;
+      case 6 :  prevMoveY = -1 ;  break ;
+      case 3 :  prevMoveZ = 1 ;  break ;
+      case 7 :  prevMoveZ = -1 ;  break ;
+    }
+    jogCmdFlag = true ;                 // the flag will inform the send module that there is a command to be sent based on moveMultiplier and preMove. 
+  }
+}
+
+void fSdFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param contains l'index (0 à 3) du fichier à ouvrir
+  Serial.println("enter fsFilePrint") ;
+  if ( ! setFileToRead( param ) ) {         // try to open the file to be printed ; in case of error, go back to Info page (lastMsg is filled)
+      Serial.println("SetFileToRead is false") ;
+      currentPage = _P_INFO ;
+      updateFullPage = true ;
+      waitReleased = true ;          // discard "pressed" until a release
+      return ;
+  }
+  
+  if ( fileToReadIsDir () ) {   // if user press a directory, then change the directory
+    Serial.println("FileToRead is dir") ;
+    if ( ! changeDirectory() ) {
+      Serial.println("changeDirectory is false") ;
+      currentPage = _P_INFO ;        // in case of error, goes to info page
+      updateFullPage = true ;
+      waitReleased = true ;          // discard "pressed" until a release
+      return ;
+    }                                // else = change dir is ok, button have been updated, screen must be reloaded
+    updateFullPage = true ;
+    waitReleased = true ;
+    return ;
+  } else if ( ! startPrintFile() ) {  // open file (based on name) and go to info page in case of error
+    Serial.println("startPrintFile is false") ;
+    prevPage = currentPage ;
+    currentPage = _P_INFO ;  
+    updateFullPage = true ;
+    waitReleased = true ;          // discard "pressed" until a release
+    return ; 
+  }
+    Serial.println("startPrintFile is true") ;
+    statusPrinting = PRINTING_FROM_SD ; // change the status, so char will be read and sent in main loop
+    prevPage = currentPage ;            // go to INFO page
+    currentPage = _P_INFO ; 
+    updateFullPage = true ;
+    waitReleased = true ;          // discard "pressed" until a release
+}
+
+void fSdMove(uint8_t param) {     // param contient _LEFT ou _RIGTH
+  if ( param == _LEFT ) {
+    if ( firstFileToDisplay > 4 ) {
+      firstFileToDisplay -= 4 ;
+    } else {
+      firstFileToDisplay = 0 ;
+    } 
+  } else if ( ( param == _RIGHT ) && ( (firstFileToDisplay + 4) < sdFileDirCnt ) ) {
+    firstFileToDisplay += 4 ;
+  } else {             // move one level up
+    sdMoveUp() ;
+  }
+  // look in the directory for another file and upload the list of button.
+  Serial.print("firstFileToDisplay=") ; Serial.println(firstFileToDisplay);
+  updateFullPage = true ;
+  waitReleased = true ;          // discard "pressed" until a release 
+}
+
+void fSetXYZ(uint8_t param) {     // param contient le n° de la commande
+  switch (param) {
+  case _SETX : Serial2.println("G10 L20 P1 X0") ;  break ;
+  case _SETY : Serial2.println("G10 L20 P1 Y0") ;  break ;
+  case _SETZ : Serial2.println("G10 L20 P1 Z0") ;  break ;
+  case _SETXYZ : Serial2.println("G10 L20 P1 X0 Y0 Z0") ;  break ;
+  }
+  waitReleased = true ;          // discard "pressed" until a release 
+}
+
+void fCmd(uint8_t param) {     // param contient le n° de la commande (valeur = _CMD1, ...)
+  cmdToSend = param ;         // fill the index of the command to send; sending will be done in communication module
+  statusPrinting = PRINTING_CMD ;
+  waitReleased = true ;          // discard "pressed" until a release 
+  Serial.println("In fCmd") ;
+}
+
+void fStartPc(uint8_t param){
+  if( statusPrinting == PRINTING_STOPPED ) {
+    while ( Serial.available() ) {      // clear the incomming buffer 
+      Serial.read() ;
+    }
+    statusPrinting = PRINTING_FROM_PC ;
+  }
+  currentPage = _P_INFO ;  // go to page Info
+  updateFullPage = true ;
+  waitReleased = true ;
+}  
+
+void fStopPc(uint8_t param){
+  statusPrinting = PRINTING_STOPPED ;
+  updateFullPage = true ;  // force a redraw even if current page does not change
+  waitReleased = true ;          // discard "pressed" until a release 
+  
+}
+
