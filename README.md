@@ -51,3 +51,22 @@ Note: the first time you let ESP32 run this program, the program should execute 
 The screen should first display an arrow in a corner. You have to click on the corner.
 When done, an arrow should also be displayed in the 3 others corners. Click each time on the arrow.
 This should normally be done only once. The calibration data are stored automatically in the ESP32.   
+
+
+Here the connections being used in my own setup.
+ESP32   TFT                touch screen          SD card
+5V      Vcc (this is used internally to provide voltage to touch screen and SD card)
+Gpio13  CS(chip select)
+Grnd	Grnd (this is used internally to provide grnd to touch screen and SD card)
+Gpio12  Reset
+Gpio14  DC (data/command)
+Gpio27                      CS (chip select)
+Gpio26                                           CS (chip select)
+Gpio25  LCD
+Gpio18  CLK                 CLK                  CLK                (So the ESP32 pin is connected to 3 pins from TFT board)
+Gpio19  MISO                MISO                 MISO               (So the ESP32 pin is connected to 3 pins from TFT board)
+Gpio23  MOSI                MOSI                 MOSI               (So the ESP32 pin is connected to 3 pins from TFT board)
+
+Gpio16 is the Serial port Rx from ESP32; It has to be connected to TX pin from GRBL
+Gpio17 is the Serial port Tx from ESP32; It has to be connected to RX pin from GRBL
+Note : Grnd has to be common between ESP32 and GRBL computer.
