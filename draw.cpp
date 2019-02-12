@@ -571,6 +571,19 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
   } else {           // if SD seems OK
     //Serial.println("fSdBase is ok") ;
     sdFileDirCnt = fileCnt() ;     // count the number of files in working dir
+    if (sdFileDirCnt == 0) {
+      firstFileToDisplay == 0 ;
+    } else if ( firstFileToDisplay == 0 ) {
+        firstFileToDisplay = 1 ;
+    } else if ( (firstFileToDisplay + 4) > sdFileDirCnt ) {
+      if (  sdFileDirCnt <= 4 ) {
+        firstFileToDisplay = 1 ;     // reset firstFileToDisplay 0 if less than 5 files
+      } else {
+        firstFileToDisplay = sdFileDirCnt - 3 ;  // keep always 4 files on screen
+      }  
+    }
+    Serial.print("Nbr de fichiers") ; Serial.println(sdFileDirCnt) ;
+    Serial.print("firstFileToDisplay") ; Serial.println(firstFileToDisplay) ;
     tft.setTextDatum( TL_DATUM ) ;
     tft.setTextSize(2) ;
     tft.setCursor(20 , 10 , 2) ; // x, y, font
@@ -586,9 +599,8 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
       fInfoBase () ;               // fill info page with basis data (affiche les data et redétermine les boutons à afficher sans les afficher)
       return ;
     }
-    tft.drawString( dirName , 319 , 10 );
-     
-    if ( ! updateFilesBtn() ) {             // mets à jour les boutons à afficher; conserve le premier fichier affiché si possible ; retourne false en cas d'erreur
+    tft.drawString( dirName , 319 , 40 );
+    if ( ! updateFilesBtn() ) {             // met à jour les boutons à afficher; conserve le premier fichier affiché si possible ; retourne false en cas d'erreur
       //Serial.println( "updateFilesBtn retuns false"); 
       memccpy ( lastMsg , "Bug: updateFilesBtn" , '\0' , 22);
       currentPage = _P_INFO ;      // in case of error, go back to Info

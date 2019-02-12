@@ -114,16 +114,15 @@ uint16_t fileCnt( void ) {
   // Open next file in volume working directory.  
   // Warning, openNext starts at the current position of sd.vwd() so a
   // rewind may be neccessary in your application.
-  // return -1 in case of error
   uint16_t cnt = 0;
-  
-  SdBaseFile file ; 
-  aDir[dirLevel].rewind();
+  File file ; 
+  aDir[dirLevel].rewind()  ;
   while ( file.openNext( &aDir[dirLevel] ) ) {
     cnt++ ;
  //   Serial.print("cnt= " ); Serial.print(cnt ); Serial.print(" , " ); Serial.println(file.name() ); 
     file.close();  
   }
+  file.close();
   //Serial.print("nbr of file in dir= " ); Serial.println(cnt );
   return cnt ;
 }
@@ -137,25 +136,16 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
 //     un index du premier fichier affiché ( firstFileToDisplay )
 //     il faut remplir les 4 premiers boutons (max) avec les noms des 4 fichiers à partir de l'index
 //     S'il y a moins de 4 fichiers, on ne crée pas les dernier boutons
-  //Serial.print("Nbr de fichiers") ; Serial.println(sdFileDirCnt) ;
-  //Serial.print("firstFileToDisplay") ; Serial.println(firstFileToDisplay) ;
-  //Serial.println(( ((int16_t) sdFileDirCnt) - 4)) ;
-  if (  (firstFileToDisplay + 4) > sdFileDirCnt ) {
-    if (  sdFileDirCnt <= 4 ) {
-      firstFileToDisplay = 0 ;     // reset firstFileToDisplay 0 if less than 5 files
-    } else {
-      firstFileToDisplay = sdFileDirCnt - 4 ;  // keep always 4 files on screen
-    }    
-  }
+  
   fillMPage (_P_SD , 0 , 0 , _JUST_PRESSED , fSdFilePrint , 0 ) ; // deactive all buttons
   fillMPage (_P_SD , 1 , 0 , _JUST_PRESSED , fSdFilePrint , 0 ) ; 
   fillMPage (_P_SD , 2 , 0 , _JUST_PRESSED , fSdFilePrint , 0 ) ; 
   fillMPage (_P_SD , 3 , 0 , _JUST_PRESSED , fSdFilePrint , 0 ) ; 
   aDir[dirLevel].rewind();
-  uint16_t cnt = 0;
-  SdBaseFile file ;
+  uint16_t cnt = 1 ;
+  File file ;
   
-  while ( cnt < firstFileToDisplay ) {
+  while ( ( cnt ) < firstFileToDisplay ) {
     if ( ! file.openNext( &aDir[dirLevel] ) ) {       // ouvre le prochain fichier dans le répertoire courant ; en cas d'erreur, retour à la page info avec un message d'erreur 
       memccpy( lastMsg , "files missing" , '\0' , 22) ;
       file.close() ;
@@ -168,7 +158,7 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
   uint8_t i = 0 ;
   char * pfileNames ;
   //Serial.print("will begin while cnt=") ; Serial.println(cnt) ; Serial.print(" ,sdFileDirCnt=") ; Serial.println(sdFileDirCnt) ; Serial.print(" ,first+4=") ; Serial.println(firstFileToDisplay + 4) ;
-  while ( (cnt < sdFileDirCnt) && (cnt < ( firstFileToDisplay + 4) ) ) {
+  while ( (cnt <=  sdFileDirCnt ) && (cnt < ( firstFileToDisplay + 4) ) ) {
     //Serial.println("in while") ;
     if ( ! file.openNext( &aDir[dirLevel] ) ) {
       memccpy( lastMsg , "Failed to open a file" , '\0' , 22) ;
@@ -210,7 +200,7 @@ void closeFileToRead() {
 }
 
 boolean setFileToRead ( uint8_t fileIdx ) { // fileIdx is a number from 0...3 related to the button being pressed
-  uint16_t cntIdx = fileIdx + firstFileToDisplay ; 
+  uint16_t cntIdx = fileIdx + firstFileToDisplay - 1; 
   uint16_t cnt = 0;
   aDir[dirLevel].rewind();
   aDir[dirLevel+1].close()  ;

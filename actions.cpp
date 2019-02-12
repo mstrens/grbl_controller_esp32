@@ -261,10 +261,11 @@ void fSdMove(uint8_t param) {     // param contient _LEFT ou _RIGTH
     if ( firstFileToDisplay > 4 ) {
       firstFileToDisplay -= 4 ;
     } else {
-      firstFileToDisplay = 0 ;
+      firstFileToDisplay = 1 ;
     } 
-  } else if ( ( param == _RIGHT ) && ( (firstFileToDisplay + 4) < sdFileDirCnt ) ) {
+  } else if ( ( param == _RIGHT ) && ( (firstFileToDisplay + 4) <= sdFileDirCnt ) ) {
     firstFileToDisplay += 4 ;
+    if ( ( firstFileToDisplay + 4) > sdFileDirCnt ) firstFileToDisplay = sdFileDirCnt - 3 ;
   } else {             // move one level up
     sdMoveUp() ;
   }
