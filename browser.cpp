@@ -11,6 +11,7 @@
 #include <WebServer.h>
 #include "config.h"
 #include "browser.h"
+#include "draw.h"
 
 #define MS_WRITE 0b1100011 // we have to define this to open file because there is a conflict between ESP32 and SdFat lib about the code to be used in open cmd
                            // this is the value used by SdFat
@@ -18,20 +19,30 @@ String  webpage = "";
 WebServer server(80);
 
 extern SdFat sd;
+
+extern char lastMsg[23] ;        // last message to display
  
 File root ; // used for Directory 
 
 
 void initWifi() {
 #if defined ( ESP32_ACT_AS_STATION )
+  blankTft("Connecting to Wifi access point", 5 , 20 ) ; // blank screen and display a text at x, y
   WiFi.begin(MY_SSID , MY_PASSWORD);
-  while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
-    delay(250); Serial.print('.');
+  uint8_t initWifiCnt = 40 ;   // maximum 40 retries for connecting to wifi
+  while (WiFi.status() != WL_CONNECTED)  { // Wait for the Wi-Fi to connect; max 40 retries
+    delay(250); // Serial.print('.');
+    printTft("X") ;
+    initWifiCnt--;
+    if ( initWifiCnt == 0) {
+      memccpy ( lastMsg , "WiFi not found" , '\0' , 22);
+      break;
+    }
   }
-  Serial.println("\nConnected to "+WiFi.SSID()+" Use IP address: "+WiFi.localIP().toString()); // Report which SSID and IP is in use
+  //Serial.println("\nConnected to "+WiFi.SSID()+" Use IP address: "+WiFi.localIP().toString()); // Report which SSID and IP is in use
 #else if defined (ESP32_ACT_AS_AP)
   WiFi.softAP( MY_SSID , MY_PASSWORD);
-  Serial.println("\nESP has IP address: "+ WiFi.softAPIP().toString()); // Report which SSID and IP is in use
+  //Serial.println("\nESP has IP address: "+ WiFi.softAPIP().toString()); // Report which SSID and IP is in use
 #endif  
   //----------------------------------------------------------------------   
   ///////////////////////////// Server Commands 
@@ -45,7 +56,7 @@ void initWifi() {
   
   ///////////////////////////// End of Request commands
   server.begin();
-  Serial.println("HTTP server started");  
+  //Serial.println("HTTP server started");  
   
 }
 
@@ -119,18 +130,18 @@ void DownloadFile(String filename){
   //fileNameC = fileNameS.c_str() ;
   if (checkSd() ) { 
     if (sd.exists( filename.c_str() ) ) {
-      Serial.println("Open file") ;
+      //Serial.println("Open file") ;
       File download ;
       download = sd.open( filename.c_str() );
       if (download) {
-        Serial.println("File open successfully") ;
+        //Serial.println("File open successfully") ;
         server.sendHeader("Content-Type", "text/text");
         server.sendHeader("Content-Disposition", "attachment; filename="+filename);
         server.sendHeader("Connection", "close");
         server.streamFile(download, "application/octet-stream");
         download.close();
       } else {
-        Serial.println("File not opened") ;
+        //Serial.println("File not opened") ;
         reportError("Error : could not open file to dowload"); 
       }
       download.close() ;
@@ -273,7 +284,7 @@ void SD_file_delete(String filename) { // Delete the file
     File dataFile = sd.open( filename.c_str() ); //  
     if (dataFile) {
       if (sd.remove( filename.c_str() )) {
-        Serial.println(F("File deleted successfully"));
+        //Serial.println(F("File deleted successfully"));
         webpage += "<h3>File '" +filename+ "' has been erased</h3>"; 
       } else { 
         webpage += "<h3>File '"  +filename+ "' could not be erased !!!!!</h3>";

@@ -208,7 +208,7 @@ void tftInit() {
   // Set the rotation before we calibrate
   tft.setRotation(1); // normally, this is already done in tft.int() but it is not clear how is rotation set (probably 0); so it can be usefull to change it here
   touch_calibrate(); // call screen calibration
-  tft.printCalibration() ;  // print calibration data
+  //tft.printCalibration() ;  // print calibration data (print on Serial port the calibration data ; only for debug
   tft.fillScreen(TFT_BLUE);   // clear screen
 }
 
@@ -363,10 +363,10 @@ void updateBtnState( void) {
     }
   }
   if (justPressedBtn){
-    Serial.print( "just pressed") ;   Serial.println( justPressedBtn) ;    
+    //Serial.print( "just pressed") ;   Serial.println( justPressedBtn) ;    
   }
   if (justReleasedBtn){
-    Serial.print( "just released") ;   Serial.println( justReleasedBtn) ;    
+    //Serial.print( "just released") ;   Serial.println( justReleasedBtn) ;    
   }
 }
 
@@ -398,6 +398,24 @@ void executeMainActionBtn( ) {   // find and execute main action for ONE button 
   }
 }
 
+
+// Basis functions
+void blankTft(char * titel, uint16_t x , uint16_t y) {    // blank screen and display one titel
+  tft.fillScreen( TFT_BLACK ) ;
+  tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+  tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
+  tft.setTextSize(1) ;           // char is 2 X magnified => 
+  tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
+  tft.drawString( titel , x , y ) ;     // affiche un texte
+  tft.setCursor( x , y + 30 , 2) ; // x, y, font
+}
+void printTft(char * text ) {     // print a text on screen
+  tft.print( text ) ;
+}
+
+
+
+
 // affichage d'une nouvelle page = fonction drawPage(pageIdx)
 //          remplir la page d'une couleur
 //          exécuter le pointeur correspondant aux paramètres de la page
@@ -407,7 +425,7 @@ void executeMainActionBtn( ) {   // find and execute main action for ONE button 
 void drawFullPage() {
   tft.fillScreen( TFT_BLACK ) ;
   mPages[currentPage].pfBase();   // exécute la fonction de base prévue pour la page
-  Serial.println("drawFullPage: fin de l'appel de la page de base") ;
+  //Serial.println("drawFullPage: fin de l'appel de la page de base") ;
   uint8_t i = 0;
   while ( i < 8 ) {           // pour chacun des 8 boutons possibles
     if ( mPages[currentPage].boutons[i] ) {  // si un n° de bouton est précisé, l'affiche)
@@ -420,7 +438,7 @@ void drawFullPage() {
     i++ ;
 //    Serial.print(i); 
   }
-  Serial.println("end drawFullPage");
+  //Serial.println("end drawFullPage");
 }
 
 void drawPartPage() {          // update only the data on screen (not the button)
@@ -551,7 +569,7 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
     dirLevel = -1 ;              // force a reload of sd data next time we goes to SD card menu
     fInfoBase () ;               // prepare info page (affiche les data et redétermine les boutons à afficher)
   } else {           // if SD seems OK
-    Serial.println("fSdBase is ok") ;
+    //Serial.println("fSdBase is ok") ;
     sdFileDirCnt = fileCnt() ;     // count the number of files in working dir
     tft.setTextDatum( TL_DATUM ) ;
     tft.setTextSize(2) ;
@@ -561,11 +579,18 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
     tft.print( sdFileDirCnt ) ;  
     tft.setTextDatum( TR_DATUM ) ;
     char dirName[23] ;
-    if ( ! aDir[dirLevel].getName( dirName , 22 ) ) Serial.println( "erreur : nom de fichier non retrouvé" ) ;
+    if ( ! aDir[dirLevel].getName( dirName , 22 ) ) { 
+      memccpy ( lastMsg , "Dir name not found" , '\0' , 22);
+      currentPage = _P_INFO ;      // in case of error, go back to Info
+      dirLevel = -1 ;              // force a reload of sd data next time we goes to SD card menu
+      fInfoBase () ;               // fill info page with basis data (affiche les data et redétermine les boutons à afficher sans les afficher)
+      return ;
+    }
     tft.drawString( dirName , 319 , 10 );
      
     if ( ! updateFilesBtn() ) {             // mets à jour les boutons à afficher; conserve le premier fichier affiché si possible ; retourne false en cas d'erreur
-      Serial.println( "updateFilesBtn retuns false"); 
+      //Serial.println( "updateFilesBtn retuns false"); 
+      memccpy ( lastMsg , "Bug: updateFilesBtn" , '\0' , 22);
       currentPage = _P_INFO ;      // in case of error, go back to Info
       dirLevel = -1 ;              // force a reload of sd data next time we goes to SD card menu
       fInfoBase () ;               // fill info page with basis data (affiche les data et redétermine les boutons à afficher sans les afficher)

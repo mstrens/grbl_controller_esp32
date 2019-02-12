@@ -42,7 +42,8 @@ You have also to replace the content of the files Touch.h and Touch.cpp that are
 Finally, you have to edit the file config.h from this project in order to 
 - specify some pins being used (e.g. the chip select for the SD card reader)
 - the name and content of the grbl commands you want to predefine (in order to activate them from the touch screen)
-- specify if you plan to use the wifi and if so using the ESP32 in station mode or in access point mode.  
+- specify if you plan to use the WiFi and if so if you are using the ESP32 in station mode or in access point mode.
+Note: when using the WiFi, you must also specify the SSID (= name of the access point) and the password (in access mode, it must contain at least 8 char)
  
 Note: the pins used for the SPI signals (MOSI, MISO, SCLK) are currently hardcoded.
 Please note that many ESP32 pins are reserved and can't ne used (reserved for bootup, for internal flash, input only,...). See doc on ESP for more details.
@@ -70,3 +71,9 @@ Gpio23  MOSI                MOSI                 MOSI               (So the ESP3
 Gpio16 is the Serial port Rx from ESP32; It has to be connected to TX pin from GRBL
 Gpio17 is the Serial port Tx from ESP32; It has to be connected to RX pin from GRBL
 Note : Grnd has to be common between ESP32 and GRBL computer.
+
+For Nunchuk, we use 4 wires
+5V = Vcc
+Grnd
+Gpio21 = SDA
+Gpio22 = SCL

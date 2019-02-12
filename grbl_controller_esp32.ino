@@ -6,7 +6,7 @@
 //void fSetXYZBase(void) ; // fonction pour l'affichage de l'écran Set XYZ ; afficher éventuellement Wpos
 // drawDataOnInfoPage() ;  // a adapter durant les tests
 // drawDataOnMOVEPage() ;  // a adapter durant les tests
-
+// retirer tous les Serial.print de debugage
 
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.
@@ -122,19 +122,6 @@ void initMenuOptions( void) ;     //prototype
 //void sendGrblMove( int8_t dir , struct menustate* ms) ; 
  
 /**************************************************************************************************/
-
-
-/*
-void testTouchScreen(void){
-    uint16_t x,y,z ;
-    ts.readData(&x , &y, &z) ;
-      Serial.print("Pressure = "); Serial.print(z);
-      Serial.print(", x = "); Serial.print(x);
-      Serial.print(", y = ");  Serial.print(y);
-      delay(30);
-      Serial.println();
-}  
-*/
  
 void setup() {
 // initialiser le serial vers USB
@@ -146,7 +133,7 @@ void setup() {
 // teste la présence et initialise le nunchuck
 // initialiser les status (notamment affichage de l'écran)
 
-  Serial.begin(115200); // init UART for debug
+  Serial.begin(115200); // init UART for debug and for Gcode passthrough via USB PC
   
     // initialise le port série vers grbl
   Serial2.begin(115200, SERIAL_8N1, SERIAL2_RXPIN, SERIAL2_TXPIN); // initialise le port série vers grbl
@@ -162,7 +149,7 @@ void setup() {
   currentPage = _P_INFO ;
   updateFullPage = true ;
   // en principe les données pour les buttons sont initialisés automatiquement à 0
-  drawFullPage( ) ;
+  //drawFullPage( ) ;
 #if defined ( ESP32_ACT_AS_STATION ) || defined (ESP32_ACT_AS_AP)  
   initWifi() ;
 #endif  

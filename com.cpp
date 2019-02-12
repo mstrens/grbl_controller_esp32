@@ -79,7 +79,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
     //Serial.print(F("s=")); Serial.print( getGrblPosState ); Serial.println() ;
 #endif    
     c=Serial2.read() ;
-#define DEBUG_RECEIVED_CHAR
+//#define DEBUG_RECEIVED_CHAR
 #ifdef DEBUG_RECEIVED_CHAR      
       Serial.print( (char) c) ; 
       //if  (c == 0x0A || c == 0x0C ) Serial.println(millis()) ;
@@ -116,7 +116,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
       millisLastGetGBL = millis();
       //Serial.print("LG< =") ; Serial.println( millisLastGetGBL ) ;
 #ifdef DEBUG_TO_PC
-      Serial.print(" <") ; 
+      //Serial.print(" <") ; 
 #endif      
       break ;
       
@@ -128,7 +128,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
       newGrblStatusReceived = true;
 #ifdef DEBUG_TO_PC
       //Serial.print("X=") ; Serial.print(wposXYZ[0]) ; Serial.print(" Y=") ; Serial.print(wposXYZ[1]) ;Serial.print(" Z=") ; Serial.println(wposXYZ[2]) ; 
-      Serial.println(">");
+      //Serial.println(">");
 #endif      
       break ;
     case '|' :
@@ -291,7 +291,7 @@ void sendToGrbl( void ) {
         waitOk = true ;
         jog_status = JOG_WAIT_END_CANCEL ;
         exitMillis = millis() + 500 ; //expect a OK before 500 msec
-        Serial.println(" send cancel code");     
+        //Serial.println(" send cancel code");     
       } else if ( jog_status == JOG_WAIT_END_CANCEL  ) {
         if ( !waitOk ) {
           jog_status = JOG_NO ;
@@ -368,7 +368,7 @@ void sendJogCmd() {
         Serial2.print(" F2000");  Serial2.print( (char) 0x0A) ;
         Serial2.flush() ;       // wait that all char are really sent
         
-        Serial.print("Send cmd jog " ); Serial.print(moveMultiplier) ; Serial.print(" " ); 
-        Serial.print(prevMoveX) ; Serial.print(" " ); Serial.print(prevMoveY) ; Serial.print(" " ); Serial.print(prevMoveZ) ;Serial.print(" ") ; Serial.println(millis()) ;
+        //Serial.print("Send cmd jog " ); Serial.print(moveMultiplier) ; Serial.print(" " ); 
+        //Serial.print(prevMoveX) ; Serial.print(" " ); Serial.print(prevMoveY) ; Serial.print(" " ); Serial.print(prevMoveZ) ;Serial.print(" ") ; Serial.println(millis()) ;
 }
 

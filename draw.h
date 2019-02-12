@@ -61,6 +61,8 @@ struct M_Page {            // defini une page
 void fillMPage (uint8_t _page , uint8_t _btnPos , uint8_t _boutons, uint8_t _actions , void (*_pfNext)(uint8_t) , uint8_t _parameters )  ;
 void initButtons() ;   // initialise les noms des boutons, les boutons pour chaque page.
 
+void blankTft(char * titel , uint16_t x , uint16_t y ) ;
+void printTft(char * text) ;
 
 // à chaque loop,
 void updateBtnState( ) ;       // tester le touchscreen et mettre à jour les valeurs de just pressed, long pressed, just released

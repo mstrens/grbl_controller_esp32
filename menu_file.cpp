@@ -60,7 +60,7 @@ boolean sdStart( void ) {  // this function is called when we enter the sd scree
                            // keep currentDir open (so it can be used by other steps)
     if ( dirLevel == -1) { // after an error or at startup, dirLevel = -1; this means that we have to close all files and we have to try again.
        closeAllFiles() ;
-      p("begin sdstart"); 
+      //p("begin sdstart"); 
       //if ( ! SD.begin(SD_CHIPSELECT_PIN) ) {
       if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
           memccpy( lastMsg , "Card Mount Failed" , '\0' , 22) ;
@@ -79,16 +79,16 @@ boolean sdStart( void ) {  // this function is called when we enter the sd scree
           memccpy( lastMsg , "Failed to open Root" , '\0' , 22) ;
           return false;  
       }
-      char nameTest[23] ;
-      if ( ! aDir[0].getName( nameTest , 22) ) p("name of root not found") ;
-      p(nameTest) ;
+      //char nameTest[23] ;
+      //if ( ! aDir[0].getName( nameTest , 22) ) p("name of root not found") ;
+      //p(nameTest) ;
       dirLevel = 0 ;
       firstFileToDisplay = 0 ;
-      p("end of sdStart to init" ) ;
+      //p("end of sdStart to init" ) ;
       return true ;
     }
   // else if we already had some files opened; then we try to recover
-    Serial.println("verify that workDir is still ok") ;
+    //Serial.println("verify that workDir is still ok") ;
   if ( ! sd.exists( "/" ) ) { // check if root exist       // first check if root exists 
       memccpy( lastMsg , "Root not found" , '\0' , 22) ;
       dirLevel = -1; 
@@ -106,7 +106,7 @@ boolean sdStart( void ) {  // this function is called when we enter the sd scree
   }
   // here we assume that it is ok and so we can continue to use aDir[dirLevel], dirLevel and firstFileToDisplay
   // so, we wiil (try to) update the name of the button
-  Serial.println("aDir[dirLevel] is still ok") ;
+  //Serial.println("aDir[dirLevel] is still ok") ;
   return true ;
 }
 
@@ -124,7 +124,7 @@ uint16_t fileCnt( void ) {
  //   Serial.print("cnt= " ); Serial.print(cnt ); Serial.print(" , " ); Serial.println(file.name() ); 
     file.close();  
   }
-  Serial.print("nbr of file in dir= " ); Serial.println(cnt );
+  //Serial.print("nbr of file in dir= " ); Serial.println(cnt );
   return cnt ;
 }
 
@@ -137,8 +137,8 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
 //     un index du premier fichier affiché ( firstFileToDisplay )
 //     il faut remplir les 4 premiers boutons (max) avec les noms des 4 fichiers à partir de l'index
 //     S'il y a moins de 4 fichiers, on ne crée pas les dernier boutons
-  Serial.print("Nbr de fichiers") ; Serial.println(sdFileDirCnt) ;
-  Serial.print("firstFileToDisplay") ; Serial.println(firstFileToDisplay) ;
+  //Serial.print("Nbr de fichiers") ; Serial.println(sdFileDirCnt) ;
+  //Serial.print("firstFileToDisplay") ; Serial.println(firstFileToDisplay) ;
   //Serial.println(( ((int16_t) sdFileDirCnt) - 4)) ;
   if (  (firstFileToDisplay + 4) > sdFileDirCnt ) {
     if (  sdFileDirCnt <= 4 ) {
@@ -167,9 +167,9 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
                                                        //ici on est prêt à chercher le nom du premier fichier à afficher
   uint8_t i = 0 ;
   char * pfileNames ;
-  Serial.print("will begin while cnt=") ; Serial.println(cnt) ; Serial.print(" ,sdFileDirCnt=") ; Serial.println(sdFileDirCnt) ; Serial.print(" ,first+4=") ; Serial.println(firstFileToDisplay + 4) ;
+  //Serial.print("will begin while cnt=") ; Serial.println(cnt) ; Serial.print(" ,sdFileDirCnt=") ; Serial.println(sdFileDirCnt) ; Serial.print(" ,first+4=") ; Serial.println(firstFileToDisplay + 4) ;
   while ( (cnt < sdFileDirCnt) && (cnt < ( firstFileToDisplay + 4) ) ) {
-    Serial.println("in while") ;
+    //Serial.println("in while") ;
     if ( ! file.openNext( &aDir[dirLevel] ) ) {
       memccpy( lastMsg , "Failed to open a file" , '\0' , 22) ;
       file.close() ;
@@ -186,8 +186,8 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
       file.close() ;
       return false ;  
     }
-    Serial.print("i= " ) ; Serial.print(i) ; Serial.print(" cnt= " ) ; Serial.println(cnt) ;    
-    Serial.println( fileNames[i] );
+    //Serial.print("i= " ) ; Serial.print(i) ; Serial.print(" cnt= " ) ; Serial.println(cnt) ;    
+    //Serial.println( fileNames[i] );
     fillMPage (_P_SD , i , _FILE0 + i , _JUST_PRESSED , fSdFilePrint , i) ; // activate the button; param contains the index of the file (0,...3)
     i++ ;
     cnt++ ;
@@ -252,10 +252,10 @@ boolean changeDirectory() {      // change the directory when selected file is a
   } else
   */
     if (dirLevel < (DIR_LEVEL_MAX - 1) ) {  // Goes one level lower 
-    Serial.println("goes one level dir down") ;
+    //Serial.println("goes one level dir down") ;
     dirLevel++ ;
     sdFileDirCnt = fileCnt() ;
-    Serial.print("After file cnt =") ;Serial.println(sdFileDirCnt) ;
+    //Serial.print("After file cnt =") ;Serial.println(sdFileDirCnt) ;
     firstFileToDisplay = 0 ; 
     return updateFilesBtn() ;
   }                       // else keep current directory and do not go one level more
@@ -264,12 +264,12 @@ boolean changeDirectory() {      // change the directory when selected file is a
 
 boolean sdMoveUp() {
   if (dirLevel == 0) return false ; // if we are already on root, just discard
-  Serial.println("goes one level dir up") ;
+  //Serial.println("goes one level dir up") ;
   aDir[dirLevel + 1].close() ;
   aDir[dirLevel].close() ;
   dirLevel-- ;
   sdFileDirCnt = fileCnt() ;
-  Serial.print("After file cnt =") ;Serial.println(sdFileDirCnt) ;
+  //Serial.print("After file cnt =") ;Serial.println(sdFileDirCnt) ;
     firstFileToDisplay = 0 ; 
     return updateFilesBtn() ;
 }

@@ -51,7 +51,7 @@ void fGoToPage(uint8_t param) {
 }
 
 void fGoBack(uint8_t param) {
-  Serial.print( "go back : " ) ; Serial.println( prevPage) ; // just for testing // to do
+  //Serial.print( "go back : " ) ; Serial.println( prevPage) ; // just for testing // to do
   
   if (prevPage >= _P_INFO && prevPage < _P_MAX_PAGES ) {       // if there are sevral back, prevPage = 0 and we will go back to _P_INFO
     currentPage = prevPage ;
@@ -118,7 +118,7 @@ void fResume(uint8_t param) {
 
 void fDist( uint8_t param ) {
   uint8_t newDist =  mPages[_P_MOVE].boutons[3] ;       // convertit la position du bouton en type de bouton 
-  Serial.print("newDist=") ; Serial.println(newDist) ;
+  //Serial.print("newDist=") ; Serial.println(newDist) ;
   if ( ++newDist > _D10 ) newDist = _D_AUTO ; // increase and reset to min value if to big
   mPages[_P_MOVE].boutons[3] = newDist ;   // update the button to display
   mButtonDraw( 4 , newDist ) ;  // draw a button at position (from 1 to 8)
@@ -158,7 +158,7 @@ void fMove( uint8_t param ) {
         case _ZM :  Serial2.print("Z-") ;  break ;
       }
       Serial2.print(distance) ; Serial2.println (" F100") ;
-      Serial.print("move for button") ; Serial.print(justPressedBtn) ;Serial.print(" ") ;  Serial.print(distance) ; Serial.println (" F100") ;
+      //Serial.print("move for button") ; Serial.print(justPressedBtn) ;Serial.print(" ") ;  Serial.print(distance) ; Serial.println (" F100") ;
       
       updatePartPage = true ;                     // force a redraw of data
       waitReleased = true ;          // discard "pressed" until a release // todo change to allow repeated press on the same button
@@ -219,9 +219,9 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
 }
 
 void fSdFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param contains l'index (0 à 3) du fichier à ouvrir
-  Serial.println("enter fsFilePrint") ;
+  //Serial.println("enter fsFilePrint") ;
   if ( ! setFileToRead( param ) ) {         // try to open the file to be printed ; in case of error, go back to Info page (lastMsg is filled)
-      Serial.println("SetFileToRead is false") ;
+      //Serial.println("SetFileToRead is false") ;
       currentPage = _P_INFO ;
       updateFullPage = true ;
       waitReleased = true ;          // discard "pressed" until a release
@@ -231,7 +231,7 @@ void fSdFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param c
   if ( fileToReadIsDir () ) {   // if user press a directory, then change the directory
     Serial.println("FileToRead is dir") ;
     if ( ! changeDirectory() ) {
-      Serial.println("changeDirectory is false") ;
+      //Serial.println("changeDirectory is false") ;
       currentPage = _P_INFO ;        // in case of error, goes to info page
       updateFullPage = true ;
       waitReleased = true ;          // discard "pressed" until a release
@@ -241,14 +241,14 @@ void fSdFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param c
     waitReleased = true ;
     return ;
   } else if ( ! startPrintFile() ) {  // open file (based on name) and go to info page in case of error
-    Serial.println("startPrintFile is false") ;
+    //Serial.println("startPrintFile is false") ;
     prevPage = currentPage ;
     currentPage = _P_INFO ;  
     updateFullPage = true ;
     waitReleased = true ;          // discard "pressed" until a release
     return ; 
   }
-    Serial.println("startPrintFile is true") ;
+    //Serial.println("startPrintFile is true") ;
     statusPrinting = PRINTING_FROM_SD ; // change the status, so char will be read and sent in main loop
     prevPage = currentPage ;            // go to INFO page
     currentPage = _P_INFO ; 
@@ -269,7 +269,7 @@ void fSdMove(uint8_t param) {     // param contient _LEFT ou _RIGTH
     sdMoveUp() ;
   }
   // look in the directory for another file and upload the list of button.
-  Serial.print("firstFileToDisplay=") ; Serial.println(firstFileToDisplay);
+  //Serial.print("firstFileToDisplay=") ; Serial.println(firstFileToDisplay);
   updateFullPage = true ;
   waitReleased = true ;          // discard "pressed" until a release 
 }
@@ -288,7 +288,7 @@ void fCmd(uint8_t param) {     // param contient le n° de la commande (valeur =
   cmdToSend = param ;         // fill the index of the command to send; sending will be done in communication module
   statusPrinting = PRINTING_CMD ;
   waitReleased = true ;          // discard "pressed" until a release 
-  Serial.println("In fCmd") ;
+  //Serial.println("In fCmd") ;
 }
 
 void fStartPc(uint8_t param){
