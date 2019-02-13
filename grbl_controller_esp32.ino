@@ -61,8 +61,7 @@ grblState
  
  */
 #include "config.h"
-//#include "touch_ms.h"
-#include <TFT_eSPI.h>   // setup file has to be edited for some parameters like screen device, pins
+#include "TFT_eSPI_ms/TFT_eSPI.cpp"   // setup file has to be edited for some parameters like screen device, pins
 #include "draw.h"
 #include "FS.h"
 #include "nunchuk.h"

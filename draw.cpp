@@ -1,6 +1,6 @@
 #include "config.h"
 #include "draw.h"
-#include <TFT_eSPI.h>
+#include "TFT_eSPI_ms/TFT_eSPI.h"
 #include "FS.h"
 #include "actions.h"
 #include "menu_file.h"
@@ -582,8 +582,8 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
         firstFileToDisplay = sdFileDirCnt - 3 ;  // keep always 4 files on screen
       }  
     }
-    Serial.print("Nbr de fichiers") ; Serial.println(sdFileDirCnt) ;
-    Serial.print("firstFileToDisplay") ; Serial.println(firstFileToDisplay) ;
+    //Serial.print("Nbr de fichiers") ; Serial.println(sdFileDirCnt) ;
+    //Serial.print("firstFileToDisplay") ; Serial.println(firstFileToDisplay) ;
     tft.setTextDatum( TL_DATUM ) ;
     tft.setTextSize(2) ;
     tft.setCursor(20 , 10 , 2) ; // x, y, font

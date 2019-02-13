@@ -1,6 +1,6 @@
 #include "config.h"
 #include "draw.h"
-#include <TFT_eSPI.h>
+#include "TFT_eSPI_ms/TFT_eSPI.h"
 #include "FS.h"
 #include "actions.h"
 #include "menu_file.h"
