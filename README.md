@@ -1,49 +1,50 @@
 # grbl_controller_esp32
-Grbl controller running on ESP32
+This Grbl controller runs on a ESP32
 
 This project allows to control a CNC running GRBL without having to use a pc.
 
 This is an alternative to Marlin or Repetier for CNC.
 
-It uses an ESP32 and a touch screen 320 X 240 with a ILI9341 (display controller) and a XPT2046 (control the touch panel)
-It also control a SD card.
+It uses an ESP32 and a display module having 3 components: a touch screen 320 X 240 a ILI9341 (display controller) , a XPT2046 (control the touch panel)
+and a SD card support. It should also possible to use separate components instead of the display module. 
+Note: this configuration uses the ILI9341 with 4 wires (CLK, MOSI, MISO and CD).
 
 This applications allows to:
-- select a file on the SD card with Gcode and to send it to GRBL
+- select a file on the SD card (with Gcode) and to send it to GRBL for execution
 - pause/resume/cancel sending the Gcode
 - send predefined GRBL commands (based on the setup in the config.h file)
-- unlock alarm
-- ask for homing the CNC
+- unlock grbl alarm
+- ask grbl for homing the CNC
 - move X,Y, Z axis by 0.01, 0.1, 1, 10 mm steps
 - set X, Y, Z Work position to 0 (based on the current position)
 - forward GRBL commands from the PC (so you can still control your CNC using your pc with e.g. Universal Gcode sender).
-  This uses the USB interface that exist on the ESP32 developement board.
-- let a pc connect to the ESP32 with the WiFi in order to upload/download files from pc to the SD card connected to ESP32
-  This works currently with the root directory on the SD card (not with subdirectory) 
+   This uses the USB interface that exist on the ESP32 developement board. This is e.g. useful to configure GRBL from the PC with "$" commands
+- let a browser session running on pc connect to the ESP32 in order to upload/download files between the pc and the SD card.
+   So you can avoid physical manipulation of SD card.
+   This works currently with the root directory on the SD card (not with subdirectory) 
 
-This application displays some GRBL informations like
+This application displays some useful GRBL informations like
 - the GRBL status (Idle, Run, Alarm,...)
 - the work position (Wpos) and the machine position (Mpos)
 - the last error and alert message.
 
-Optionnally you can connect a Nunchuck in order to move the X, Y, Z, axis with the joystick 
+Optionnally you can connect a Nunchuck (kind of joystick) in order to move the X, Y, Z, axis.
+To move the axis, you have to move the joystick (up/down/left/right) and simultaneously 
 - press the C button to move X/Y axis,
 - press the Z button to move Z axis
 
 This project compiles in Arduino IDE but it requires:
 - to add in Arduino IDE the software that support ESP32. The process is explained e.g. in this link
 	https://randomnerdtutorials.com/installing-the-esp32-board-in-arduino-ide-windows-instructions/
-- to install a library to manage the display. The library is tft_espi. It is avaiblable at 
-	https://github.com/Bodmer/TFT_eSPI
-	See Arduino doc about how to install a library.
-Take care that you have to edit the file User_setup.h included in the TFT_espi library to specify the type of display controller and the pins being used by the SPI, the display and the touch screen chip select.
-You have also to replace the content of the files Touch.h and Touch.cpp that are in the directory "Extensions" by those provided on this github repository in subdirectory Extensions.
 
-Finally, you have to edit the file config.h from this project in order to 
-- specify some pins being used (e.g. the chip select for the SD card reader)
-- the name and content of the grbl commands you want to predefine (in order to activate them from the touch screen)
-- specify if you plan to use the WiFi and if so if you are using the ESP32 in station mode or in access point mode.
-Note: when using the WiFi, you must also specify the SSID (= name of the access point) and the password (in access mode, it must contain at least 8 char)
+Take care that if you do not use the configuration as me, you can have:
+-  to edit the file User_setup.h included in the TFT_eSPI_ms folder.
+   This file specify the type of display controller and the pins being used by the SPI, the display and the touch screen chip select.
+-  to edit the file config.h from this project in order to specify
+    - some pins being used (e.g. the chip select for the SD card reader)
+    - the name and content of the grbl commands you want to predefine (in order to activate them from the touch screen)
+    - if you plan to use the WiFi and if so if you are using the ESP32 in station mode or in access point mode.
+	When using the WiFi, you must also specify the SSID (= name of the access point) and the password (in access mode, it must contain at least 8 char)
  
 Note: the pins used for the SPI signals (MOSI, MISO, SCLK) are currently hardcoded.
 Please note that many ESP32 pins are reserved and can't ne used (reserved for bootup, for internal flash, input only,...). See doc on ESP for more details.
