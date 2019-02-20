@@ -56,25 +56,25 @@ This should normally be done only once. The calibration data are stored automati
 
 
 Here the connections being used in my own setup.
-ESP32   TFT                touch screen          SD card
-5V      Vcc (this is used internally to provide voltage to touch screen and SD card)
-Gpio13  CS(chip select)
-Grnd	Grnd (this is used internally to provide grnd to touch screen and SD card)
-Gpio12  Reset
-Gpio14  DC (data/command)
-Gpio27                      CS (chip select)
-Gpio26                                           CS (chip select)
-Gpio25  LCD
-Gpio18  CLK                 CLK                  CLK                (So the ESP32 pin is connected to 3 pins from TFT board)
-Gpio19  MISO                MISO                 MISO               (So the ESP32 pin is connected to 3 pins from TFT board)
-Gpio23  MOSI                MOSI                 MOSI               (So the ESP32 pin is connected to 3 pins from TFT board)
+ESP32___TFT________________touch screen__________SD card
+5V______Vcc_______________________________________________________ (this is used internally to provide voltage to touch screen and SD card)
+Gpio13__CS(chip select)
+Grnd____Grnd ______________________________________________________(this is used internally to provide grnd to touch screen and SD card)
+Gpio12__Reset
+Gpio14__DC (data/command)
+Gpio27______________________CS (chip select)
+Gpio26___________________________________________CS (chip select)
+Gpio25__LCD
+Gpio18__CLK_________________CLK__________________CLK                (So the ESP32 pin is connected to 3 pins from TFT board)
+Gpio19__MISO________________MISO(T_DO)___________MISO               (So the ESP32 pin is connected to 3 pins from TFT board)
+Gpio23__MOSI________________MOSI(T_DIN)__________MOSI               (So the ESP32 pin is connected to 3 pins from TFT board)
 
 Gpio16 is the Serial port Rx from ESP32; It has to be connected to TX pin from GRBL
 Gpio17 is the Serial port Tx from ESP32; It has to be connected to RX pin from GRBL
 Note : Grnd has to be common between ESP32 and GRBL computer.
 
 For Nunchuk, we use 4 wires
-5V = Vcc
-Grnd
+3.3V = Vcc
+Grnd = Grnd
 Gpio21 = SDA
 Gpio22 = SCL

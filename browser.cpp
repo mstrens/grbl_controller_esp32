@@ -35,7 +35,7 @@ void initWifi() {
     printTft("X") ;
     initWifiCnt--;
     if ( initWifiCnt == 0) {
-      memccpy ( lastMsg , "WiFi not found" , '\0' , 22);
+      fillMsg(  "WiFi not found" );
       break;
     }
   }

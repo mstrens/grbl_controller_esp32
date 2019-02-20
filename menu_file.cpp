@@ -63,20 +63,20 @@ boolean sdStart( void ) {  // this function is called when we enter the sd scree
       //p("begin sdstart"); 
       //if ( ! SD.begin(SD_CHIPSELECT_PIN) ) {
       if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
-          memccpy( lastMsg , "Card Mount Failed" , '\0' , 22) ;
+          fillMsg( "Card Mount Failed" ) ;
           return false;       
       }
       //if ( ! SD.exists( "/" ) ) { // check if root exist
       if ( ! sd.exists( "/" ) ) { // check if root exist   
-          memccpy( lastMsg , "Root not found" , '\0' , 22) ;
+          fillMsg(  "Root not found" ) ;
           return false;  
       }
       if ( ! sd.chdir( "/" ) ) {
-          memccpy( lastMsg , "chdir error" , '\0' , 22) ;
+          fillMsg(  "chdir error" ) ;
           return false;  
       }
       if ( ! aDir[0].open("/" ) ) { // open root 
-          memccpy( lastMsg , "Failed to open Root" , '\0' , 22) ;
+          fillMsg( "Failed to open Root" ) ;
           return false;  
       }
       //char nameTest[23] ;
@@ -90,17 +90,17 @@ boolean sdStart( void ) {  // this function is called when we enter the sd scree
   // else if we already had some files opened; then we try to recover
     //Serial.println("verify that workDir is still ok") ;
   if ( ! sd.exists( "/" ) ) { // check if root exist       // first check if root exists 
-      memccpy( lastMsg , "Root not found" , '\0' , 22) ;
+      fillMsg( "Root not found" ) ;
       dirLevel = -1; 
         return false;  
   }  
   if ( dirLevel == 0 && ( ! aDir[0].isDir() )  ) {
-      memccpy( lastMsg , "first dir is not Root" , '\0' , 22) ;
+      fillMsg( "first dir is not Root") ;
       dirLevel = -1; 
         return false;  
   }
   if ( dirLevel > 0 && ( ! aDir[dirLevel].isDir()  ) ){
-      memccpy( lastMsg , "current dir is not a sub dir" , '\0' , 22) ;
+      fillMsg(  "current dir is not a sub dir" ) ;
       dirLevel = -1; 
         return false;  
   }
@@ -147,7 +147,7 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
   
   while ( ( cnt ) < firstFileToDisplay ) {
     if ( ! file.openNext( &aDir[dirLevel] ) ) {       // ouvre le prochain fichier dans le répertoire courant ; en cas d'erreur, retour à la page info avec un message d'erreur 
-      memccpy( lastMsg , "files missing" , '\0' , 22) ;
+      fillMsg( "files missing" ) ;
       file.close() ;
       return false ; 
     }
@@ -161,7 +161,7 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
   while ( (cnt <=  sdFileDirCnt ) && (cnt < ( firstFileToDisplay + 4) ) ) {
     //Serial.println("in while") ;
     if ( ! file.openNext( &aDir[dirLevel] ) ) {
-      memccpy( lastMsg , "Failed to open a file" , '\0' , 22) ;
+      fillMsg( "Failed to open a file" ) ;
       file.close() ;
       return false ;  
     }
@@ -172,7 +172,7 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
       pfileNames++ ;  
     }
     if ( ! file.getName( pfileNames , 21 ) ) {   // Rempli fileNames avec le nom du fichier
-      memccpy( lastMsg , "No file name" , '\0' , 22) ;
+      fillMsg(  "No file name" ) ;
       file.close() ;
       return false ;  
     }
@@ -209,7 +209,7 @@ boolean setFileToRead ( uint8_t fileIdx ) { // fileIdx is a number from 0...3 re
 //    Serial.print("workDir is dir= ") ; Serial.println(workDir.isDirectory() );
 //    Serial.print("dirName=") ; Serial.println(workDir.name() );
       if (  ! aDir[dirLevel+1].openNext( &aDir[dirLevel] ) ) {       
-        memccpy( lastMsg , "selected file missing" , '\0' , 22) ;
+        fillMsg( "selected file missing" ) ;
         aDir[dirLevel+1].close() ;
         dirLevel = -1 ;                         // in case of error, force a reset of SD card
         return false ; 

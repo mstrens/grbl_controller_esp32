@@ -100,7 +100,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
     case '\r' : // CR is sent after "error:xx"
       if( getGrblPosState == GET_GRBL_STATUS_CLOSED ) {
         if ( ( strGrblBuf[0] == 'e' && strGrblBuf[1] == 'r' ) || ( strGrblBuf[0] == 'A' && strGrblBuf[1] == 'L' ) ) {  // we got an error message or an ALARM message
-          memccpy( lastMsg , strGrblBuf , '\0', 22);           // save the error or ALARM
+          fillMsg( strGrblBuf );           // save the error or ALARM
         } 
       }
       getGrblPosState = GET_GRBL_STATUS_CLOSED ;
@@ -302,7 +302,7 @@ void sendToGrbl( void ) {
             jog_status = JOG_NO ; // reset all parameters related to jog .
             jogCancelFlag = false ;
             jogCmdFlag = false ;
-            if(lastMsg[0] ) memccpy( lastMsg , "Can.JOG:missing Ok" , '\0' , 22) ; // put a message if there was no message (e.g. alarm:)
+            if(lastMsg[0] || (lastMsg[0] == 32) ) fillMsg( "Can.JOG:missing Ok" ) ; // put a message if there was no message (e.g. alarm:)
           }
         }
       } 
@@ -322,7 +322,7 @@ void sendToGrbl( void ) {
             jog_status = JOG_NO ; // reset all parameters related to jog .
             jogCancelFlag = false ;
             jogCmdFlag = false ;
-            if(lastMsg[0] ) memccpy( lastMsg , "Cmd JOG:missing Ok" , '\0' , 22) ; // put a message if there was no message (e.g. alarm:)
+            if(lastMsg[0] || (lastMsg[0] == 32) ) fillMsg( "Cmd JOG:missing Ok" ) ; // put a message if there was no message (e.g. alarm:)
           }
         }
       } 

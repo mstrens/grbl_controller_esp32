@@ -40,6 +40,7 @@ extern float mposXYZ[3] ;
 extern char machineStatus[9]; 
 
 extern char lastMsg[23] ;        // last message to display
+extern boolean lastMsgChanged ;  
 
 //char sdStatusText[][20]  = { "No Sd card" , "Sd card to check" , "Sd card OK" , "Sd card error"} ;  // pour affichage en clair sur le lcd;
 char printingStatusText[][20] = { " " , "SD-->Grbl" , "Error SD-->Grbl" , "Pause SD-->Grbl" , "PC-->Grbl" ,  "CMD" } ; 
@@ -206,7 +207,7 @@ void tftInit() {
                 //#define TFT_RST  -1  // Set TFT_RST to -1 if display RESET is connected to ESP32 board RST
                 //Cette fonction met les pins en mode input/output; elle envoie aussi les commandes d'initialisation
   // Set the rotation before we calibrate
-  tft.setRotation(1); // normally, this is already done in tft.int() but it is not clear how is rotation set (probably 0); so it can be usefull to change it here
+  tft.setRotation(3); // normally, this is already done in tft.int() but it is not clear how is rotation set (probably 0); so it can be usefull to change it here
   touch_calibrate(); // call screen calibration
   //tft.printCalibration() ;  // print calibration data (print on Serial port the calibration data ; only for debug
   tft.fillScreen(TFT_BLUE);   // clear screen
@@ -448,10 +449,9 @@ void drawPartPage() {          // update only the data on screen (not the button
     drawDataOnInfoPage() ;
   } else if ( currentPage == _P_MOVE) {
     drawWposOnMovePage() ;
-  } 
-  //else if (currentPage == _P_SETUP ){
-  //  drawWifiOnSetupPage() ;
-  //}
+  } else if (currentPage == _P_SETUP ){
+    drawDataOnSetupPage() ;
+  }
 }
 
 //********************************  Fonctions appelées quand on entre dans un écran (appelée via drawFullPage)
@@ -503,31 +503,35 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
 
   tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
   tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
-  tft.setTextSize(1) ;           // char is 2 X magnified => 
-  tft.setTextDatum( TR_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
-  tft.setTextPadding (160) ;      // expect to clear 70 pixel when drawing text or 
-  uint8_t line = 0 ;
-  tft.drawString( "Wpos          Xpos" , 150 , line + 10 ) ;     // affiche un texte
-  tft.setTextSize(2) ;
-  tft.drawString( &machineStatus[0] , 315  , line ) ; // affiche le status GRBL (Idle,....)
-  tft.setTextPadding (80) ;      // expect to clear 70 pixel when drawing text or float
-  uint8_t c1 = 100, c2 = c1 + 100 ;
-  line += 32 ; tft.drawFloat( wposXYZ[0] , 3 , c1 , line ); // affiche la valeur avec 3 décimales en position 70, 30
-  tft.drawFloat( mposXYZ[0] , 3 , c2 , line ); 
-  line += 32 ; tft.drawFloat( wposXYZ[1] , 3 , c1 , line ); 
-  tft.drawFloat( mposXYZ[1] , 3 , c2 , line );
-  line += 32 ; tft.drawFloat( wposXYZ[2] , 3 , c1 , line ); 
-  tft.drawFloat( mposXYZ[2] , 3 , c2 , line  ); 
-  tft.setTextDatum( TL_DATUM ) ; 
-  
-  tft.setTextPadding (150) ; 
-  //line += 32 ; tft.drawString ( &sdStatusText[sdStatus][0] , 0 , line  ) ;
-  line += 32 ; tft.drawString ( &printingStatusText[statusPrinting][0] , 0 , line )  ;
+  tft.setTextSize(2) ;           // char is 2 X magnified => 
+  tft.setTextDatum( TL_DATUM ) ; // align Left
+  tft.setTextPadding (200) ; 
+  tft.drawString ( &printingStatusText[statusPrinting][0] , 5 , 0 )  ;
   if ( statusPrinting == PRINTING_FROM_SD ) {
       tft.print(" ") ; tft.print( (uint8_t) ( 100 * sdNumberOfCharSent / sdFileSize) ) ; tft.print("%") ;
   }
+  tft.setTextDatum( TR_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
+  tft.setTextPadding (120) ;      // expect to clear 70 pixel when drawing text or 
+  tft.drawString( &machineStatus[0] , 315  , 0 ) ; // affiche le status GRBL (Idle,....)
+  
+  tft.setTextDatum( TL_DATUM ) ; // align Left
   tft.setTextColor(TFT_RED, TFT_BLACK ) ;
-  line += 32 ; tft.drawString ( &lastMsg[0] , 0 , line) ;
+  tft.drawString ( &lastMsg[0] , 5 , 32) ;
+
+  tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; 
+  tft.setTextDatum( TR_DATUM ) ; // align Left
+  tft.setTextSize(1) ;           // char is 2 X magnified => 
+  tft.setTextPadding (160) ;      // expect to clear 70 pixel when drawing text or 
+  uint16_t line = 90 ;
+  tft.drawString( "Wpos          Xpos" , 150 , line ) ;     // affiche un texte
+  tft.setTextSize(2) ;
+  
+  tft.setTextPadding (100) ;      // expect to clear 100 pixel when drawing text or float
+  uint8_t c1 = 100, c2 = c1 + 100 ;
+  line += 20 ; tft.drawFloat( wposXYZ[0] , 2 , c1 , line ); tft.drawFloat( mposXYZ[0] , 2 , c2 , line ); 
+  line += 32 ; tft.drawFloat( wposXYZ[1] , 2 , c1 , line );  tft.drawFloat( mposXYZ[1] , 2 , c2 , line );
+  line += 32 ; tft.drawFloat( wposXYZ[2] , 2 , c1 , line );  tft.drawFloat( mposXYZ[2] , 2 , c2 , line  ); 
+  // here we could add the Feed rate and the spindle rpm
 }
 
 void fNoBase(void) {
@@ -538,8 +542,8 @@ void fSetupBase(void) {
   tft.setTextColor(TFT_GREEN , TFT_BLACK ) ; // when oly 1 parameter, background = fond);
   tft.setTextSize(2) ;           // char is 2 X magnified => 
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
-  tft.setTextPadding (80) ;      // expect to clear 70 pixel when drawing text or 
-  uint8_t line = 20 ;
+  //tft.setTextPadding (240) ;      // expect to clear 70 pixel when drawing text or 
+  uint8_t line = 2 ;
   uint8_t col = 10 ;
   char ipBuffer[20] ;
   if ( getWifiIp( ipBuffer ) ) { 
@@ -548,6 +552,15 @@ void fSetupBase(void) {
   } else {
     tft.drawString( "No WiFi" , col , line ); 
   }
+}
+
+void drawDataOnSetupPage() {  
+  tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+  tft.setTextSize(2) ;           // char is 2 X magnified => 
+  tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
+  tft.setTextPadding (240) ;      // expect to clear 70 pixel when drawing text or 
+  tft.setTextColor(TFT_RED, TFT_BLACK ) ;
+  tft.drawString( lastMsg , 10 , 34 );
 }
 
 void fMoveBase(void) {
@@ -593,7 +606,7 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
     tft.setTextDatum( TR_DATUM ) ;
     char dirName[23] ;
     if ( ! aDir[dirLevel].getName( dirName , 22 ) ) { 
-      memccpy ( lastMsg , "Dir name not found" , '\0' , 22);
+      fillMsg ( "Dir name not found" );
       currentPage = _P_INFO ;      // in case of error, go back to Info
       dirLevel = -1 ;              // force a reload of sd data next time we goes to SD card menu
       fInfoBase () ;               // fill info page with basis data (affiche les data et redétermine les boutons à afficher sans les afficher)
@@ -602,7 +615,7 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
     tft.drawString( dirName , 319 , 40 );
     if ( ! updateFilesBtn() ) {             // met à jour les boutons à afficher; conserve le premier fichier affiché si possible ; retourne false en cas d'erreur
       //Serial.println( "updateFilesBtn retuns false"); 
-      memccpy ( lastMsg , "Bug: updateFilesBtn" , '\0' , 22);
+      fillMsg( "Bug: updateFilesBtn" );
       currentPage = _P_INFO ;      // in case of error, go back to Info
       dirLevel = -1 ;              // force a reload of sd data next time we goes to SD card menu
       fInfoBase () ;               // fill info page with basis data (affiche les data et redétermine les boutons à afficher sans les afficher)
@@ -621,10 +634,10 @@ void drawWposOnMovePage() {
   tft.setTextPadding (80) ;      // expect to clear 70 pixel when drawing text or 
   
   uint8_t line = 20 ;
-  uint8_t col = 80 ;
-  tft.drawFloat( wposXYZ[0] , 3 , col , line ); // affiche la valeur avec 3 décimales 
-  tft.drawFloat( wposXYZ[1] , 3 , col + 80 , line );
-  tft.drawFloat( wposXYZ[2] , 3 , col + 160 , line );
+  uint8_t col = 70 ;
+  tft.drawFloat( wposXYZ[0] , 2 , col , line ); // affiche la valeur avec 3 décimales 
+  tft.drawFloat( wposXYZ[1] , 2 , col + 80 , line );
+  tft.drawFloat( wposXYZ[2] , 2 , col + 160 , line );
 }
 
 
@@ -694,5 +707,10 @@ void touch_calibrate() {
       f.close();
     }
   }
+}
+
+void fillMsg( char * msg) {
+  memccpy ( lastMsg , msg , '\0' , 22);
+  lastMsgChanged = true ;
 }
 

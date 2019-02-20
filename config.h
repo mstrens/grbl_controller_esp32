@@ -27,6 +27,7 @@
 // Repeat calibration if you change the screen rotation.
 #define REPEAT_CAL false
 
+
 // Set the parameter to connect to an access point (router) for the local network
 #define MY_SSID "bbox2-58c4"       // replace by the name of your access point
 #define MY_PASSWORD "alineloriejulien"   // replace by the password of your access point

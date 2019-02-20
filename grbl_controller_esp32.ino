@@ -81,6 +81,7 @@ boolean updatePartPage = true ;
 uint8_t justPressedBtn , justReleasedBtn, longPressedBtn ,currentBtn = 0 ; // 0 = nihil, 1 à 9 = position sur l'écran du bouton (donc pas la fonction du bouton)
 uint32_t beginChangeBtnMillis ;
 char lastMsg[23] = { 0} ;        // last message to display
+boolean lastMsgChanged = false ;
 
 //         SD variables  
 int8_t dirLevel ; //-1 means that card has to be (re)loaded
@@ -182,7 +183,10 @@ void loop() {
   sendToGrbl() ;           // s'il y de la place libre dans le Tx buffer, le rempli avec le fichier de SD, une CMD ou le flux du PC; envoie périodiquement "?" pour demander le statut
 //  if (newGrblStatusReceived) Serial.println( "newStatus");
 
-  if (newGrblStatusReceived == true && ( currentPage == _P_INFO || currentPage == _P_MOVE) ) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
+  if (newGrblStatusReceived == true && ( currentPage == _P_INFO || currentPage == _P_MOVE ) ) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
+    updatePartPage = true ;
+  }
+  if (newGrblStatusReceived == true && ( currentPage == _P_SETUP) ) { //force a refresh if a message has been received from GRBL and we are in a setup screen
     updatePartPage = true ;
   }
   newGrblStatusReceived = false ;
@@ -195,6 +199,7 @@ void loop() {
   
   updateFullPage = false ;
   updatePartPage = false ;
+  lastMsgChanged = false ;
 }
 
 

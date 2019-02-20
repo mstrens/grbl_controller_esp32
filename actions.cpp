@@ -14,7 +14,8 @@ extern boolean updatePartPage ;
 extern boolean waitReleased ;
 extern uint8_t statusPrinting ;
 extern char machineStatus[9];           // Iddle, Run, Alarm, ...
-extern char lastMsg[23]  ;  
+extern char lastMsg[23]  ;
+
 
 extern uint16_t firstFileToDisplay ;
 extern uint16_t sdFileDirCnt ;
@@ -68,7 +69,7 @@ void fHome(uint8_t param) {
 #define HOME_CMD "$H"
     Serial2.println(HOME_CMD) ;  
   } else {
-    memccpy ( lastMsg , "Invalid btn (Home)" , '\0' , 22);
+    fillMsg("Invalid btn (Home)") ;
   }
   waitReleased = true ;          // discard "pressed" until a release 
 }
@@ -84,7 +85,9 @@ void fUnlock(uint8_t param) {
 
 void fReset(uint8_t param) {
   Serial2.print( (char) SOFT_RESET) ;
-  waitReleased = true ;          // discard "pressed" until a release 
+  waitReleased = true ;          // discard "pressed" until a release
+  fillMsg( " " );
+  
 }
 
 void fCancel(uint8_t param) {
@@ -148,14 +151,14 @@ void fMove( uint8_t param ) {
         distance = 10 ;
         break ;
       }
-      Serial2.print("$J=G91 G21 ") ;
+      Serial2.println("") ; Serial2.print("$J=G91 G21 ") ;
       switch ( justPressedBtn ) {  // we convert the position of the button into the type of button
-        case _XP :  Serial2.print("X")  ;  break ;
-        case _XM :  Serial2.print("X-") ;  break ;
-        case _YP :  Serial2.print("Y")  ;  break ;
-        case _YM :  Serial2.print("Y-") ;  break ;
-        case _ZP :  Serial2.print("Z")  ;  break ;
-        case _ZM :  Serial2.print("Z-") ;  break ;
+        case 1 :  Serial2.print("X")  ;  break ;
+        case 5 :  Serial2.print("X-") ;  break ;
+        case 2 :  Serial2.print("Y")  ;  break ;
+        case 6 :  Serial2.print("Y-") ;  break ;
+        case 3 :  Serial2.print("Z")  ;  break ;
+        case 7 :  Serial2.print("Z-") ;  break ;
       }
       Serial2.print(distance) ; Serial2.println (" F100") ;
       //Serial.print("move for button") ; Serial.print(justPressedBtn) ;Serial.print(" ") ;  Serial.print(distance) ; Serial.println (" F100") ;
