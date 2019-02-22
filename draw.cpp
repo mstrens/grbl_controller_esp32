@@ -37,7 +37,8 @@ extern SdBaseFile aDir[DIR_LEVEL_MAX] ;
 extern uint8_t statusPrinting ;
 extern float wposXYZ[3] ;
 extern float mposXYZ[3] ;
-extern char machineStatus[9]; 
+extern char machineStatus[9];
+extern float feedSpindle[2] ;  
 
 extern char lastMsg[40] ;        // last message to display
 extern boolean lastMsgChanged ;  
@@ -414,9 +415,6 @@ void printTft(char * text ) {     // print a text on screen
   tft.print( text ) ;
 }
 
-
-
-
 // affichage d'une nouvelle page = fonction drawPage(pageIdx)
 //          remplir la page d'une couleur
 //          exécuter le pointeur correspondant aux paramètres de la page
@@ -531,9 +529,17 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   tft.setTextPadding (100) ;      // expect to clear 100 pixel when drawing text or float
   uint8_t c1 = 100, c2 = c1 + 100 ;
   line += 20 ; tft.drawFloat( wposXYZ[0] , 2 , c1 , line ); tft.drawFloat( mposXYZ[0] , 2 , c2 , line ); 
-  line += 32 ; tft.drawFloat( wposXYZ[1] , 2 , c1 , line );  tft.drawFloat( mposXYZ[1] , 2 , c2 , line );
-  line += 32 ; tft.drawFloat( wposXYZ[2] , 2 , c1 , line );  tft.drawFloat( mposXYZ[2] , 2 , c2 , line  ); 
-  // here we could add the Feed rate and the spindle rpm
+  line += 32 ; tft.drawFloat( wposXYZ[1] , 2 , c1 , line ); tft.drawFloat( mposXYZ[1] , 2 , c2 , line );
+  line += 32 ; tft.drawFloat( wposXYZ[2] , 2 , c1 , line ); tft.drawFloat( mposXYZ[2] , 2 , c2 , line  ); 
+  tft.setTextSize(1) ;
+  tft.setTextPadding (0) ;
+  tft.setTextDatum( TL_DATUM ) ;
+  line += 32 ; tft.drawString("Feed" , 5, line)  ; tft.drawString("Rpm" , 205 , line) ;
+  tft.setTextPadding (50) ;
+  tft.setTextDatum( TR_DATUM ) ;
+  tft.drawNumber( (long) feedSpindle[0] , c1 , line) ; // here we could add the Feed rate and the spindle rpm
+  tft.drawNumber( (long) feedSpindle[1] , c2 , line) ; // here we could add the Feed rate and the spindle rpm
+
 }
 
 void fNoBase(void) {
@@ -560,7 +566,7 @@ void drawDataOnSetupPage() {
   tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
   tft.setTextSize(2) ;           // char is 2 X magnified => 
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
-  tft.setTextPadding (240) ;      // expect to clear 70 pixel when drawing text or 
+  tft.setTextPadding (320) ;      // expect to clear 70 pixel when drawing text or 
   tft.setTextColor(TFT_RED, TFT_BLACK ) ;
   tft.drawString( lastMsg , 10 , 34 );
 }

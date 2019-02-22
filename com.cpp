@@ -33,7 +33,7 @@ uint8_t wposIdx = 0 ;
 uint8_t wcoIdx = 0 ;
 uint8_t fsIdx = 0 ;
 uint8_t getGrblPosState = GET_GRBL_STATUS_CLOSED ;
-float feedSpidle[2] ;
+float feedSpindle[2] ;  // first is FeedRate, second is Speed
 float wcoXYZ[3] ;
 float wposXYZ[3] ; 
 float mposXYZ[3] ;
@@ -215,7 +215,7 @@ void handleLastNumericField(void) { // decode last numeric field
           wposIdx++ ;
           strGrblIdx = 0 ; 
   } else if (  getGrblPosState == GET_GRBL_STATUS_F_DATA && fsIdx < 2) {
-          feedSpidle[fsIdx++] = temp ;
+          feedSpindle[fsIdx++] = temp ;
           strGrblIdx = 0 ; 
   } else if (  getGrblPosState == GET_GRBL_STATUS_WCO_DATA && wcoIdx < 3) {
           wcoXYZ[wcoIdx] = temp ;
