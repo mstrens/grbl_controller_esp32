@@ -11,6 +11,8 @@ void handleLastNumericField(void) ;
 void sendToGrbl( void ) ;
 //int8_t waitForOK() ;
 void sendJogCmd(void ) ;
+void fillErrorMsg( char * errorMsg ) ; 
+void fillAlarmMsg( char * alarmMsg ) ;
 
 #endif                                       
 

@@ -39,7 +39,7 @@ extern float wposXYZ[3] ;
 extern float mposXYZ[3] ;
 extern char machineStatus[9]; 
 
-extern char lastMsg[23] ;        // last message to display
+extern char lastMsg[40] ;        // last message to display
 extern boolean lastMsgChanged ;  
 
 //char sdStatusText[][20]  = { "No Sd card" , "Sd card to check" , "Sd card OK" , "Sd card error"} ;  // pour affichage en clair sur le lcd;
@@ -514,10 +514,12 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   tft.setTextPadding (120) ;      // expect to clear 70 pixel when drawing text or 
   tft.drawString( &machineStatus[0] , 315  , 0 ) ; // affiche le status GRBL (Idle,....)
   
+  //tft.setTextFont( 1 );
   tft.setTextDatum( TL_DATUM ) ; // align Left
   tft.setTextColor(TFT_RED, TFT_BLACK ) ;
   tft.drawString ( &lastMsg[0] , 5 , 32) ;
 
+  tft.setTextFont( 2 );
   tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; 
   tft.setTextDatum( TR_DATUM ) ; // align Left
   tft.setTextSize(1) ;           // char is 2 X magnified => 
@@ -538,7 +540,7 @@ void fNoBase(void) {
 }
 
 void fSetupBase(void) {
-  tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+  tft.setTextFont( 1 ); // use Font2 = 16 pixel X 7 probably
   tft.setTextColor(TFT_GREEN , TFT_BLACK ) ; // when oly 1 parameter, background = fond);
   tft.setTextSize(2) ;           // char is 2 X magnified => 
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
@@ -710,7 +712,7 @@ void touch_calibrate() {
 }
 
 void fillMsg( char * msg) {
-  memccpy ( lastMsg , msg , '\0' , 22);
+  memccpy ( lastMsg , msg , '\0' , 39);
   lastMsgChanged = true ;
 }
 

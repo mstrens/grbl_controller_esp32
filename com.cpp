@@ -55,7 +55,7 @@ extern volatile boolean waitOk ;
 extern boolean newGrblStatusReceived ;
 extern volatile uint8_t statusPrinting  ;
 extern char machineStatus[9];
-extern char lastMsg[23] ;        // last message to display
+extern char lastMsg[40] ;        // last message to display
 
 extern boolean updateFullPage ;
 
@@ -65,6 +65,8 @@ extern SdBaseFile aDir[DIR_LEVEL_MAX] ;
 extern int8_t dirLevel ;
 extern uint8_t cmdToSend ; // cmd to be send
 extern uint32_t sdNumberOfCharSent ;
+
+uint8_t wposOrMpos ;
 
 // ----------------- fonctions pour lire de GRBL -----------------------------
 void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if statusprinting = PRINTING_FROM_PC and decode the data (look for "OK", for <xxxxxx> sentence
@@ -100,8 +102,11 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
     case '\r' : // CR is sent after "error:xx"
       if( getGrblPosState == GET_GRBL_STATUS_CLOSED ) {
         if ( ( strGrblBuf[0] == 'e' && strGrblBuf[1] == 'r' ) || ( strGrblBuf[0] == 'A' && strGrblBuf[1] == 'L' ) ) {  // we got an error message or an ALARM message
-          fillMsg( strGrblBuf );           // save the error or ALARM
-        } 
+          fillErrorMsg( strGrblBuf );           // save the error or ALARM
+        } else if ( ( strGrblBuf[0] == 'A' && strGrblBuf[1] == 'L' ) ) {
+          fillAlarmMsg( strGrblBuf );  
+        }
+        
       }
       getGrblPosState = GET_GRBL_STATUS_CLOSED ;
       strGrblIdx = 0 ;                                        // reset the buffer
@@ -147,6 +152,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
     case ':' :
       if ( getGrblPosState == GET_GRBL_STATUS_WPOS_HEADER ) { // separateur entre field name et value 
          getGrblPosState = GET_GRBL_STATUS_WPOS_DATA ; 
+         wposOrMpos = strGrblBuf[0] ;       // save the first char of the string that should be MPos or WPos
          strGrblIdx = 0 ;
          strGrblBuf[strGrblIdx] = 0 ;
          wposIdx = 0 ;
@@ -199,8 +205,13 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
 void handleLastNumericField(void) { // decode last numeric field
   float temp = atof (&strGrblBuf[0]) ;
   if (  getGrblPosState == GET_GRBL_STATUS_WPOS_DATA && wposIdx < 3) {
-          wposXYZ[wposIdx] = temp ;
-          mposXYZ[wposIdx] = wposXYZ[wposIdx] + wcoXYZ[wposIdx] ;
+          if ( wposOrMpos == 'W') {                  // we got a WPos
+            wposXYZ[wposIdx] = temp ;
+            mposXYZ[wposIdx] = wposXYZ[wposIdx] + wcoXYZ[wposIdx] ;
+          } else {                                   // we got a MPos
+            mposXYZ[wposIdx] = temp ;
+            wposXYZ[wposIdx] = mposXYZ[wposIdx] - wcoXYZ[wposIdx] ;
+          }
           wposIdx++ ;
           strGrblIdx = 0 ; 
   } else if (  getGrblPosState == GET_GRBL_STATUS_F_DATA && fsIdx < 2) {
@@ -208,7 +219,12 @@ void handleLastNumericField(void) { // decode last numeric field
           strGrblIdx = 0 ; 
   } else if (  getGrblPosState == GET_GRBL_STATUS_WCO_DATA && wcoIdx < 3) {
           wcoXYZ[wcoIdx] = temp ;
-          mposXYZ[wcoIdx] = wposXYZ[wcoIdx] + wcoXYZ[wcoIdx] ; //modifié pour mettre à jour en fonction de wcoIdx au lieu de wposIdx
+          if ( wposOrMpos == 'W') {                  // we previously had a WPos so we update MPos
+            mposXYZ[wcoIdx] = wposXYZ[wcoIdx] + wcoXYZ[wcoIdx] ;  
+          } else {                                   // we previously had a MPos so we update WPos
+            mposXYZ[wcoIdx] = wposXYZ[wcoIdx] + wcoXYZ[wcoIdx] ;
+          }
+          
           wcoIdx++ ;
           strGrblIdx = 0 ;
   } 
@@ -370,5 +386,71 @@ void sendJogCmd() {
         
         //Serial.print("Send cmd jog " ); Serial.print(moveMultiplier) ; Serial.print(" " ); 
         //Serial.print(prevMoveX) ; Serial.print(" " ); Serial.print(prevMoveY) ; Serial.print(" " ); Serial.print(prevMoveZ) ;Serial.print(" ") ; Serial.println(millis()) ;
+}
+
+char * errorArrayMsg[] = { "Unknown error" , 
+              "1.Expected command letter",
+              "2.Bad number format",
+              "3.Invalid $ sytem command",
+              "4.Negative value",
+              //"5.Homing not enabled",
+              "33.Invalid motion target",
+              "6.Step pulse <3 usec",
+              "7.EEPROM read fail",
+              "8. $ while not IDLE",
+              "9.Locked (alarm or jog)",
+              "10.Homing not enabled",
+              "11.Line overflow",
+              "12.Step rate to high",
+              "13.Safety door detected",
+              "14.Line length exceeded",
+              "15.Jog travel exceeded",
+              "16.Invalid jog command",
+              "17.Laser requires PWM",
+              "Unknown error",
+              "Unknown error",
+              "20.Unsupported command",
+              "21.Modal group violation",
+              "22.Undefined feed rate",
+              "23.Cmd requires integer",
+              "24.Several axis Gcode",
+              "25.Repeated Gcode",
+              "26.Axis missing in Gcode",
+              "27.Invalid line number",
+              "28.Value missing in Gcode",
+              "29.G59 WCS not supported",
+              "30.G53 without G0 and G1",
+              "31.Axis not allowed",
+              "32.G2,G3 require a plane",
+              "33.Invalid motion target",
+              "34.Invalid arc radius",
+              "35.G2,G3 require offset",
+              "36.Unused value",
+              "37.G43.1 tool length",
+              "38.Tool number > max"
+};
+
+char * alarmArrayMsg[] = { "Unknown Alarm" , 
+              "A1.Hard limit reached(P?)",
+              "A2.Motion exceed CNC",
+              "A3.Reset in motion(P?)",
+              "A4.Probe init fail",
+              "A5.Probe travel fail" ,
+              "A6.Reset during homing",
+              "A7.Door open (homing)",
+              "A8.Limit ON(homing)",
+              "A9.Limit missing(homing)"
+}; 
+
+
+void fillErrorMsg( char * errorMsg ) {   // errorMsg contains "Error:xx"
+   int errorNum = atoi( &errorMsg[6]) ;
+   if (errorNum < 1 || errorNum > 38 ) errorNum = 0 ;
+   fillMsg( errorArrayMsg[errorNum] ) ;
+}
+void fillAlarmMsg( char * alarmMsg ) {   //alarmMsg contains "ALARM:xx"
+  int alarmNum = atoi( &alarmMsg[6]) ;
+   if (alarmNum < 1 || alarmNum > 9 ) alarmNum = 0 ;
+   fillMsg( alarmArrayMsg[alarmNum] ) ;
 }
 

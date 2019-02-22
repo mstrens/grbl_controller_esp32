@@ -30,7 +30,7 @@ extern uint8_t prevPage , currentPage ;
 
 extern uint16_t sdFileDirCnt ;
 extern char fileNames[4][23] ; // 22 car per line + "\0"
-extern char lastMsg[23] ;
+extern char lastMsg[40] ;
 extern uint16_t fileFocus ;
 extern int16_t encoderTopLine ;
 

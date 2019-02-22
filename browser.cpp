@@ -20,7 +20,7 @@ WebServer server(80);
 
 extern SdFat sd;
 
-extern char lastMsg[23] ;        // last message to display
+//extern char lastMsg[40] ;        // last message to display
  
 File root ; // used for Directory 
 
