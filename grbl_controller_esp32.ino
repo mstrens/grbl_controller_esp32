@@ -4,9 +4,6 @@
 // prévoir des icones pour les boutons
 //void fMoveBase(void) ; // fonction pour l'affichage de l'écran Move ; afficher éventuellement le déplacement depuis l'entrée dans l'écran
 //void fSetXYZBase(void) ; // fonction pour l'affichage de l'écran Set XYZ ; afficher éventuellement Wpos
-// drawDataOnInfoPage() ;  // a adapter durant les tests
-// drawDataOnMOVEPage() ;  // a adapter durant les tests
-// retirer tous les Serial.print de debugage
 
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.

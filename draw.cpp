@@ -582,6 +582,7 @@ void fMoveBase(void) {
 
 
 void fSetXYZBase(void) {                 //  En principe il n'y a rien à faire;
+  drawWposOnMovePage() ;
 }
 
 void fSdBase(void) {                // cette fonction doit vérifier que la carte est accessible et actualiser les noms des fichiers disponibles sur la carte sd
@@ -640,9 +641,9 @@ void drawWposOnMovePage() {
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextDatum( TR_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
   tft.setTextPadding (80) ;      // expect to clear 70 pixel when drawing text or 
-  
-  uint8_t line = 20 ;
-  uint8_t col = 70 ;
+  tft.drawString( "WPos:" , 5 , 20);
+  uint8_t line = 40 ;
+  uint8_t col = 60 ;
   tft.drawFloat( wposXYZ[0] , 2 , col , line ); // affiche la valeur avec 3 décimales 
   tft.drawFloat( wposXYZ[1] , 2 , col + 80 , line );
   tft.drawFloat( wposXYZ[2] , 2 , col + 160 , line );
