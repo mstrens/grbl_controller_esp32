@@ -34,6 +34,8 @@ extern char fileNames[4][23] ; // 22 car per line + "\0"
 extern uint16_t firstFileToDisplay ;   // 0 = first file in the directory
 extern SdBaseFile aDir[DIR_LEVEL_MAX] ;
 
+extern char cmdName[7][17] ;          // contains the names of the commands
+
 extern uint8_t statusPrinting ;
 extern float wposXYZ[3] ;
 extern float mposXYZ[3] ;
@@ -44,7 +46,7 @@ extern char lastMsg[40] ;        // last message to display
 extern boolean lastMsgChanged ;  
 
 //char sdStatusText[][20]  = { "No Sd card" , "Sd card to check" , "Sd card OK" , "Sd card error"} ;  // pour affichage en clair sur le lcd;
-char printingStatusText[][20] = { " " , "SD-->Grbl" , "Error SD-->Grbl" , "Pause SD-->Grbl" , "PC-->Grbl" ,  "CMD" } ; 
+char printingStatusText[][20] = { " " , "SD-->Grbl" , "Error SD-->Grbl" , "Pause SD-->Grbl" , "Usb-->Grbl" ,  "CMD" , "Telnet-->Grbl"} ; 
 
 extern int8_t prevMoveX ;
 extern int8_t prevMoveY ;
@@ -71,7 +73,8 @@ mButton[_HOME].pLabel = "Home" ;
 mButton[_UNLOCK].pLabel = "Unlock" ;
 mButton[_RESET].pLabel = "Reset" ;
 mButton[_SD].pLabel = "SD card" ;
-mButton[_PC_GRBL].pLabel = "PC->GRBL" ;
+mButton[_USB_GRBL].pLabel = "USB" ;
+mButton[_TELNET_GRBL].pLabel = "Telnet" ;
 mButton[_PAUSE].pLabel = "Pause" ;
 mButton[_CANCEL].pLabel = "Cancel" ;
 mButton[_INFO].pLabel = "Info" ;
@@ -98,13 +101,13 @@ mButton[_BACK].pLabel = "Back" ;
 mButton[_LEFT].pLabel = "<-" ;
 mButton[_RIGHT].pLabel = "->" ;
 mButton[_UP].pLabel = "UP" ;
-mButton[_CMD1].pLabel = CMD1_NAME ;
-mButton[_CMD2].pLabel = CMD2_NAME ;
-mButton[_CMD3].pLabel = CMD3_NAME ;
-mButton[_CMD4].pLabel = CMD4_NAME ;
-mButton[_CMD5].pLabel = CMD5_NAME ;
-mButton[_CMD6].pLabel = CMD6_NAME ;
-mButton[_CMD7].pLabel = CMD7_NAME ;
+mButton[_CMD1].pLabel = &cmdName[0][0] ;
+mButton[_CMD2].pLabel = &cmdName[1][0] ;
+mButton[_CMD3].pLabel = &cmdName[2][0] ;
+mButton[_CMD4].pLabel = &cmdName[3][0] ;
+mButton[_CMD5].pLabel = &cmdName[4][0] ;
+mButton[_CMD6].pLabel = &cmdName[5][0] ;
+mButton[_CMD7].pLabel = &cmdName[6][0] ;
 mButton[_MORE_PAUSE].pLabel = "More" ;
 mButton[_FILE0].pLabel = fileNames[0] ;  // labels are defined during execution in a table
 mButton[_FILE1].pLabel = fileNames[1] ;
@@ -130,7 +133,8 @@ fillMPage (_P_SETUP , 7 , _INFO , _JUST_PRESSED , fGoToPage ,  _P_INFO) ;
 mPages[_P_PRINT].titel = "Print" ;
 mPages[_P_PRINT].pfBase = fNoBase ;
 fillMPage (_P_PRINT , 0 , _SD , _JUST_PRESSED , fGoToPage , _P_SD) ;
-fillMPage (_P_PRINT , 1 , _PC_GRBL , _JUST_PRESSED , fStartPc , 0) ;
+fillMPage (_P_PRINT , 1 , _USB_GRBL , _JUST_PRESSED , fStartUsb , 0) ;
+fillMPage (_P_PRINT , 2 , _TELNET_GRBL , _JUST_PRESSED , fStartTelnet , 0) ;
 fillMPage (_P_PRINT , 3 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
 fillMPage (_P_PRINT , 7 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
 
@@ -170,27 +174,13 @@ fillMPage (_P_SD , 7 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
 mPages[_P_CMD].titel = "Select a command" ;
 mPages[_P_CMD].pfBase = fCmdBase ; // 
-#if defined( CMD1_GRBL_CODE) && defined (CMD1_NAME)
-fillMPage (_P_CMD , 0 , _CMD1 , _JUST_PRESSED , fCmd , _CMD1) ; // le paramètre contient le n° du bouton
-#endif
-#if defined( CMD2_GRBL_CODE) && defined (CMD2_NAME)
-fillMPage (_P_CMD , 1 , _CMD2 , _JUST_PRESSED , fCmd , _CMD2) ; // le paramètre contient le n° du bouton
-#endif
-#if defined( CMD3_GRBL_CODE) && defined (CMD3_NAME)
-fillMPage (_P_CMD , 2 , _CMD3 , _JUST_PRESSED , fCmd , _CMD3) ; // le paramètre contient le n° du bouton
-#endif
-#if defined( CMD4_GRBL_CODE) && defined (CMD4_NAME)
-fillMPage (_P_CMD , 3 , _CMD4 , _JUST_PRESSED , fCmd , _CMD4) ; // le paramètre contient le n° du bouton
-#endif
-#if defined( CMD5_GRBL_CODE) && defined (CMD5_NAME)
-fillMPage (_P_CMD , 4 , _CMD5 , _JUST_PRESSED , fCmd , _CMD5) ; // le paramètre contient le n° du bouton
-#endif
-#if defined( CMD6_GRBL_CODE) && defined (CMD6_NAME)
-fillMPage (_P_CMD , 5 , _CMD6 , _JUST_PRESSED , fCmd , _CMD6) ; // le paramètre contient le n° du bouton
-#endif
-#if defined( CMD7_GRBL_CODE) && defined (CMD7_NAME)
-fillMPage (_P_CMD , 6 , _CMD7 , _JUST_PRESSED , fCmd , _CMD7) ; // le paramètre contient le n° du bouton
-#endif
+if (cmdName[0][0] ) fillMPage (_P_CMD , 0 , _CMD1 , _JUST_PRESSED , fCmd , _CMD1) ; // le paramètre contient le n° du bouton
+if (cmdName[1][0] ) fillMPage (_P_CMD , 1 , _CMD2 , _JUST_PRESSED , fCmd , _CMD2) ; // le paramètre contient le n° du bouton
+if (cmdName[2][0] ) fillMPage (_P_CMD , 2 , _CMD3 , _JUST_PRESSED , fCmd , _CMD3) ; // le paramètre contient le n° du bouton
+if (cmdName[3][0] ) fillMPage (_P_CMD , 3 , _CMD4 , _JUST_PRESSED , fCmd , _CMD4) ; // le paramètre contient le n° du bouton
+if (cmdName[4][0] ) fillMPage (_P_CMD , 4 , _CMD5 , _JUST_PRESSED , fCmd , _CMD5) ; // le paramètre contient le n° du bouton
+if (cmdName[5][0] ) fillMPage (_P_CMD , 5 , _CMD6 , _JUST_PRESSED , fCmd , _CMD6) ; // le paramètre contient le n° du bouton
+if (cmdName[6][0] ) fillMPage (_P_CMD , 6 , _CMD7 , _JUST_PRESSED , fCmd , _CMD7) ; // le paramètre contient le n° du bouton
 fillMPage (_P_CMD , 7 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
 }  // end of init
@@ -213,6 +203,7 @@ void tftInit() {
   //tft.printCalibration() ;  // print calibration data (print on Serial port the calibration data ; only for debug
   tft.fillScreen(TFT_BLUE);   // clear screen
 }
+
 
 boolean convertPosToXY( uint8_t pos , int32_t *_x, int32_t *_y ){
   if (pos > 0 && pos < 9 ) {                // accept only value from 1 to 8
@@ -478,7 +469,11 @@ void updateButtonsInfoPage (void) { // met à jour le set up de la page en fonct
       fillMPage (_P_INFO , 3 , _RESUME , _JUST_PRESSED , fResume , 0 ) ;
       fillMPage (_P_INFO , 7 , _MORE_PAUSE , _JUST_PRESSED , fGoToPage , _P_PAUSE) ;
       break ;
-    case PRINTING_FROM_PC :
+    case PRINTING_FROM_USB :
+      fillMPage (_P_INFO , 3 , _STOP_PC_GRBL , _JUST_PRESSED , fStopPc , 0 ) ;
+      fillMPage (_P_INFO , 7 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
+      break ;
+    case PRINTING_FROM_TELNET :
       fillMPage (_P_INFO , 3 , _STOP_PC_GRBL , _JUST_PRESSED , fStopPc , 0 ) ;
       fillMPage (_P_INFO , 7 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
       break ;
@@ -491,14 +486,15 @@ void updateButtonsInfoPage (void) { // met à jour le set up de la page en fonct
 
 
 void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
-//              W             M                 Idle                (or Run, Alarm, ... grbl status)            
+//            USB<-->Grbl                  Idle                (or Run, Alarm, ... grbl status)  
+//                                                 So, printing status (blanco, ,SD-->Grbl  xxx%, USB<-->Grbl , Pause,  Cmd)  = printing status
+//                                                 and GRBL status (or Run, Alarm, ... grbl status)
+//            Last message                   (ex : card inserted, card removed, card error, Error: 2 
+//              Wpos          Mpos
 //            X xxxxxpos      xxxxxpos                 
 //            Y yyyyypos      yyyyypos       
 //            Z zzzzzpos      zzzzzpos  
-//            F 100           SD OK          (Sd ok, no SD, SD defect) = Sd status
-//            PC<-->Grbl                     (blanco, ,SD-->Grbl  xxx%, PC<-->Grbl , Pause,  Cmd)  = printing status
-//            Last message                   (ex : card inserted, card removed, card error, Error: 2  
-
+//            F 100           S 10000
   tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
   tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
   tft.setTextSize(2) ;           // char is 2 X magnified => 

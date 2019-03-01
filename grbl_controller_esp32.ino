@@ -1,6 +1,7 @@
 // compilé dans mon cas avec la board WEMOS LOLIN32
 
 // to do
+// tester l'impression par SD et par CMD
 // prévoir des icones pour les boutons
 //void fMoveBase(void) ; // fonction pour l'affichage de l'écran Move ; afficher éventuellement le déplacement depuis l'entrée dans l'écran
 //void fSetXYZBase(void) ; // fonction pour l'affichage de l'écran Set XYZ ; afficher éventuellement Wpos
@@ -33,29 +34,16 @@ Prévoir l'utilisation d'un nunchuck (I2C)
 Prévoir la réception de fichier sur la SD card par wifi
 
 Sur l'écran de base, prévoir l'affichage des infos
-//   Info screen number 1
-//            1     Idle                (or Run, Alarm, ... grbl status)            
+//   Info screen 
+//            USB->Grbl                  Idle                (or Run, Alarm, ... grbl status)  
+//                                                 So, printing status (blanco, ,SD-->Grbl  xxx%, USB<-->Grbl , Pause,  Cmd)  = printing status
+//                                                 and GRBL status (or Run, Alarm, ... grbl status)
+//            Last message                   (ex : card inserted, card removed, card error, Error: 2 
 //              Wpos          Mpos
 //            X xxxxxpos      xxxxxpos                 
 //            Y yyyyypos      yyyyypos       
 //            Z zzzzzpos      zzzzzpos  
-//            F 100           SD OK          (Sd ok, no SD, SD defect) = Sd status
-//            PC<-->Grbl                     (blanco, ,SD-->Grbl  xxx%, PC<-->Grbl , Pause,  Cmd)  = printing status
-//            Last message                   (ex : card inserted, card removed, card error, Error: 2  
-//    Ajouter un bouton pour accéder au menu principal
-
-Sur l'écran du menu principal
-Info   Sdcard  Cmd
-Cancel Pause/resume  Unlock
-Home Move set WCO to 0
-Pc->Grbl
-
-// céer des status
-lcdState
-sdState
-printingState
-grblState
- 
+//            F 100           S 10000 
  */
 #include "config.h"
 #include "TFT_eSPI_ms/TFT_eSPI.cpp"   // setup file has to be edited for some parameters like screen device, pins
@@ -67,6 +55,8 @@ grblState
 #include "SdFat.h"
 #include "menu_file.h"
 #include "browser.h"
+#include "telnet.h"
+#include "cmd.h"
 
 extern TFT_eSPI tft ;       // Invoke custom library
 
@@ -99,6 +89,7 @@ uint32_t sdFileSize ;
 uint32_t sdNumberOfCharSent ;
 
 //         Commande à exécuter
+char cmdName[7][17] ;     // store the names of the commands
 uint8_t cmdToSend = 0 ;   //store the cmd to be send to grbl
 
 //         printing status
@@ -112,6 +103,8 @@ boolean waitOk = false ;
 // Nunchuk data.
 extern boolean nunchukOK ;  // keep flag to detect a nunchuk at startup
 
+// status pour telnet
+boolean statusTelnetIsConnected = false ; 
 
 /***************   Prototypes of function to avoid forward references*********************************************************************/
 //uint16_t fileCnt( void ) ;  // prototype
@@ -137,10 +130,18 @@ void setup() {
   pinMode(TFT_LED_PIN , OUTPUT) ;
   digitalWrite(TFT_LED_PIN , HIGH) ;
   tftInit() ; // init screen and touchscreen, set rotation and calibrate
+  if (! spiffsInit() ) {   // just to test. Todo : change for loading the cmd in memory if the file exist in spiffs 
+    fillMsg("SPIFFS formatted") ;
+  } else {
+    if (! cmdNameInit() ) {
+      fillMsg("Cmd not loaded") ;
+    }
+  }
+//  listSpiffsDir( "/", 0 );   // uncomment to see the SPIFFS content
   
   initButtons() ; //initialise les noms des boutons, les boutons pour chaque page.
   dirLevel = -1 ;   // negative value means that SD card has to be uploaded
-// initialiser les status (notamment affichage de l'écran)
+
   nunchuk_init() ; 
   prevPage = _P_NULL ;     
   currentPage = _P_INFO ;
@@ -149,7 +150,10 @@ void setup() {
   //drawFullPage( ) ;
 #if defined ( ESP32_ACT_AS_STATION ) || defined (ESP32_ACT_AS_AP)  
   initWifi() ;
-#endif  
+  telnetInit() ;
+#endif 
+
+ 
 }
 
 //******************************** Main loop ***************************************
@@ -164,6 +168,16 @@ void loop() {
 // réaffiche l'écran (complètement ou partiellement) et fait un reset de flags
 #if defined ( ESP32_ACT_AS_STATION ) || defined (ESP32_ACT_AS_AP)
   processWifi();
+  checkTelnetConnection();
+  boolean tempTelnetIsConnected = telnetIsConnected() ;
+  if ( statusPrinting == PRINTING_FROM_TELNET && !tempTelnetIsConnected ){
+    statusPrinting = PRINTING_STOPPED ;
+    fillMsg( "Telnet disconneted" );
+  }
+  if ( tempTelnetIsConnected && !statusTelnetIsConnected ) {
+    fillMsg( "Telnet connected" ) ; 
+  }
+  statusTelnetIsConnected = tempTelnetIsConnected ;
 #endif 
  updateBtnState();  // check touch screen and update justPressedBtn ,justReleasedBtn , longPressedBtn and beginChangeBtnMillis
  drawUpdatedBtn() ;        // update color of button if pressed/released, apply actions foreseen for buttons (e.g. change currentPage) 
@@ -175,7 +189,8 @@ void loop() {
   }
 
   getFromGrblAndForward() ; // get char from serial GRBL and always decode them (check for OK, update machineStatus and positions),
-                            // if statusprinting = PRINTING_FROM_PC, then forward received char from GRBL to PC (via Serial)    
+                            // if statusprinting = PRINTING_FROM_USB or if telnet is active, then forward received char from GRBL to PC (via Serial)
+                        
 
   sendToGrbl() ;           // s'il y de la place libre dans le Tx buffer, le rempli avec le fichier de SD, une CMD ou le flux du PC; envoie périodiquement "?" pour demander le statut
 //  if (newGrblStatusReceived) Serial.println( "newStatus");

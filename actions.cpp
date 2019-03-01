@@ -4,6 +4,8 @@
 #include "FS.h"
 #include "actions.h"
 #include "menu_file.h"
+#include "telnet.h"
+#include "cmd.h"
 
 // create for touchscreeen
 extern TFT_eSPI tft ;
@@ -20,6 +22,7 @@ extern char lastMsg[40]  ;
 extern uint16_t firstFileToDisplay ;
 extern uint16_t sdFileDirCnt ;
 
+extern char cmdName[7][17] ;     // store the names of the commands
 extern uint8_t cmdToSend ;
 extern M_Page mPages[_P_MAX_PAGES] ;
 extern uint8_t currentBtn ;
@@ -27,6 +30,7 @@ extern uint8_t justPressedBtn;
 extern uint8_t justReleasedBtn;
 extern uint8_t longPressedBtn;
 extern uint32_t beginChangeBtnMillis ;
+extern boolean waitOk ;
 
 extern uint32_t cntSameMove ;
 extern uint8_t jog_status  ;
@@ -223,16 +227,15 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
 
 void fSdFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param contains l'index (0 à 3) du fichier à ouvrir
   //Serial.println("enter fsFilePrint") ;
-  if ( ! setFileToRead( param ) ) {         // try to open the file to be printed ; in case of error, go back to Info page (lastMsg is filled)
+  if ( ! setFileToRead( param ) ) {         // try to open the file to be printed ; in case of error, go back to Info page (lastMsg is already filled)
       //Serial.println("SetFileToRead is false") ;
       currentPage = _P_INFO ;
       updateFullPage = true ;
       waitReleased = true ;          // discard "pressed" until a release
       return ;
   }
-  
   if ( fileToReadIsDir () ) {   // if user press a directory, then change the directory
-    Serial.println("FileToRead is dir") ;
+    //Serial.println("FileToRead is dir") ;
     if ( ! changeDirectory() ) {
       //Serial.println("changeDirectory is false") ;
       currentPage = _P_INFO ;        // in case of error, goes to info page
@@ -243,20 +246,18 @@ void fSdFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param c
     updateFullPage = true ;
     waitReleased = true ;
     return ;
-  } else if ( ! startPrintFile() ) {  // open file (based on name) and go to info page in case of error
-    //Serial.println("startPrintFile is false") ;
-    prevPage = currentPage ;
-    currentPage = _P_INFO ;  
+  } else if ( fileIsCmd() ) { //  when a "command" file is selected, it will not be executed it but will be saved in SPIFFS  
     updateFullPage = true ;
-    waitReleased = true ;          // discard "pressed" until a release
-    return ; 
-  }
-    //Serial.println("startPrintFile is true") ;
+    waitReleased = true ;
+    return ;
+  } else {                    // file can be printed
+    waitOk = false ; // do not wait for OK before sending char.
     statusPrinting = PRINTING_FROM_SD ; // change the status, so char will be read and sent in main loop
     prevPage = currentPage ;            // go to INFO page
     currentPage = _P_INFO ; 
     updateFullPage = true ;
     waitReleased = true ;          // discard "pressed" until a release
+  }   
 }
 
 void fSdMove(uint8_t param) {     // param contient _LEFT ou _RIGTH
@@ -290,22 +291,52 @@ void fSetXYZ(uint8_t param) {     // param contient le n° de la commande
 
 void fCmd(uint8_t param) {     // param contient le n° de la commande (valeur = _CMD1, ...)
   cmdToSend = param ;         // fill the index of the command to send; sending will be done in communication module
+                              // create file name and try to open SPIFFS cmd file
+  char spiffsCmdName[21] = "/Cmd0_" ;               // begin with fix text
+  spiffsCmdName[4] = param - _CMD1 + '1' ;          // fill the cmd number (from 1...7)
+  strcat( spiffsCmdName , cmdName[param - _CMD1]) ; // add the cmd name to the first part 
+  if ( ! spiffsOpenCmdFile( spiffsCmdName ) ) {
+      fillMsg("Cmd not retrieved") ;
+      currentPage = _P_INFO ;
+      updateFullPage = true ;
+      waitReleased = true ;          // discard "pressed" until a release
+      return ;
+  }
+  waitOk = false ; // do not wait for OK before sending char.
   statusPrinting = PRINTING_CMD ;
+  currentPage = _P_INFO ;
+  updateFullPage = true ;
   waitReleased = true ;          // discard "pressed" until a release 
-  //Serial.println("In fCmd") ;
 }
 
-void fStartPc(uint8_t param){
+void fStartUsb(uint8_t param){
   if( statusPrinting == PRINTING_STOPPED ) {
     while ( Serial.available() ) {      // clear the incomming buffer 
       Serial.read() ;
     }
-    statusPrinting = PRINTING_FROM_PC ;
+    statusPrinting = PRINTING_FROM_USB ;
   }
   currentPage = _P_INFO ;  // go to page Info
   updateFullPage = true ;
   waitReleased = true ;
 }  
+
+void fStartTelnet(uint8_t param){
+  if( statusPrinting == PRINTING_STOPPED ) {
+    checkTelnetConnection();
+    if ( telnetIsConnected() ) {
+      clearTelnetBuffer() ;
+      statusPrinting = PRINTING_FROM_TELNET ;
+    } else { 
+      fillMsg( "No telnet connection" );   
+    }
+  }
+  currentPage = _P_INFO ;  // go to page Info
+  updateFullPage = true ;
+  waitReleased = true ;
+}  
+
+
 
 void fStopPc(uint8_t param){
   statusPrinting = PRINTING_STOPPED ;

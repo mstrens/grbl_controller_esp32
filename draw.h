@@ -24,7 +24,7 @@ struct M_Button {
 };
 
 // Liste des boutons disponibles
-enum {_SETUP = 1, _PRINT , _HOME, _UNLOCK , _RESET , _SD , _PC_GRBL , _PAUSE , _CANCEL , _INFO , _CMD ,
+enum {_SETUP = 1, _PRINT , _HOME, _UNLOCK , _RESET , _SD , _USB_GRBL , _TELNET_GRBL, _PAUSE , _CANCEL , _INFO , _CMD ,
 _MOVE , _RESUME , _STOP_PC_GRBL , _XP , _XM , _YP , _YM , _ZP , _ZM, _D_AUTO , _D0_01 , _D0_1 , _D1, _D10 ,
 _SETX , _SETY , _SETZ, _SETXYZ , _BACK , _LEFT, _RIGHT , _UP ,
  _CMD1 ,_CMD2 ,_CMD3 ,_CMD4 ,_CMD5 ,_CMD6 ,_CMD7 , _MORE_PAUSE , _FILE0 , _FILE1 , _FILE2 , _FILE3 , _MAX_BTN} ; // keep _MAX_BTN latest
@@ -36,7 +36,7 @@ enum { _P_NULL = 0  , _P_INFO , _P_SETUP , _P_PRINT , _P_PAUSE , _P_MOVE , _P_SE
 enum { _JUST_PRESSED = 1 , _JUST_RELEASED , _JUST_LONG_PRESSED , _LONG_PRESSED , _JUST_LONG_PRESSED_RELEASED } ;
 
 // Liste des statuts d'impression
-enum { PRINTING_STOPPED = 0 , PRINTING_FROM_SD , PRINTING_ERROR , PRINTING_PAUSED , PRINTING_FROM_PC , PRINTING_CMD } ;
+enum { PRINTING_STOPPED = 0 , PRINTING_FROM_SD , PRINTING_ERROR , PRINTING_PAUSED , PRINTING_FROM_USB , PRINTING_CMD , PRINTING_FROM_TELNET } ;
 
 // fonctions pour un bouton (index du bouton): 
 //          mButtonDraw(position , btnIdx) // dessine le bouton à une place correspondant à l'index 

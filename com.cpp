@@ -4,6 +4,9 @@
 #include "SdFat.h"
 #include "draw.h"
 #include "nunchuk.h"
+#include <WiFi.h> 
+#include "telnet.h"
+#include "cmd.h"
 
 // GRBL status are : Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep
 // a message should look like (note : GRBL sent or WPOS or MPos depending on grbl parameter : to get WPos, we have to set "$10=0"
@@ -66,6 +69,8 @@ extern int8_t dirLevel ;
 extern uint8_t cmdToSend ; // cmd to be send
 extern uint32_t sdNumberOfCharSent ;
 
+extern WiFiClient telnetClient;
+
 uint8_t wposOrMpos ;
 
 // ----------------- fonctions pour lire de GRBL -----------------------------
@@ -86,9 +91,10 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
       Serial.print( (char) c) ; 
       //if  (c == 0x0A || c == 0x0C ) Serial.println(millis()) ;
 #endif      
-    if ( statusPrinting == PRINTING_FROM_PC ) {
+    if ( statusPrinting == PRINTING_FROM_USB ) {
       Serial.print( (char) c) ;                         // forward characters from GRBL to PC when PRINTING_FROM_PC
     }
+    sendViaTelnet((char) c) ;
     switch (c) {                                // parse char received from grbl
     case 'k' :
       if ( lastC == 'o' ) {
@@ -261,43 +267,31 @@ void sendToGrbl( void ) {
       updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
       Serial2.print( (char) 0x10 ) ; // sent a new line to be sure that Grbl handle last line.
     }
-  } else if ( statusPrinting == PRINTING_FROM_PC ) {
-    while ( Serial.available() && statusPrinting == PRINTING_FROM_PC ) {
+  } else if ( statusPrinting == PRINTING_FROM_USB ) {
+    while ( Serial.available() && statusPrinting == PRINTING_FROM_USB ) {
       sdChar = Serial.read() ;
       Serial2.print( (char) sdChar ) ;
     } // end while       
+  } else if ( statusPrinting == PRINTING_FROM_TELNET ) {
+    while ( telnetClient.available() && statusPrinting == PRINTING_FROM_TELNET ) {
+      sdChar = telnetClient.read() ;
+      Serial2.print( (char) sdChar ) ;
+    } // end while       
   } else if ( statusPrinting == PRINTING_CMD ) {
-    if ( cmdToSend >= 1 && cmdToSend <= 7 ) {
-      switch ( cmdToSend ) {
-      case 1 :
-        Serial2.print( CMD1_GRBL_CODE ) ;
-        break ;
-      case 2 :
-        Serial2.print( CMD2_GRBL_CODE ) ;
-        break ;
-      case 3 :
-        Serial2.print( CMD3_GRBL_CODE ) ;
-        break ;
-      case 4 :
-        Serial2.print( CMD4_GRBL_CODE ) ;
-        break ;
-      case 5 :
-        Serial2.print( CMD5_GRBL_CODE ) ;
-        break ;
-      case 6 :
-        Serial2.print( CMD6_GRBL_CODE ) ;
-        break ;
-      case 7 :
-        Serial2.print( CMD7_GRBL_CODE ) ;
-        break ;
-      } // end switch
-      cmdToSend = 0 ;
-      Serial2.print( '\n' ) ; // send end of line
-      Serial2.flush() ;       // wait that all char are really sent
-      delay (30) ; // wait for GRBL having sent "OK"  
-    } // end if
-    statusPrinting = PRINTING_STOPPED  ;
-    //updateFullPage = true ; No need to redraw the page because we stay on the same page which is CMD page
+    while ( spiffsAvailableCmdFile() > 0 && (! waitOk) && statusPrinting == PRINTING_CMD && Serial2.availableForWrite() > 2 ) {
+      sdChar = (int) spiffsReadCmdFile() ;
+      if( sdChar != 13){
+          Serial2.print( (char) sdChar ) ;
+        }
+      if ( sdChar == '\n' ) {
+           waitOk = true ;
+        }
+    } // end while
+    if ( spiffsAvailableCmdFile() == 0 ) { 
+      statusPrinting = PRINTING_STOPPED  ; 
+      updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
+      Serial2.print( (char) 0x10 ) ; // sent a new line to be sure that Grbl handle last line.
+    }      
   } // end else if  
   if ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_PAUSED ) {   // process nunchuk cancel and commands
     if ( jogCancelFlag ) {
@@ -346,7 +340,7 @@ void sendToGrbl( void ) {
      
   }  // end of nunchuk process
   
-  if ( statusPrinting != PRINTING_FROM_PC ) {     // when PC is master, it is the PC that asks for GRBL status
+  if ( statusPrinting != PRINTING_FROM_USB && statusPrinting != PRINTING_FROM_TELNET) {     // when PC is master, it is the PC that asks for GRBL status
     currSendMillis = millis() ;                   // ask GRBL current status every X millis sec. GRBL replies with a message with status and position
     if ( currSendMillis > nextSendMillis) {
        nextSendMillis = currSendMillis + 300 ;

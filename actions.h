@@ -17,7 +17,8 @@ void fDist(uint8_t param) ; // change le bouton distance affiché de manière cy
 void fSetXYZ(uint8_t param) ;
 void fSdMove(uint8_t param) ;
 void fCmd(uint8_t param) ;
-void fStartPc(uint8_t param) ;
+void fStartUsb(uint8_t param) ;
+void fStartTelnet(uint8_t param) ;
 void fStopPc(uint8_t param) ;
 
 void handleAutoMove( uint8_t param) ;

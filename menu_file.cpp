@@ -13,6 +13,8 @@
 #include "config.h"
 #include "draw.h"
 #include "actions.h"
+#include "cmd.h"
+
 
 extern SdFat sd;
 //extern File root ;
@@ -130,10 +132,10 @@ uint16_t fileCnt( void ) {
 boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and update the table used to display file name button ; 
                                 // this function assumes that aDir[dirLevel] is defined and is the current dir
                                 // it assumes also that sdFileDirCnt has been calculated and that
-                                // firstFileToDisplay contains the index (starting at 0) of the first file name to display in the workDir
+                                // firstFileToDisplay contains the index (starting at 1) of the first file name to display in the workDir
 // Pour afficher l'écran SD, on utilise
 //     un compteur du nbre de fichiers ( sdFileDirCnt )
-//     un index du premier fichier affiché ( firstFileToDisplay )
+//     un index du premier fichier affiché ( firstFileToDisplay  (1 = premier fichier; 0 = pas de fichier) )
 //     il faut remplir les 4 premiers boutons (max) avec les noms des 4 fichiers à partir de l'index
 //     S'il y a moins de 4 fichiers, on ne crée pas les dernier boutons
   
@@ -186,10 +188,9 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
   return true ;
 }      
 
-boolean startPrintFile( ) {                        // open the file given fy ffileToRead ; return false when error after filling a message, 
+boolean startPrintFile( ) {                         
   sdFileSize = aDir[dirLevel+1].fileSize() ;
   sdNumberOfCharSent = 0 ;
-  //Serial.print("file size=") ; Serial.println(sdFileSize) ;
   statusPrinting = PRINTING_FROM_SD ;
   waitOk = false ; // do not wait for OK before sending char.
   return true ;
@@ -199,23 +200,38 @@ void closeFileToRead() {
   aDir[dirLevel+1].close() ;
 }
 
-boolean setFileToRead ( uint8_t fileIdx ) { // fileIdx is a number from 0...3 related to the button being pressed
-  uint16_t cntIdx = fileIdx + firstFileToDisplay - 1; 
+boolean setFileToRead ( uint8_t fileIdx ) { // fileIdx is a number from 0...3 related to the button being pressed; return false when error after filling a message,
+                                            // firstFileToDisplay starts from 1 (or is 0 when there is no file)
+                                            // if OK, return is true and aDir[dirLevel+1] point to the file and sdFileSize = size of file
+  uint16_t cntIdx =  fileIdx + firstFileToDisplay ; 
   uint16_t cnt = 0;
   aDir[dirLevel].rewind();
-  aDir[dirLevel+1].close()  ;
-  while ( cnt <= cntIdx ) {
-//    Serial.print("cnt= ") ; Serial.print(cnt) ; Serial.print(" , Idx= ") ; Serial.println(cntIdx) ; 
-//    Serial.print("workDir is dir= ") ; Serial.println(workDir.isDirectory() );
-//    Serial.print("dirName=") ; Serial.println(workDir.name() );
+  //aDir[dirLevel+1].close()  ;
+//  Serial.print("firstFileToDisplay= ") ; Serial.println(firstFileToDisplay) ;
+//  Serial.print("fileIdx= ") ; Serial.println(fileIdx) ;
+//  Serial.print(" , cntIdx= ") ; Serial.println(cntIdx) ; 
+//  Serial.print("diLevel is dir= ") ; Serial.println(aDir[dirLevel].isDir() );
+//  char dirName[32] = "error" ;
+//  boolean dirNameOk ;
+//  dirNameOk = aDir[dirLevel].getName(dirName, 31) ;
+//  Serial.print("dir OK=") ; Serial.println(dirNameOk);
+//  Serial.print("dirName=") ; Serial.println(dirName );
+  while ( cnt < cntIdx ) {
+//      Serial.print("cnt= ") ; Serial.println(cnt) ; 
+      aDir[dirLevel+1].close() ;
       if (  ! aDir[dirLevel+1].openNext( &aDir[dirLevel] ) ) {       
-        fillMsg( "selected file missing" ) ;
+        fillMsg( "Selected file missing" ) ;
         aDir[dirLevel+1].close() ;
         dirLevel = -1 ;                         // in case of error, force a reset of SD card
         return false ; 
-    }
-    cnt++ ;
+      }
+      cnt++ ;
+                                               // keep aDir[dirLevel+1] open when found
   }
+//  dirNameOk = aDir[dirLevel+1].getName(dirName, 31) ;
+//  Serial.print("file OK=") ; Serial.println(dirNameOk);
+//  Serial.print("fileName=") ; Serial.println(dirName );
+  
   // here fileToread is filled
   sdFileSize = aDir[dirLevel+1].fileSize() ;
   sdNumberOfCharSent = 0 ;
@@ -225,6 +241,50 @@ boolean setFileToRead ( uint8_t fileIdx ) { // fileIdx is a number from 0...3 re
 boolean fileToReadIsDir( ) {
   return aDir[dirLevel+1].isDir() ;
 }
+
+boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cmd and if so, copy it into the SPIFFS, return true if it is cmd file
+                                // command file names look like Cmd5_name.xxx where
+                                //             Cmd and _ are fixed
+                                //             5 is the digit of the Cmd (must be between 1 and 7)
+                                //             name is the name given to the button (must be less than 16 char and begin with a letter a...z or A...Z)
+                                //             xxx is the extension and is discarded
+  char fileName[32] ;
+  char * pchar ;
+  int sdChar = 0 ;
+  if (! aDir[dirLevel+1].getName(fileName , 31) ) {   // fill fileName
+    fillMsg( "File name not found" ); 
+    return false ;
+  }
+  if ( strlen(fileName) < 6 || fileName[0] != 'C' || fileName[1] != 'm' || fileName[2] != 'd' || fileName[3] < '1' || fileName[3] > '7' || fileName[4] != '_' || (!isalpha(fileName[5]) )  ){
+    return false ;
+  }
+  // here we assume that the file name identifies a command; so we can store it on SPIFFS
+  // first we remove the extension
+  pchar = strchr(fileName , '.' );   // replace the first '.' by 0 (= skip the file extension)
+  if ( ! pchar == NULL ) {
+    *pchar = 0 ;
+  }
+  deleteFileLike( fileName ) ;    // then look in SPIFFS for files beginning by Cmdx_ and if found, delete them
+  if ( ! createFileCmd(fileName ) ) {      // then create the new file name
+       fillMsg("Cmd not created") ;
+       aDir[dirLevel+1].close() ; // close the file from SD card
+       return true ;
+  }
+  while ( aDir[dirLevel+1].available() > 0 ) {
+      sdChar = aDir[dirLevel+1].read() ;
+      if ( sdChar < 0 ) {
+        fillMsg("Cmd: part not read") ;
+        break ;
+      } else if ( ! writeFileCmd( (char) sdChar) ) {  // write the char in SPIFFS; on error, break
+        fillMsg("Cmd: could not save") ;
+        break ; 
+      }
+  } // end while
+  aDir[dirLevel+1].close() ; // close the file from SD card
+  closeFileCmd() ;
+  return true ;  
+}
+
 
 boolean changeDirectory() {      // change the directory when selected file is a directory; aDir[dirLevel+1] is the directory
   /*char dirName[23] ;

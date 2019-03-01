@@ -34,22 +34,7 @@
 
 #define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
 
-//        commands available in menu
-#define CMD1_GRBL_CODE "*X"
-#define CMD2_GRBL_CODE "G01 X02"
-#define CMD3_GRBL_CODE "G01 X03"
-#define CMD4_GRBL_CODE "G01 X04"
-#define CMD5_GRBL_CODE "G01 X05"
-#define CMD6_GRBL_CODE "G01 X06"
-#define CMD7_GRBL_CODE "G01 X07"
 
-#define CMD1_NAME " Unlock GRBL"
-#define CMD2_NAME "G01 X02"
-#define CMD3_NAME "G01 X03"
-#define CMD4_NAME "G01 X04"
-#define CMD5_NAME "G01 X05"
-#define CMD6_NAME "G01 X06"
-#define CMD7_NAME "G01 X07"
 
 
 //                                    normally do not change here below
@@ -64,6 +49,24 @@
 #define DIR_LEVEL_MAX 6
 
 #define MAX_FILES 4
+
+//        commands available in menu ; this part is normally not used anymore because cmd are defined in SPIFFS
+//#define CMD1_GRBL_CODE "*X"
+//#define CMD2_GRBL_CODE "G01 X02"
+//#define CMD3_GRBL_CODE "G01 X03"
+//#define CMD4_GRBL_CODE "G01 X04"
+//#define CMD5_GRBL_CODE "G01 X05"
+//#define CMD6_GRBL_CODE "G01 X06"
+//#define CMD7_GRBL_CODE "G01 X07"
+
+//#define CMD1_NAME " Unlock GRBL"
+//#define CMD2_NAME "G01 X02"
+//#define CMD3_NAME "G01 X03"
+//#define CMD4_NAME "G01 X04"
+//#define CMD5_NAME "G01 X05"
+//#define CMD6_NAME "G01 X06"
+//#define CMD7_NAME "G01 X07"
+
 
 #endif
 
