@@ -1,7 +1,19 @@
 #ifndef _config_h
 #define _config_h
 
-// pins for touch screen are defined in tft_espi User_Setup.h file
+// decide if you will use Wifi or not (and how)
+#define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
+
+// If wifi is used, set the parameter to identify the access point (= the router when ESP32_ACT_AS_STATION or the ESP32 when ESP32_ACT_AS_AP)
+#define MY_SSID "bbox2-58c4"       // replace by the name of your access point 
+
+// Only for ESP32_ACT_AS_STATION , set the password to get access to your access point (router)
+#define MY_PASSWORD "alineloriejulien"   // replace by the password of your access point
+
+
+// Here some pins (GPIO) being used
+//************************************
+// pin (GPIO) for touch screen are defined in tft_espi User_Setup.h file
 //#define TS_CS_PIN  15
 
 // Note: SPI is currently hardcoded for using following pins
@@ -10,15 +22,17 @@
 
 #define TFT_LED_PIN 25       // pin connected to led of lcd; pin has to be high to set led ON
 
+// other TFT pins are defined in tft_espi User_Setup.h file
+
 #define SD_CHIPSELECT_PIN 26  //5  // pin for SD card selection // to change probably
 
-// pins for Serial to GRBL
+// pins for Serial to GRBL (it uses Serial2 UART)
 #define SERIAL2_RXPIN 16
 #define SERIAL2_TXPIN 17
 
 // pin for Nunchuk are currently the defalult I2C pin so pins 21, 22
 
-// This is the file name used to store the touch coordinate
+// This is the file name used to store the touch coordinate in the SPIFFS from ESP32 (in es32 flash memory)
 // calibration data. Cahnge the name to start a new calibration.
 #define CALIBRATION_FILE "/TouchCalData3"
 
@@ -28,11 +42,18 @@
 #define REPEAT_CAL false
 
 
-// Set the parameter to connect to an access point (router) for the local network
-#define MY_SSID "bbox2-58c4"       // replace by the name of your access point
-#define MY_PASSWORD "alineloriejulien"   // replace by the password of your access point
-
-#define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
+// note: this project allows to define up to 7 GRBL set of commands (makros) that can be called from setup screen.
+// Those are defined by the user on a sd card and loaded on request into the ESP32 flash memory system (SPIFFS)
+// So, once uploaded, they can be called without SD card.
+// To be recognise as command, file name must be like Cmd3_xxxxxxxx.yyyy where
+//       Cmd _ is fixed text (take care to the case)
+//       3 is a digit from 1 up to 7; it defines the position of the button
+//       xxxxxxxx will be the name of the button; first char must be a letter; min 1, max 16 characters, no space
+//       yyy is the file name extension; it will be discarded
+// The files to be used for upload must be placed in the root directory of SD card.
+// To upload one of them, use the "Print" + "SD->GRBL" menus and then select the file.
+// After reset, there will be a button named xxxxxxxxx in the "Setup" + "CMD" menu
+// If you upload a file having the same digit (= button position) as an existing button, the new file will replace the button name and content of the previous button. 
 
 
 
