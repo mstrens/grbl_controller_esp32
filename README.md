@@ -38,7 +38,7 @@ To move the axis, you have to move the joystick (up/down/left/right) and simulta
 - press the Z button to move Z axis
 Nunchuk is automatically disconnected when the source of Gcode USB or Telnet.
 
-#Hardware
+## Hardware
 
 To implement this project you need:
 - an ESP32 development board and
@@ -51,7 +51,7 @@ It should also be possible to use a separate SD card support.<br>
 Note: this configuration uses the ILI9341 with 4 wires (CLK, MOSI, MISO and CD).<br>
 Currently, this project works only with a TFT having a ILI9341 chip, a resolution of 320X240 and XPT2046 chip for the touch screen. If you are using another display, you should change the code yourself.
 
-#Software
+## Software
 
 This project compiles in Arduino IDE but it requires:
 - to add in Arduino IDE the software that support ESP32. The process is explained e.g. in this link
@@ -74,10 +74,10 @@ When done, an arrow should also be displayed sucessively in the 3 others corners
 This should normally be done only once. The calibration data are stored automatically in the ESP32.<br>   
 If you want to recalibrate your screen, you should change the "config.h" file (parameter 
 
-#Wiring the ESP32
+## Wiring the ESP32
 
 Here the connections being used in my own setup.<br>
-Between ESP32 and TFT.
+#### Between ESP32 and TFT.
 - 5V  - - - - - -> Vcc (on my TFT, it provides internally voltage to SD card)
 - Gpio13 - - -> CS(chip select)
 - Grnd - - - -> Grnd (on my TFT, it provides internally grnd to SD card)
@@ -89,34 +89,34 @@ Between ESP32 and TFT.
 - Gpio23 - - -> MOSI
 
 
-Between ESP32 and touch screen
+#### Between ESP32 and touch screen
 - Gpio27 - - -> CS (chip select)
 - Gpio18 - - -> CLK
 - Gpio19 - - -> MISO(T_DO)
 - Gpio23 - - -> MOSI(T_DIN)
 
 
-Between ESP32 and SD card
+#### Between ESP32 and SD card
 - Gpio26 - - -> CS (chip select)
 - Gpio18 - - -> CLK
 - Gpio19 - - -> MISO
 - Gpio23 - - -> MOSI
 
 
-Between ESP32 and GRBL computer
+#### Between ESP32 and GRBL computer
 - Gpio16 is the Serial port Rx from ESP32; It has to be connected to TX pin from GRBL
 - Gpio17 is the Serial port Tx from ESP32; It has to be connected to RX pin from GRBL
 Note : Grnd has to be common between ESP32 and GRBL computer.
 
 
-Between ESP32 and Nunchuk
+#### Between ESP32 and Nunchuk
 - 3.3V => Vcc
 - Grnd => Grnd
 - Gpio21 => SDA
 - Gpio22 => SCL
 
 
-#Control of GRBL from the PC
+## Control of GRBL from the PC
 
 In order to control GRBL from a PC, you can use the software bCNC on the PC.\
 It allows you to connect ESP32 using a com port (USB) or using wifi.\
@@ -136,7 +136,7 @@ Once USB or Telnet is activated, you can't anymore use the ESP32 options (Setup,
 The only thing you can do on ESP32 side is to select the button "Stop PC" which will stop the flow of data exchanged with the PC.\
 
 
-#Control of SD card content from the PC
+## Control of SD card content from the PC
 
 In order to manage the files on the SD card from the PC, you have to:
 - open a browser session (chrome, ...)
