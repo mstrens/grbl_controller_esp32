@@ -1,4 +1,5 @@
 # grbl_controller_esp32
+
 This Grbl controller runs on a ESP32
 
 This project allows to control a CNC running GRBL without having to use a pc.<br>
@@ -37,6 +38,8 @@ To move the axis, you have to move the joystick (up/down/left/right) and simulta
 - press the Z button to move Z axis
 Nunchuk is automatically disconnected when the source of Gcode USB or Telnet.
 
+#Hardware
+
 To implement this project you need:
 - an ESP32 development board and
 - a display module combining 3 components:
@@ -47,6 +50,8 @@ To implement this project you need:
 It should also be possible to use a separate SD card support.<br> 
 Note: this configuration uses the ILI9341 with 4 wires (CLK, MOSI, MISO and CD).<br>
 Currently, this project works only with a TFT having a ILI9341 chip, a resolution of 320X240 and XPT2046 chip for the touch screen. If you are using another display, you should change the code yourself.
+
+#Software
 
 This project compiles in Arduino IDE but it requires:
 - to add in Arduino IDE the software that support ESP32. The process is explained e.g. in this link
@@ -69,6 +74,7 @@ When done, an arrow should also be displayed sucessively in the 3 others corners
 This should normally be done only once. The calibration data are stored automatically in the ESP32.<br>   
 If you want to recalibrate your screen, you should change the "config.h" file (parameter 
 
+#Wiring the ESP32
 
 Here the connections being used in my own setup.<br>
 Between ESP32 and TFT.
@@ -108,4 +114,34 @@ Between ESP32 and Nunchuk
 - Grnd => Grnd
 - Gpio21 => SDA
 - Gpio22 => SCL
+
+
+#Control of GRBL from the PC
+
+In order to control GRBL from a PC, you can use the software bCNC on the PC.\
+It allows you to connect ESP32 using a com port (USB) or using wifi.\
+To install bCNC, follow the instructions from this site: https://github.com/vlachoudis/bCNC/wiki/Installation \
+For Windows, do not use the exe file but start intalling python2.7 and then install bCNC using pip.\
+At march 2019, this does not install the latest version of pyserial software. \
+To install the latest version of pyserial, you have to enter (in the command windows): pip install --upgrade pyserial \
+Then, you can launch bCNC with the command: python.exe -m bCNC.\
+
+In bCNC, select the "File" tab, and in the serial part, in field port, enter:\
+- for a USB connection : comX    (where X is the com port when using Arduino)
+- for a Wifi (telnet) connection : socket://192.168.1.5:23 (where 192.168.1.5 has to be replaced by the IP adress assign to your ESP32)
+
+Then click on the "Open" button in bCNC.\
+And finally, on ESP32, select the Print button and then "USB" or "Telnet".\
+Once USB or Telnet is activated, you can't anymore use the ESP32 options (Setup, ...).\
+The only thing you can do on ESP32 side is to select the button "Stop PC" which will stop the flow of data exchanged with the PC.\
+
+
+#Control of SD card content from the PC
+
+In order to manage the files on the SD card from the PC, you have to:
+- open a browser session (chrome, ...)
+- fill in the URL of your ESP32 e.g. //192.168.1.5 (the value is displayed on the setup screen on ESP32)
+- then click on the buttons Download, Upload , Delete, Directory
+Note: you can only interact with the root of the SD card (not the sub directories).
+ 
 	
