@@ -327,6 +327,7 @@ void fStartTelnet(uint8_t param){
     if ( telnetIsConnected() ) {
       clearTelnetBuffer() ;
       statusPrinting = PRINTING_FROM_TELNET ;
+      //fillMsg( "Connected to telnet" );
     } else { 
       fillMsg( "No telnet connection" );   
     }

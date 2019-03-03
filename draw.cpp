@@ -57,6 +57,8 @@ extern uint8_t jog_status  ;
 extern boolean jogCancelFlag ;
 extern boolean jogCmdFlag  ; 
 
+extern boolean statusTelnetIsConnected ;
+
 
 // rempli le paramétrage des boutons de chaque page 
 void fillMPage (uint8_t _page , uint8_t _btnPos , uint8_t _boutons, uint8_t _actions , void (*_pfNext)(uint8_t) , uint8_t _parameters ) {
@@ -471,11 +473,11 @@ void updateButtonsInfoPage (void) { // met à jour le set up de la page en fonct
       break ;
     case PRINTING_FROM_USB :
       fillMPage (_P_INFO , 3 , _STOP_PC_GRBL , _JUST_PRESSED , fStopPc , 0 ) ;
-      fillMPage (_P_INFO , 7 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
+      fillMPage (_P_INFO , 7 , _NO_BUTTON , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
       break ;
     case PRINTING_FROM_TELNET :
       fillMPage (_P_INFO , 3 , _STOP_PC_GRBL , _JUST_PRESSED , fStopPc , 0 ) ;
-      fillMPage (_P_INFO , 7 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
+      fillMPage (_P_INFO , 7 ,_NO_BUTTON , _JUST_PRESSED , fGoToPage, _P_INFO ) ;
       break ;
     case PRINTING_CMD :
       fillMPage (_P_INFO , 3 , _PAUSE , _JUST_PRESSED , fPause , 0 ) ;
@@ -511,7 +513,16 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   //tft.setTextFont( 1 );
   tft.setTextDatum( TL_DATUM ) ; // align Left
   tft.setTextColor(TFT_RED, TFT_BLACK ) ;
+  tft.setTextPadding (320) ;  
   tft.drawString ( &lastMsg[0] , 5 , 32) ;
+
+  tft.setTextColor(TFT_GREEN, TFT_BLACK ) ;
+  tft.setTextPadding (10) ;  
+  if ( statusTelnetIsConnected ) {
+    tft.drawString ( "T" , 2 , 62 ) ;
+  } else {
+    tft.drawString ( "#" , 2 , 62 ) ;
+  }  
 
   tft.setTextFont( 2 );
   tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; 

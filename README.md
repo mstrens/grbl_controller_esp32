@@ -20,7 +20,7 @@ This application allows to:
    This is e.g. useful to configure GRBL from the PC with GRBL "$" commands.<br>
    The Gcode/commands can be sent using or <br>
    - the USB (serial) interface that exist on the ESP32 developement board.<br>
-   - a telnet protocol over Wifi (in this case, best is to use BCC software on pc side because it support telnet connection)
+   - a telnet protocol over Wifi (in this case, best is to use BCNC software on pc side because it support telnet connection)
 - let a browser session running on pc connect to the ESP32 over Wifi in order to upload/download files between the pc and the SD card.
    So you can avoid physical manipulation of SD card.
    This works currently only with the root directory on the SD card (not with subdirectory) 

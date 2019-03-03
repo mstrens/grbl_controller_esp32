@@ -267,16 +267,19 @@ void sendToGrbl( void ) {
       updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
       Serial2.print( (char) 0x10 ) ; // sent a new line to be sure that Grbl handle last line.
     }
+    
   } else if ( statusPrinting == PRINTING_FROM_USB ) {
     while ( Serial.available() && statusPrinting == PRINTING_FROM_USB ) {
       sdChar = Serial.read() ;
       Serial2.print( (char) sdChar ) ;
-    } // end while       
+    } // end while 
+          
   } else if ( statusPrinting == PRINTING_FROM_TELNET ) {
     while ( telnetClient.available() && statusPrinting == PRINTING_FROM_TELNET ) {
       sdChar = telnetClient.read() ;
       Serial2.print( (char) sdChar ) ;
     } // end while       
+  
   } else if ( statusPrinting == PRINTING_CMD ) {
     while ( spiffsAvailableCmdFile() > 0 && (! waitOk) && statusPrinting == PRINTING_CMD && Serial2.availableForWrite() > 2 ) {
       sdChar = (int) spiffsReadCmdFile() ;
@@ -346,6 +349,11 @@ void sendToGrbl( void ) {
        nextSendMillis = currSendMillis + 300 ;
        Serial2.print("?") ; 
     }
+  }
+  if( statusPrinting != PRINTING_FROM_TELNET ) {
+    while ( telnetClient.available() && statusPrinting != PRINTING_FROM_TELNET ) {
+      sdChar = telnetClient.read() ;
+    } // end while  
   }
 }  
 

@@ -2,6 +2,9 @@
 
 // to do
 // tester l'impression par SD et par CMD
+// tester l'impression par telnet et BCC
+// prévoir une indication pour dire si on est connecté à telnet
+// détecter la fin d'une connection telnet
 // prévoir des icones pour les boutons
 //void fMoveBase(void) ; // fonction pour l'affichage de l'écran Move ; afficher éventuellement le déplacement depuis l'entrée dans l'écran
 //void fSetXYZBase(void) ; // fonction pour l'affichage de l'écran Set XYZ ; afficher éventuellement Wpos
@@ -38,7 +41,8 @@ Sur l'écran de base, prévoir l'affichage des infos
 //            USB->Grbl                  Idle                (or Run, Alarm, ... grbl status)  
 //                                                 So, printing status (blanco, ,SD-->Grbl  xxx%, USB<-->Grbl , Pause,  Cmd)  = printing status
 //                                                 and GRBL status (or Run, Alarm, ... grbl status)
-//            Last message                   (ex : card inserted, card removed, card error, Error: 2 
+//            Last message                  (ex : card inserted, card removed, card error, Error: 2 ; 
+//            T                                   T = telnet connected or # = telnet not connected
 //              Wpos          Mpos
 //            X xxxxxpos      xxxxxpos                 
 //            Y yyyyypos      yyyyypos       
@@ -172,11 +176,11 @@ void loop() {
   boolean tempTelnetIsConnected = telnetIsConnected() ;
   if ( statusPrinting == PRINTING_FROM_TELNET && !tempTelnetIsConnected ){
     statusPrinting = PRINTING_STOPPED ;
-    fillMsg( "Telnet disconneted" );
+    fillMsg( "Telnet disconnected" );
   }
-  if ( tempTelnetIsConnected && !statusTelnetIsConnected ) {
-    fillMsg( "Telnet connected" ) ; 
-  }
+//  if ( tempTelnetIsConnected && !statusTelnetIsConnected ) {
+//    fillMsg( "Telnet connected" ) ; 
+//  }
   statusTelnetIsConnected = tempTelnetIsConnected ;
 #endif 
  updateBtnState();  // check touch screen and update justPressedBtn ,justReleasedBtn , longPressedBtn and beginChangeBtnMillis
