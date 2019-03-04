@@ -121,14 +121,17 @@ Note : Grnd has to be common between ESP32 and GRBL computer.
 In order to control GRBL from a PC, you can use the software bCNC on the PC.\
 It allows you to connect ESP32 using a com port (USB) or using wifi.\
 To install bCNC, follow the instructions from this site: https://github.com/vlachoudis/bCNC/wiki/Installation \
-For Windows, do not use the exe file but start intalling python2.7 and then install bCNC using pip.\
+For Windows, do not use the exe file (at march 2019 it did not work) but start intalling python2.7 and then install bCNC using pip.\
 At march 2019, this does not install the latest version of pyserial software. \
-To install the latest version of pyserial, you have to enter (in the command windows): pip install --upgrade pyserial \
+So, you have to enter also (in the command windows): pip install --upgrade pyserial \
 Then, you can launch bCNC with the command: python.exe -m bCNC.\
+Note: if you already have a version 3 of python running on your PC, it could be that you have to type: python2.exe -m bCNC.\
 
-In bCNC, select the "File" tab, and in the serial part, in field port, enter:\
-- for a USB connection : comX    (where X is the com port when using Arduino)
+In bCNC, select the "File" tab, and in the Serial part, in field Port, enter:\
+- for a USB connection : comX    (where X is the com port assigned to ESP32 e.g. with Arduino)
 - for a Wifi (telnet) connection : socket://192.168.1.5:23 (where 192.168.1.5 has to be replaced by the IP adress assign to your ESP32)
+
+In bCNC, in the serial part, in field Controller, enter the type of GRBL you are using, so probably it will be GRBL1.\
 
 Then click on the "Open" button in bCNC.\
 And finally, on ESP32, select the Print button and then "USB" or "Telnet".\

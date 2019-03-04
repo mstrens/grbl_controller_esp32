@@ -85,7 +85,9 @@ void fCmdBase(void) ; // fonction pour l'affichage del'écran Cmd
 void updateButtonsInfoPage() ; // met à jour le set up de la page en fonction du statut d'impression
 void drawDataOnInfoPage()  ; // affiche les données sur la page d'info
 void drawWposOnMovePage() ;
-void drawDataOnSetupPage() ;
+void drawDataOnSetupPage() ;  // affiche wpos et distance since entry on this screen
+void drawDataOnSetXYZPage() ; // affiche wpos
+void drawWposOnSetXYZPage() ; // affiche Wpos
 void drawWifiOnSetupPage() ; // affiche l'adresse IP sur l'écran set up
 
 void fillMsg( char * msg) ;

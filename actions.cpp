@@ -134,7 +134,6 @@ void fDist( uint8_t param ) {
 }  
 
 void fMove( uint8_t param ) {
-  // ToDo ajouter une détection des appuis répétés sur la touche
     float distance ;
     uint32_t moveMillis = millis() ;
     static uint32_t prevMoveMillis ;
@@ -286,7 +285,8 @@ void fSetXYZ(uint8_t param) {     // param contient le n° de la commande
   case _SETZ : Serial2.println("G10 L20 P1 Z0") ;  break ;
   case _SETXYZ : Serial2.println("G10 L20 P1 X0 Y0 Z0") ;  break ;
   }
-  waitReleased = true ;          // discard "pressed" until a release 
+  waitReleased = true ;          // discard "pressed" until a release
+                                 // update will be done when we receive a new GRBL status message
 }
 
 void fCmd(uint8_t param) {     // param contient le n° de la commande (valeur = _CMD1, ...)

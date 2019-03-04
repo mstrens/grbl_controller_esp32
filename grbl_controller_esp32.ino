@@ -3,10 +3,8 @@
 // to do
 // tester l'impression par SD et par CMD
 // tester l'impression par telnet et BCC
-// prévoir une indication pour dire si on est connecté à telnet
-// détecter la fin d'une connection telnet
 // prévoir des icones pour les boutons
-//void fMoveBase(void) ; // fonction pour l'affichage de l'écran Move ; afficher éventuellement le déplacement depuis l'entrée dans l'écran
+
 //void fSetXYZBase(void) ; // fonction pour l'affichage de l'écran Set XYZ ; afficher éventuellement Wpos
 
 /*
@@ -199,7 +197,7 @@ void loop() {
   sendToGrbl() ;           // s'il y de la place libre dans le Tx buffer, le rempli avec le fichier de SD, une CMD ou le flux du PC; envoie périodiquement "?" pour demander le statut
 //  if (newGrblStatusReceived) Serial.println( "newStatus");
 
-  if (newGrblStatusReceived == true && ( currentPage == _P_INFO || currentPage == _P_MOVE ) ) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
+  if (newGrblStatusReceived == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ ) ) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
     updatePartPage = true ;
   }
   if (newGrblStatusReceived == true && ( currentPage == _P_SETUP) ) { //force a refresh if a message has been received from GRBL and we are in a setup screen

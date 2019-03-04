@@ -59,6 +59,7 @@ extern boolean jogCmdFlag  ;
 
 extern boolean statusTelnetIsConnected ;
 
+float wposMoveInitXYZ[3] ;
 
 // rempli le paramétrage des boutons de chaque page 
 void fillMPage (uint8_t _page , uint8_t _btnPos , uint8_t _boutons, uint8_t _actions , void (*_pfNext)(uint8_t) , uint8_t _parameters ) {
@@ -442,6 +443,8 @@ void drawPartPage() {          // update only the data on screen (not the button
     drawWposOnMovePage() ;
   } else if (currentPage == _P_SETUP ){
     drawDataOnSetupPage() ;
+  } else if (currentPage == _P_SETXYZ ){
+    drawDataOnSetXYZPage() ;
   }
 }
 
@@ -530,7 +533,7 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextPadding (160) ;      // expect to clear 70 pixel when drawing text or 
   uint16_t line = 90 ;
-  tft.drawString( "Wpos          Xpos" , 150 , line ) ;     // affiche un texte
+  tft.drawString( "Wpos          Mpos" , 150 , line ) ;     // affiche un texte
   tft.setTextSize(2) ;
   
   tft.setTextPadding (100) ;      // expect to clear 100 pixel when drawing text or float
@@ -579,8 +582,11 @@ void drawDataOnSetupPage() {
 }
 
 void fMoveBase(void) {
-  // reset button 3 with distance 0.01mm = default)
-  fillMPage (_P_MOVE , 3 , _D_AUTO , _JUST_LONG_PRESSED , fDist , 0) ;
+  
+  fillMPage (_P_MOVE , 3 , _D_AUTO , _JUST_LONG_PRESSED , fDist , 0) ;  // reset the button for autochange of speed
+  wposMoveInitXYZ[0] = wposXYZ[0];             // save the position when entering (so we calculate distance between current pos and init pos on this screen)
+  wposMoveInitXYZ[1] = wposXYZ[1];
+  wposMoveInitXYZ[2] = wposXYZ[2];
   drawWposOnMovePage() ;
   // multiplier = 0.01 ; // à voir si cela sera encore utilisé (si on met à jour le bouton distance au fur et à mesure, on peut l'utiliser pour calculer 
   // movePosition = 0 ;  à utiliser si on l'affiche 
@@ -589,8 +595,27 @@ void fMoveBase(void) {
 
 
 void fSetXYZBase(void) {                 //  En principe il n'y a rien à faire;
-  drawWposOnMovePage() ;
+  drawWposOnSetXYZPage() ;
 }
+
+void drawDataOnSetXYZPage() {
+  drawWposOnSetXYZPage() ;
+}
+
+void drawWposOnSetXYZPage() {
+  tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+  tft.setTextColor(TFT_GREEN , TFT_BLACK ) ; // when oly 1 parameter, background = fond);
+  tft.setTextSize(1) ;           // char is 2 X magnified => 
+  tft.setTextDatum( TR_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
+  tft.setTextPadding (80) ;      // expect to clear 70 pixel when drawing text or   
+  uint8_t line = 40 ;
+  uint8_t col = 60 ;
+  tft.drawFloat( wposXYZ[0] , 2 , col , line ); // affiche la valeur avec 3 décimales 
+  tft.drawFloat( wposXYZ[1] , 2 , col + 80 , line );
+  tft.drawFloat( wposXYZ[2] , 2 , col + 160 , line );
+  tft.drawString( "WPos" , col + 240 , line);
+}
+
 
 void fSdBase(void) {                // cette fonction doit vérifier que la carte est accessible et actualiser les noms des fichiers disponibles sur la carte sd
   if ( ! sdStart() ) {           // try to read the SD card; en cas d'erreur, rempli last message et retourne false
@@ -648,12 +673,18 @@ void drawWposOnMovePage() {
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextDatum( TR_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
   tft.setTextPadding (80) ;      // expect to clear 70 pixel when drawing text or 
-  tft.drawString( "WPos:" , 5 , 20);
+  
   uint8_t line = 40 ;
   uint8_t col = 60 ;
   tft.drawFloat( wposXYZ[0] , 2 , col , line ); // affiche la valeur avec 3 décimales 
   tft.drawFloat( wposXYZ[1] , 2 , col + 80 , line );
   tft.drawFloat( wposXYZ[2] , 2 , col + 160 , line );
+  tft.drawString( "WPos" , col + 240 , line);
+  line += 15 ;
+  tft.drawFloat( wposXYZ[0] - wposMoveInitXYZ[0] , 2 , col , line ); // affiche la valeur avec 3 décimales 
+  tft.drawFloat( wposXYZ[1] - wposMoveInitXYZ[1] , 2 , col + 80 , line );
+  tft.drawFloat( wposXYZ[2] - wposMoveInitXYZ[2] , 2 , col + 160 , line ) ;
+  tft.drawString( "Move" , col + 240 , line);
 }
 
 
