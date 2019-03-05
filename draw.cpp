@@ -506,10 +506,13 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   tft.setTextDatum( TL_DATUM ) ; // align Left
   tft.setTextPadding (200) ; 
   tft.drawString ( &printingStatusText[statusPrinting][0] , 5 , 0 )  ;
+  tft.setTextDatum( TR_DATUM ) ;
   if ( statusPrinting == PRINTING_FROM_SD ) {
-      tft.print(" ") ; tft.print( (uint8_t) ( 100 * sdNumberOfCharSent / sdFileSize) ) ; tft.print("%") ;
+      tft.setTextPadding (40) ;
+      tft.drawNumber( ( (100 * sdNumberOfCharSent) / sdFileSize), 170 , 0 ) ;
+      tft.setTextPadding (1) ;
+      tft.drawString( "%" , 190 , 0 ) ;
   }
-  tft.setTextDatum( TR_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
   tft.setTextPadding (120) ;      // expect to clear 70 pixel when drawing text or 
   tft.drawString( &machineStatus[0] , 315  , 0 ) ; // affiche le status GRBL (Idle,....)
   
@@ -528,27 +531,29 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   }  
 
   tft.setTextFont( 2 );
-  tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; 
-  tft.setTextDatum( TR_DATUM ) ; // align Left
+  tft.setTextColor(TFT_WHITE ,  TFT_BLACK) ; 
+  tft.setTextDatum( TR_DATUM ) ; 
   tft.setTextSize(1) ;           // char is 2 X magnified => 
-  tft.setTextPadding (160) ;      // expect to clear 70 pixel when drawing text or 
+  tft.setTextPadding (0) ;      // expect to clear 70 pixel when drawing text or 
   uint16_t line = 90 ;
-  tft.drawString( "Wpos          Mpos" , 150 , line ) ;     // affiche un texte
+  tft.drawString( "Wpos             Mpos" , 190 , line ) ;     // affiche un texte
   tft.setTextSize(2) ;
-  
+  tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ;
   tft.setTextPadding (100) ;      // expect to clear 100 pixel when drawing text or float
-  uint8_t c1 = 100, c2 = c1 + 100 ;
+  uint8_t c1 = 110, c2 = c1 + 120 ;
   line += 20 ; tft.drawFloat( wposXYZ[0] , 2 , c1 , line ); tft.drawFloat( mposXYZ[0] , 2 , c2 , line ); 
   line += 32 ; tft.drawFloat( wposXYZ[1] , 2 , c1 , line ); tft.drawFloat( mposXYZ[1] , 2 , c2 , line );
   line += 32 ; tft.drawFloat( wposXYZ[2] , 2 , c1 , line ); tft.drawFloat( mposXYZ[2] , 2 , c2 , line  ); 
   tft.setTextSize(1) ;
   tft.setTextPadding (0) ;
   tft.setTextDatum( TL_DATUM ) ;
-  line += 32 ; tft.drawString("Feed" , 5, line)  ; tft.drawString("Rpm" , 205 , line) ;
-  tft.setTextPadding (50) ;
+  tft.setTextColor(TFT_WHITE ,  TFT_BLACK) ; 
+  line += 32 ; tft.drawString("Feed" , 90 , line)  ; tft.drawString("Rpm" , 205 , line) ;
+  tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ;
+  tft.setTextPadding (80) ;
   tft.setTextDatum( TR_DATUM ) ;
-  tft.drawNumber( (long) feedSpindle[0] , c1 , line) ; // here we could add the Feed rate and the spindle rpm
-  tft.drawNumber( (long) feedSpindle[1] , c2 , line) ; // here we could add the Feed rate and the spindle rpm
+  tft.drawNumber( (long) feedSpindle[0] , 80 , line) ; // here we could add the Feed rate and the spindle rpm
+  tft.drawNumber( (long) feedSpindle[1] , 200 , line) ; // here we could add the Feed rate and the spindle rpm
 
 }
 

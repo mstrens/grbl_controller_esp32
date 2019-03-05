@@ -3,10 +3,7 @@
 // to do
 // tester l'impression par SD et par CMD
 // tester l'impression par telnet et BCC
-// prévoir des icones pour les boutons
-
-//void fSetXYZBase(void) ; // fonction pour l'affichage de l'écran Set XYZ ; afficher éventuellement Wpos
-
+// prévoir des icones pour les boutons?????
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.
 
