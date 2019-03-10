@@ -3,7 +3,7 @@
 // to do
 // tester l'impression par SD et par CMD
 // tester l'impression par telnet et BCC
-// prévoir des icones pour les boutons?????
+// prévoir des icones pour les boutons; on peut créer des charactères en format RLE
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.
 

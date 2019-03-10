@@ -139,6 +139,7 @@ fillMPage (_P_PRINT , 0 , _SD , _JUST_PRESSED , fGoToPage , _P_SD) ;
 fillMPage (_P_PRINT , 1 , _USB_GRBL , _JUST_PRESSED , fStartUsb , 0) ;
 fillMPage (_P_PRINT , 2 , _TELNET_GRBL , _JUST_PRESSED , fStartTelnet , 0) ;
 fillMPage (_P_PRINT , 3 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
+fillMPage (_P_PRINT , 6 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;
 fillMPage (_P_PRINT , 7 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
 
 mPages[_P_PAUSE].titel = "Paused" ;
@@ -524,12 +525,23 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
 
   tft.setTextColor(TFT_GREEN, TFT_BLACK ) ;
   tft.setTextPadding (10) ;  
+  
+  //if ( statusTelnetIsConnected ) {
+  //  tft.drawString ( "T" , 2 , 62 ) ;
+  //} else {
+  //  tft.drawString ( "#" , 2 , 62 ) ;
+  //}  
   if ( statusTelnetIsConnected ) {
-    tft.drawString ( "T" , 2 , 62 ) ;
+    tft.setTextSize(1) ;
+    tft.setTextColor(TFT_GREEN, TFT_BLACK ) ;    // display in green when connected
   } else {
-    tft.drawString ( "#" , 2 , 62 ) ;
-  }  
-
+    tft.setTextSize(1) ;
+    tft.setTextColor(TFT_RED, TFT_BLACK ) ;      // display in red when not connected
+  } 
+  tft.setTextFont( 4 );
+  
+  tft.drawChar (  0x7F , 2 , 62 ) ;  // char 0x7E in font 4 has been redesigned to get the Wifi logo
+  
   tft.setTextFont( 2 );
   tft.setTextColor(TFT_WHITE ,  TFT_BLACK) ; 
   tft.setTextDatum( TR_DATUM ) ; 
