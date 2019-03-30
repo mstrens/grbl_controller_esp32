@@ -37,10 +37,10 @@ extern uint8_t jog_status  ;
 extern boolean jogCancelFlag ;
 extern boolean jogCmdFlag  ; 
 
-extern int8_t prevMoveX ;
-extern int8_t prevMoveY ;
-extern int8_t prevMoveZ ;
-extern float moveMultiplier ;
+extern int8_t jogDistX ;
+extern int8_t jogDistY ;
+extern int8_t jogDistZ ;
+//extern float moveMultiplier ;
 
 uint32_t prevAutoMoveMillis ;
 
@@ -175,13 +175,14 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
                                       // param contains the touch being pressed or the released if no touch has been pressed
 #define AUTO_MOVE_REPEAT_DELAY 100
   uint8_t pressedBtn  = 0 ;
+  float moveMultiplier ;
   uint32_t autoMoveMillis = millis() ;
   if ( justReleasedBtn )  {
       jogCancelFlag = true ;                                // cancel any previous move when a button is released (even before asking for another jog
       cntSameMove = 0 ;             // reset the counter
        //Serial.println("cancel jog") ;
   } else {
-        jogCancelFlag = false ;
+      jogCancelFlag = false ;
   }
   if ( ( autoMoveMillis - prevAutoMoveMillis ) <  AUTO_MOVE_REPEAT_DELAY ) {
     return ;   
@@ -194,7 +195,7 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
       pressedBtn = longPressedBtn ; 
       prevAutoMoveMillis = autoMoveMillis ;
     }
-  if ( pressedBtn ) {
+  if ( ( pressedBtn ) && (jogCmdFlag == false) ) {
     if (cntSameMove == 0 ) { 
       moveMultiplier = 0.01 ; 
     } else if (cntSameMove < 5 ) {   // avoid to send to fast a new move
@@ -209,16 +210,16 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
       moveMultiplier = 1 ;
     } 
     cntSameMove++ ;
-    prevMoveX = 0 ;           // reset all deplacements
-    prevMoveY = 0 ;
-    prevMoveZ = 0 ;
+    jogDistX = 0 ;           // reset all deplacements
+    jogDistY = 0 ;
+    jogDistZ = 0 ;
     switch ( pressedBtn ) {  // fill one direction of move
-      case 1 :  prevMoveX = 1  ;  break ;
-      case 5 :  prevMoveX = -1 ;  break ;
-      case 2 :  prevMoveY = 1  ;  break ;
-      case 6 :  prevMoveY = -1 ;  break ;
-      case 3 :  prevMoveZ = 1 ;  break ;
-      case 7 :  prevMoveZ = -1 ;  break ;
+      case 1 :  jogDistX = 1  ;  break ;
+      case 5 :  jogDistX = -1 ;  break ;
+      case 2 :  jogDistY = 1  ;  break ;
+      case 6 :  jogDistY = -1 ;  break ;
+      case 3 :  jogDistZ = 1 ;  break ;
+      case 7 :  jogDistZ = -1 ;  break ;
     }
     jogCmdFlag = true ;                 // the flag will inform the send module that there is a command to be sent based on moveMultiplier and preMove. 
   }

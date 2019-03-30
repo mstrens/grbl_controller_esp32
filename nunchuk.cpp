@@ -35,6 +35,9 @@ uint8_t nunchuk_data[6];
 int8_t prevMoveX = 0;
 int8_t prevMoveY = 0;
 int8_t prevMoveZ = 0;
+int8_t jogDistX = 0;
+int8_t jogDistY = 0;
+int8_t jogDistZ = 0;
 float moveMultiplier ;
 uint32_t cntSameMove = 0 ;
 
@@ -54,7 +57,7 @@ void nunchuk_init() {
     Wire.begin();
     // Change TWI speed for nuchuk, which uses Fast-TWI (400kHz)
     // Normally this will be set in twi_init(), but this hack works without modifying the original source
-    Wire.setClock(400000);
+    Wire.setClock(100000);
     delay(500);    // delay ajouté pour donner le temps à la nunchuk de s'initialiser
 
     Wire.beginTransmission(NUNCHUK_ADDRESS);
@@ -186,10 +189,13 @@ void handleNunchuk (void) {
         } else if (cntSameMove < 20 ) {
           moveMultiplier = 1 ;
         } else {
-          moveMultiplier = 1 ;
+          moveMultiplier = 3 ;
         } 
         cntSameMove++ ;
         jogCmdFlag = true ;
+        jogDistX = moveX;
+        jogDistY = moveY;
+        jogDistZ = moveZ;
       } else {               // no move asked ( moveX || moveY || moveZ) 
         cntSameMove = 0 ; 
         jogCmdFlag = false ;

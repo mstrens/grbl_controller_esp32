@@ -45,9 +45,9 @@ float mposXYZ[3] ;
 char strGrblBuf[STR_GRBL_BUF_MAX_SIZE] ; // this buffer is used to store a few char received from GRBL before decoding them
 uint8_t strGrblIdx ;
 
-extern int8_t prevMoveX ;
-extern int8_t prevMoveY ;
-extern int8_t prevMoveZ ;
+extern int8_t jogDistX ;
+extern int8_t jogDistY ;
+extern int8_t jogDistZ ;
 extern float moveMultiplier ;
 // used by nunchuck
 extern uint8_t jog_status  ;
@@ -359,28 +359,28 @@ void sendToGrbl( void ) {
 
 void sendJogCmd() {
         Serial2.print("$J=G91 G21") ;
-        if (prevMoveX > 0) {
+        if (jogDistX > 0) {
           Serial2.print(" X") ;
-        } else if (prevMoveX ) {
+        } else if (jogDistX ) {
           Serial2.print(" X-") ;
         }
-        if (prevMoveX ) {
+        if (jogDistX ) {
           Serial2.print(moveMultiplier) ;
         }  
-        if (prevMoveY > 0) {
+        if (jogDistY > 0) {
           Serial2.print(" Y") ;
-        } else if (prevMoveY ) {
+        } else if (jogDistY ) {
           Serial2.print(" Y-") ;
         }
-        if (prevMoveY ) {
+        if (jogDistY ) {
           Serial2.print(moveMultiplier) ;
         }
-        if (prevMoveZ > 0) {
+        if (jogDistZ > 0) {
           Serial2.print(" Z") ;
-        } else if (prevMoveZ ) {
+        } else if (jogDistZ ) {
           Serial2.print(" Z-") ;
         }
-        if (prevMoveZ ) {
+        if (jogDistZ ) {
           Serial2.print(moveMultiplier) ;
         }
         Serial2.print(" F2000");  Serial2.print( (char) 0x0A) ;
