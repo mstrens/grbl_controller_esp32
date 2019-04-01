@@ -417,6 +417,7 @@ void printTft(char * text ) {     // print a text on screen
 //                 si le n° du bouton existe
 //                    afficher le bouton
 void drawFullPage() {
+  //uint32_t fullPageMillis = millis();
   tft.fillScreen( TFT_BLACK ) ;
   mPages[currentPage].pfBase();   // exécute la fonction de base prévue pour la page
   //Serial.println("drawFullPage: fin de l'appel de la page de base") ;
@@ -432,7 +433,7 @@ void drawFullPage() {
     i++ ;
 //    Serial.print(i); 
   }
-  //Serial.println("end drawFullPage");
+  //Serial.print("drawFullPage takes");Serial.println(millis() - fullPageMillis); // most of time it takes about 100msec to redraw the full screen
 }
 
 void drawPartPage() {          // update only the data on screen (not the button)

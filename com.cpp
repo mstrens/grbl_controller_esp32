@@ -391,7 +391,7 @@ void sendJogCmd() {
 }
 
 char * errorArrayMsg[] = { "Unknown error" , 
-              "1.Expected command letter",
+              "1.Expected cmd letter",
               "2.Bad number format",
               "3.Invalid $ sytem command",
               "4.Negative value",

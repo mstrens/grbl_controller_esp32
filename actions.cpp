@@ -106,7 +106,7 @@ void fCancel(uint8_t param) {
 }
 
 void fPause(uint8_t param) {
-  if( statusPrinting == PRINTING_FROM_SD  && machineStatus[0] == 'R') {
+  if( statusPrinting == PRINTING_FROM_SD  && ( machineStatus[0] == 'R' || machineStatus[0] == 'J' ) ) { // test on J added mainly for test purpose
   #define PAUSE_CMD "!" 
     Serial2.print(PAUSE_CMD) ;
     statusPrinting = PRINTING_PAUSED ;
@@ -119,6 +119,7 @@ void fResume(uint8_t param) {
   #define RESUME_CMD "~" 
     Serial2.print(RESUME_CMD) ;
     statusPrinting = PRINTING_FROM_SD ;
+    updateFullPage = true ;      // we have to redraw the buttons because Resume should become Pause
   }
   waitReleased = true ;          // discard "pressed" until a release 
 }
@@ -251,8 +252,12 @@ void fSdFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param c
     waitReleased = true ;
     return ;
   } else {                    // file can be printed
-    waitOk = false ; // do not wait for OK before sending char.
-    statusPrinting = PRINTING_FROM_SD ; // change the status, so char will be read and sent in main loop
+    waitOk = false ;
+    Serial2.print(PAUSE_CMD) ;
+    delay(10);
+    Serial2.print("?") ;
+    //waitOk = false ; // do not wait for OK before sending char.
+    statusPrinting = PRINTING_PAUSED ; // initially it was PRINTING_FROM_SD ; // change the status, so char will be read and sent in main loop
     prevPage = currentPage ;            // go to INFO page
     currentPage = _P_INFO ; 
     updateFullPage = true ;
