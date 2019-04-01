@@ -55,6 +55,15 @@ void fGoToPage(uint8_t param) {
 //  delay(10000);
 }
 
+void fGoToPageAndClearMsg(uint8_t param) {
+  fillMsg(" ") ;
+  prevPage = currentPage ;
+  currentPage = param ;
+  updateFullPage = true ; 
+  waitReleased = true ;          // discard "pressed" until a release 
+}
+
+
 void fGoBack(uint8_t param) {
   //Serial.print( "go back : " ) ; Serial.println( prevPage) ; // just for testing // to do
   

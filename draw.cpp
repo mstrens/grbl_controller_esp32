@@ -131,7 +131,7 @@ fillMPage (_P_SETUP , 3 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT ) ;
 fillMPage (_P_SETUP , 4 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE ) ;
 fillMPage (_P_SETUP , 5 , _SETXYZ , _JUST_PRESSED , fGoToPage , _P_SETXYZ ) ;
 fillMPage (_P_SETUP , 6 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;
-fillMPage (_P_SETUP , 7 , _INFO , _JUST_PRESSED , fGoToPage ,  _P_INFO) ;
+fillMPage (_P_SETUP , 7 , _INFO , _JUST_PRESSED , fGoToPageAndClearMsg ,  _P_INFO) ;
 
 mPages[_P_PRINT].titel = "Print" ;
 mPages[_P_PRINT].pfBase = fNoBase ;

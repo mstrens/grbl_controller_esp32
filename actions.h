@@ -2,6 +2,7 @@
 #define _actions_h
 
 void fGoToPage(uint8_t param); // fonction pour aller à une autre page // param = page où aller.
+void fGoToPageAndClearMsg(uint8_t param);   // fonction pour aller à une autre page en ayant effacer le last Message // param = page où aller.
 void fGoBack(uint8_t param) ;
 
 void fHome(uint8_t param); // fonction pour traiter Home // param = page où aller.
