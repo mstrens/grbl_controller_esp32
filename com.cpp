@@ -265,7 +265,8 @@ void sendToGrbl( void ) {
     if ( aDir[dirLevel+1].available() == 0 ) { 
       statusPrinting = PRINTING_STOPPED  ; 
       updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
-      Serial2.print( (char) 0x10 ) ; // sent a new line to be sure that Grbl handle last line.
+      //Serial2.print( (char) 0x18 ) ; //0x85) ;   // cancel jog (just for testing); must be removed
+      Serial2.print( (char) 10 ) ; // sent a new line to be sure that Grbl handle last line.
     }
     
   } else if ( statusPrinting == PRINTING_FROM_USB ) {
@@ -298,6 +299,7 @@ void sendToGrbl( void ) {
   } // end else if  
   if ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_PAUSED ) {   // process nunchuk cancel and commands
     if ( jogCancelFlag ) {
+/*
       if ( jog_status == JOG_NO ) {
         Serial2.print( (char) 0x85) ;  Serial2.print("G4P0") ; Serial2.print( (char) 0x0A) ;    // to be execute after a cancel jog in order to get an OK that says that grbl is Idle.
         Serial2.flush() ;             // wait that all outgoing char are really sent.
@@ -319,7 +321,14 @@ void sendToGrbl( void ) {
           }
         }
       } 
+*/
+      Serial2.print( '!') ;
+      Serial2.flush() ;
+      delay(10);
+      Serial2.print( '~') ;
+      jogCancelFlag = false ;
     }
+    
     if ( jogCmdFlag ) {
       if ( jog_status == JOG_NO ) {
         sendJogCmd() ;                

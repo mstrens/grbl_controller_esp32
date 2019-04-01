@@ -592,6 +592,13 @@ void fSetupBase(void) {
 
 void drawDataOnSetupPage() {  
   tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+  tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
+  tft.setTextSize(2) ;           // char is 2 X magnified => 
+  tft.setTextDatum( TR_DATUM ) ;
+  tft.setTextPadding (120) ;      // expect to clear 70 pixel when drawing text or 
+  tft.drawString( &machineStatus[0] , 315  , 0 ) ; // affiche le status GRBL (Idle,....)
+ 
+  tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
   tft.setTextSize(2) ;           // char is 2 X magnified => 
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
   tft.setTextPadding (320) ;      // expect to clear 70 pixel when drawing text or 

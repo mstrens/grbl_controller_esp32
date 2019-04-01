@@ -195,7 +195,7 @@ void loop() {
   sendToGrbl() ;           // s'il y de la place libre dans le Tx buffer, le rempli avec le fichier de SD, une CMD ou le flux du PC; envoie périodiquement "?" pour demander le statut
 //  if (newGrblStatusReceived) Serial.println( "newStatus");
 
-  if (newGrblStatusReceived == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ ) ) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
+  if (newGrblStatusReceived == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP ) ) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
     updatePartPage = true ;
   }
   if (newGrblStatusReceived == true && ( currentPage == _P_SETUP) ) { //force a refresh if a message has been received from GRBL and we are in a setup screen
