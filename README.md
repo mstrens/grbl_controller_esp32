@@ -162,12 +162,13 @@ It displays:
 ### Setup screen displays:
 - The IP address to be used if you want to
   - upload/download/delete/list files from the root directory on the SD. This IP has to be entered in a PC browsing session
-  - use a telnet (=wifi) connection to controm GRBL
+  - use a telnet (=wifi) connection to control GRBL
   - The GRBL status
 - The last message from GRBL
-- some buttons to request from GRBL a Homing, an unlock, a soft reset
+- some buttons to request from GRBL a Homing, an unlock or a soft reset
 - some buttons to access other screens
-### Print screen displays some buttons to select between
+### Print screen
+It displays some buttons to select between
 - printing a file from the SD card; you will then get a screen with a list of files/directories on the SD card
 - printing/controlling GRBL from the PC using the USB connection.
 - printing/controlling GRBL from the PC using a telnet connection.
@@ -175,21 +176,24 @@ It displays:
 Note: with USB and Telnet, the ESP32 works in "passthrough". It means that it works just like the PC was directly connected to GRBL.
 So, Once USB or Telnet is activated, you can't anymore use the ESP32 options (Setup, ...).\
 The only thing you can do on ESP32 side is to view the current position and status and to select the button "Stop PC" which will stop the flow of data exchanged with the PC.\
-### Move screen allows you to move your motoers in the X, Y and Z axis.
+### Move screen
+It allows to move the motors in the X, Y and Z axis.
 - It displays the current work positions and the distances moved since this screen has been entered.
 - there are 2 kinds of moves
-- when the button "Auto" is displayed, it means that the distances to move depends on the duration of pressing a X,Y,R button. When you keep pressing, the distance (and the speed) increases)
-- If you press the "Auto" button, it will be repladed by "0.01". It means that each press on X, Y,Z will move by 0.01 mm (or inch depending on the GRBL setting).
-- Pressing 0.01 button changes it to 0.1. Pressing again, it becomes 1, 10 and finally back to Auto
-### Set XYZ screen allows you to set the work coordinates X, Y, Z or all to zero at the current machine position.
-### Cmd screen allows you to execute some set of predefined Gcode commands. It is a kind of macros that you can define yourself (e.g. for probing, changing coordinates system, ...)
-- you can define up to 7 commands (the name and the Gcode commands
-- to define/update a Cmd button, you have to edit a file on your pc with one set of Gcode commands and save it under a name like Cmd5_name.xxx where
+  - when the button "Auto" is displayed, it means that the distances to move depends on the duration of pressing a X,Y,R button. When you keep pressing, the speed increases.  When you releases, the motor stops)
+  - If you press the "Auto" button, the button will be renamed "0.01". It means that each press on X, Y,Z will move by 0.01 mm (or inch depending on the GRBL setting). Button X,Y,Z has to be released and pressed again to move a new step.
+   Pressing 0.01 button changes it to 0.1. Pressing again, it becomes 1, 10 and finally back to Auto.
+### Set XYZ screen
+It allows to set the work coordinates X, Y, Z (or all 3) to zero at the current machine position.
+### Cmd screen
+It allows you to execute some set of predefined Gcode commands. It is a kind of macros that you can define yourself (e.g. for probing, changing coordinates system, ...)
+- you can define up to 7 commands (the name and the Gcode commands)
+- to define/update a Cmd button, you have to fill in a file on your pc with one set of Gcode commands and save it under a name like Cmd5_name.xxx where
   - Cmd and _ are fixed
   - 5 is replaced by the digit of the Cmd (must be between 1 and 7)
   - name is replaced by the name given to the button (must be less than 16 char and begin with a letter a...z or A...Z)
   - xxx is the file extension and is discarded
 - this file has to be copied/uploaded on the SD card
-- if you select such a file with the Print from SD Card menu, the file will not be printed but the Cmd button will be created and the Gcode commands will be saved in the ESP32.
-- So you can later use the Cmd buttons even if the SD card is not present.
-Note: "Printing" a file having the same button digit as an existing Cmd button will replace as well the name as the Gcode of the button  
+- you have to select this file with the Print from SD Card option. The file (due to the structure of the name) will not be printed but the Cmd button will be created and the Gcode commands will be saved in the ESP32.
+- So, later on, you can use the Cmd buttons even if the SD card is not present.
+Note: "Printing" a file having the same Cmd digit as an existing Cmd button will replace as well the name as the Gcode of the button  
