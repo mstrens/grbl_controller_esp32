@@ -206,6 +206,11 @@ It allows you to execute some set of predefined Gcode commands. It is a kind of 
   - name is replaced by the name given to the button (must be less than 16 char and begin with a letter a...z or A...Z)
   - xxx is the file extension and is discarded
 - this file has to be copied/uploaded on the SD card
-- you have to select this file with the Print from SD Card option. The file (due to the structure of the name) will not be printed but the Cmd button will be created and the Gcode commands will be saved in the ESP32.
+- you have to select this file with the Print from SD Card option.
+ The file (due to the structure of the name) will not be printed but the Cmd button will be created and the Gcode commands will be saved in the ESP32.
 - So, later on, you can use the Cmd buttons even if the SD card is not present.
-Note: "Printing" a file having the same Cmd digit as an existing Cmd button will replace as well the name as the Gcode of the button  
+Notes:
+- A button being added will be displayed only after the next reset of ESP32.
+- "Printing" a file having the same Cmd digit as an existing Cmd button will replace as well the name as the Gcode of the button 
+- to delete a Cmd button, "Print" a file having a name equal to "delete" So, e.g. "Cmd2_delete.xxx" will delete the second button.
+	

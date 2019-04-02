@@ -53,7 +53,7 @@ void deleteFileLike (const char * path) {       // path does not start with "/")
     File file = root.openNextFile();
     while(file){
         pchar = file.name() ;
-        if(pchar[1] == 'C' && pchar[2] == 'm' && pchar[3] == 'd' && pchar[4] == path[3] && pchar[5] == '_' ) {
+        if(pchar[0] == 'C' && pchar[1] == 'm' && pchar[2] == 'd' && pchar[3] == path[3] && pchar[4] == '_' ) {
             SPIFFS.remove(pchar );          // delete file having a name that begins with Cmdx_ (with same x)
         }
         file = root.openNextFile();

@@ -265,6 +265,11 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
     *pchar = 0 ;
   }
   deleteFileLike( fileName ) ;    // then look in SPIFFS for files beginning by Cmdx_ and if found, delete them
+  if ( strlen(fileName) == 11 && fileName[5] == 'd' && fileName[6] == 'e' && fileName[7] == 'l' && fileName[8] == 'e' && fileName[9] == 't' && fileName[10] == 'e' ){
+      fillMsg("Cmd deleted") ;
+      aDir[dirLevel+1].close() ; // close the file from SD card
+      return true ;
+  }  
   if ( ! createFileCmd(fileName ) ) {      // then create the new file name
        fillMsg("Cmd not created") ;
        aDir[dirLevel+1].close() ; // close the file from SD card

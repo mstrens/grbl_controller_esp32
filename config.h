@@ -58,7 +58,7 @@
 
 
 
-//                                    normally do not change here below
+// *************************************     normally do not change here below ****************************
 //       debugging
 //#define DEBUG_TO_PC
 #ifdef DEBUG_TO_PC
