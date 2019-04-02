@@ -177,6 +177,14 @@ It displays some buttons to select between
 Note: with USB and Telnet, the ESP32 works in "passthrough". It means that it works just like the PC was directly connected to GRBL.
 So, Once USB or Telnet is activated, you can't anymore use the ESP32 options (Setup, ...).\
 The only thing you can do on ESP32 side is to view the current position and status and to select the button "Stop PC" which will stop the flow of data exchanged with the PC.\
+### File list screen
+It allows to select a file in a directory from the Sd card
+- line 1 left: index of the first file name being displayed followed by "/" and the total number of files in the current directory
+- line 2 right: name of the current directory (empty for the root)
+- up to 4 buttons with file/directory names; text is blue on white background for a directory and the opposite for a file. Pressing one of those button on a directory goes into this duirectory (one level down) or start printing (= sending the Gcode to GRBL). Still printing does not start immediately because the controller is first set in Pause mode in order to let you eventually cancel the job. So in order to really start printing you have to press on the Resume button
+- button UP to move one level up in the directory hierarchy
+- button <- and -> to scroll in the list
+
 ### Move screen
 It allows to move the motors in the X, Y and Z axis.
 - It displays the current work positions and the distances moved since this screen has been entered.
