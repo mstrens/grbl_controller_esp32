@@ -152,12 +152,12 @@ Note: you can only interact with the root of the SD card (not the sub directorie
 ### Info screen:
 This is the first and main screen of the application.
 It displays:
-- on the first line, left: a status saying when printing from SD card or when GRBL is controlled via PC and USB or via PC and wifi
-- on the first line, right: the GRBL status (Idle, Run, Alarm , Hold, Jog, ...) or "??" when GRBL is not responding (e.g. GRBL in alarm:1) 
-- on a second line, the last message (error or alarm) sent by GRBL
-- on the third line, left: a wifi icon; it is red when there are no PC connected with telnet, green when a pc is connected with telnet
-- on the next lines: the X, Y, Z positions in Work coordinate and in Machine coordinate
-- on the last line: the feed rate and the spindle rpm.
+- line 1 left: a status saying if you are printing from SD card (and % of printing), in Pause or if GRBL is controlled via PC and USB or via PC and wifi
+- line 1 right: the GRBL status (Idle, Run, Alarm , Hold, Jog, ...) or "??" when GRBL is not responding (e.g. GRBL in alarm:1) 
+- line 2: the last message (error or alarm) sent by GRBL. This message is automatically cleared when you go back from Setup screen to Info screen.
+- line 3: a wifi icon; it is red when there are no PC connected with telnet, green when a pc is connected with telnet
+- next lines: the X, Y, Z positions in Work coordinate and in Machine coordinate
+- last line: the current feed rate and spindle rpm.
 - there are also 2 buttons that depends on the current state (e.g. Setup, Print, Pause, Resume, Cancel)
 ### Setup screen displays:
 - The IP address to be use if you want to upload/download/delete/list files from the root directory on the SD. This IP has to be entered in a PC browsing session
