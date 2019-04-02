@@ -256,6 +256,7 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
     return false ;
   }
   if ( strlen(fileName) < 6 || fileName[0] != 'C' || fileName[1] != 'm' || fileName[2] != 'd' || fileName[3] < '1' || fileName[3] > '7' || fileName[4] != '_' || (!isalpha(fileName[5]) )  ){
+    fillMsg( fileName );
     return false ;
   }
   // here we assume that the file name identifies a command; so we can store it on SPIFFS
@@ -275,6 +276,7 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
        aDir[dirLevel+1].close() ; // close the file from SD card
        return true ;
   }
+  fillMsg("Cmd created") ;
   while ( aDir[dirLevel+1].available() > 0 ) {
       sdChar = aDir[dirLevel+1].read() ;
       if ( sdChar < 0 ) {

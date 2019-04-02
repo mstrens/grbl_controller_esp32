@@ -256,7 +256,8 @@ void fSdFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param c
     updateFullPage = true ;
     waitReleased = true ;
     return ;
-  } else if ( fileIsCmd() ) { //  when a "command" file is selected, it will not be executed it but will be saved in SPIFFS  
+  } else if ( fileIsCmd() ) { //  when a "command" file is selected, it will not be executed it but will be saved in SPIFFS
+                              // note : this function also fill LastMsg (e.g. with the file name when it is a file to be printed   
     updateFullPage = true ;
     waitReleased = true ;
     return ;

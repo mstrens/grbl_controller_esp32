@@ -16,5 +16,6 @@ boolean setFileToRead ( uint8_t fileIdx ) ;
 boolean sdMoveUp() ;
 boolean fileIsCmd() ;           // check if the file is a cmd and if so, copy it into the SPIFFS, return true if it is cmd file
 boolean createFile(char * fileName) ;
+
 #endif
 
