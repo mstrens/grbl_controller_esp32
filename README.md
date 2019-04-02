@@ -159,7 +159,8 @@ It displays:
 - next lines: the X, Y, Z positions in Work coordinate and in Machine coordinate
 - last line: the current feed rate and spindle rpm.
 - there are also 2 buttons that depends on the current state (e.g. Setup, Print, Pause, Resume, Cancel)
-### Setup screen displays:
+### Setup screen
+It displays:
 - The IP address to be used if you want to
   - upload/download/delete/list files from the root directory on the SD. This IP has to be entered in a PC browsing session
   - use a telnet (=wifi) connection to control GRBL
