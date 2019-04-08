@@ -10,6 +10,7 @@
 
 // GRBL status are : Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep
 // a message should look like (note : GRBL sent or WPOS or MPos depending on grbl parameter : to get WPos, we have to set "$10=0"
+//  <Jog|WPos:1329.142,0.000,0.000|Bf:32,254|FS:2000,0|Ov:100,100,100|A:FM>
 //  <Idle|WPos:0.000,0.000,0.000|FS:0.0,0> or e.g. <Idle|MPos:0.000,0.000,0.000|FS:0.0,0|WCO:0.000,0.000,0.000>
 //CLOSED
 //   START
@@ -31,12 +32,15 @@
 #define GET_GRBL_STATUS_F_DATA 5
 #define GET_GRBL_STATUS_WCO_DATA 6
 #define GET_GRBL_STATUS_ALARM 7
+#define GET_GRBL_STATUS_BF_DATA 8
 
 uint8_t wposIdx = 0 ;
 uint8_t wcoIdx = 0 ;
 uint8_t fsIdx = 0 ;
+uint8_t bfIdx = 0 ;
 uint8_t getGrblPosState = GET_GRBL_STATUS_CLOSED ;
 float feedSpindle[2] ;  // first is FeedRate, second is Speed
+float bufferAvailable[2] ;  // first is number of blocks available in planner, second is number of chars available in serial buffer
 float wcoXYZ[3] ;
 float wposXYZ[3] ; 
 float mposXYZ[3] ;
@@ -174,6 +178,10 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
           getGrblPosState = GET_GRBL_STATUS_WCO_DATA ; 
           strGrblIdx = 0 ;
           wcoIdx = 0 ;
+        } else if ( strGrblBuf[0] == 'B' ) {     // start Bf data
+          getGrblPosState = GET_GRBL_STATUS_BF_DATA ; 
+          strGrblIdx = 0 ;
+          bfIdx = 0 ;
         }  
       }
       break ;
@@ -183,7 +191,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
     default :
       if (  strGrblIdx < ( STR_GRBL_BUF_MAX_SIZE - 1)) {
         if ( ( c =='-' || (c>='0' && c<='9' ) || c == '.' ) ) { 
-          if ( getGrblPosState == GET_GRBL_STATUS_WPOS_DATA || getGrblPosState == GET_GRBL_STATUS_F_DATA || getGrblPosState == GET_GRBL_STATUS_WCO_DATA || getGrblPosState == GET_GRBL_STATUS_START || getGrblPosState == GET_GRBL_STATUS_CLOSED ){
+          if ( getGrblPosState == GET_GRBL_STATUS_WPOS_DATA || getGrblPosState == GET_GRBL_STATUS_F_DATA || getGrblPosState == GET_GRBL_STATUS_BF_DATA || getGrblPosState == GET_GRBL_STATUS_WCO_DATA || getGrblPosState == GET_GRBL_STATUS_START || getGrblPosState == GET_GRBL_STATUS_CLOSED ){
             strGrblBuf[strGrblIdx++] = c ;
             strGrblBuf[strGrblIdx] = 0 ;
           }
@@ -222,6 +230,9 @@ void handleLastNumericField(void) { // decode last numeric field
           strGrblIdx = 0 ; 
   } else if (  getGrblPosState == GET_GRBL_STATUS_F_DATA && fsIdx < 2) {
           feedSpindle[fsIdx++] = temp ;
+          strGrblIdx = 0 ;
+  } else if (  getGrblPosState == GET_GRBL_STATUS_BF_DATA && bfIdx < 2) {   // save number of available block or char in GRBL buffer
+          bufferAvailable[bfIdx++] = temp ;
           strGrblIdx = 0 ; 
   } else if (  getGrblPosState == GET_GRBL_STATUS_WCO_DATA && wcoIdx < 3) {
           wcoXYZ[wcoIdx] = temp ;
@@ -299,9 +310,10 @@ void sendToGrbl( void ) {
   } // end else if  
   if ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_PAUSED ) {   // process nunchuk cancel and commands
     if ( jogCancelFlag ) {
-/*
+
+
       if ( jog_status == JOG_NO ) {
-        Serial2.print( (char) 0x85) ;  Serial2.print("G4P0") ; Serial2.print( (char) 0x0A) ;    // to be execute after a cancel jog in order to get an OK that says that grbl is Idle.
+        Serial2.print( (char) 0x85) ; Serial2.print("G4P0") ; Serial2.print( (char) 0x0A) ;    // to be execute after a cancel jog in order to get an OK that says that grbl is Idle.
         Serial2.flush() ;             // wait that all outgoing char are really sent.
         waitOk = true ;
         jog_status = JOG_WAIT_END_CANCEL ;
@@ -321,19 +333,24 @@ void sendToGrbl( void ) {
           }
         }
       } 
-*/
+
+/*
       Serial2.print( '!') ;
       Serial2.flush() ;
       delay(10);
       Serial2.print( '~') ;
       jogCancelFlag = false ;
+*/      
     }
     
     if ( jogCmdFlag ) {
       if ( jog_status == JOG_NO ) {
-        sendJogCmd() ;                
-        waitOk = true ;
-        jog_status = JOG_WAIT_END_CMD ;
+        //Serial.println( bufferAvailable[0] ) ;
+        if (bufferAvailable[0] > 15) {    // tests shows that GRBL gives errors when we fill to much the block buffer
+          sendJogCmd() ;                
+          waitOk = true ;
+          jog_status = JOG_WAIT_END_CMD ;
+        }  
         exitMillis = millis() + 500 ; //expect a OK before 500 msec      
       } else if ( jog_status == JOG_WAIT_END_CMD  ) {
         if ( !waitOk ) {

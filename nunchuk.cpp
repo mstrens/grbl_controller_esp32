@@ -141,8 +141,9 @@ void handleNunchuk (void) {
   int8_t moveY = 0 ; //static int8 prevMoveY = 0;
   int8_t moveZ = 0 ; //static int8 prevMoveZ = 0;
   //float moveMultiplier ;
-  
-  if ( jogCancelFlag == false && jogCmdFlag == false ) { // read only if the is no pending jog flag 
+
+  if ( machineStatus[0] == 'J' || machineStatus[0] == 'I' ) {    //read only if the GRBL status is Idle or Jog
+  //if ( jogCancelFlag == false && jogCmdFlag == false ) { // read only if the is no pending jog flag 
     //if ( ( ( nunchukMillis - lastNunchukMillis ) > NUNCHUK_READ_DELAY  ) && ( (cntSameMove !=1)  || (( nunchukMillis - lastNunchukMillis ) > NUNCHUK_READ_DELAY_FIRST_CMD  ) ) ) {                // we can not read to fast
     if  ( ( nunchukMillis - lastNunchukMillis ) > NUNCHUK_READ_DELAY  )    {                // we can not read to fast
       lastNunchukMillis = nunchukMillis  ;
@@ -175,7 +176,7 @@ void handleNunchuk (void) {
         cntSameMove = 0 ;             // reset the counter
         //Serial.println("cancel jog") ;
       } else {
-        jogCancelFlag = false ;
+        //jogCancelFlag = false ;
       }
       if ( moveX || moveY || moveZ) {    // if at least one move is asked
         if (cntSameMove == 0 ) { 
@@ -189,7 +190,7 @@ void handleNunchuk (void) {
         } else if (cntSameMove < 20 ) {
           moveMultiplier = 1 ;
         } else {
-          moveMultiplier = 3 ;
+          moveMultiplier = 4;
         } 
         cntSameMove++ ;
         jogCmdFlag = true ;
@@ -197,8 +198,9 @@ void handleNunchuk (void) {
         jogDistY = moveY;
         jogDistZ = moveZ;
       } else {               // no move asked ( moveX || moveY || moveZ) 
-        cntSameMove = 0 ; 
-        jogCmdFlag = false ;
+        cntSameMove = 0 ;
+        moveMultiplier = 0 ; // put the value on 0 to avoid an old move to be execute  ; let the flag to be reset by the com.cpp file after a OK being received
+        //jogCmdFlag = false ;
       } // end if ( moveX || moveY || moveZ)
       prevMoveX = moveX ;
       prevMoveY = moveY ;

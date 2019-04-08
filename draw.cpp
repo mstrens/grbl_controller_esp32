@@ -552,8 +552,8 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   tft.drawString( "Wpos             Mpos" , 190 , line ) ;     // affiche un texte
   tft.setTextSize(2) ;
   tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ;
-  tft.setTextPadding (100) ;      // expect to clear 100 pixel when drawing text or float
-  uint8_t c1 = 110, c2 = c1 + 120 ;
+  tft.setTextPadding (121) ;      // expect to clear 100 pixel when drawing text or float
+  uint8_t c1 = 121, c2 = c1 + 121 ;
   line += 20 ; tft.drawFloat( wposXYZ[0] , 2 , c1 , line ); tft.drawFloat( mposXYZ[0] , 2 , c2 , line ); 
   line += 32 ; tft.drawFloat( wposXYZ[1] , 2 , c1 , line ); tft.drawFloat( mposXYZ[1] , 2 , c2 , line );
   line += 32 ; tft.drawFloat( wposXYZ[2] , 2 , c1 , line ); tft.drawFloat( mposXYZ[2] , 2 , c2 , line  ); 

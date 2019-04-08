@@ -217,7 +217,7 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
     } else if (cntSameMove < 20 ) {
       moveMultiplier = 1 ;
     } else {
-      moveMultiplier = 1 ;
+      moveMultiplier = 2 ;
     } 
     cntSameMove++ ;
     jogDistX = 0 ;           // reset all deplacements
