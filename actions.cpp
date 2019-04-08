@@ -32,7 +32,7 @@ extern uint8_t longPressedBtn;
 extern uint32_t beginChangeBtnMillis ;
 extern boolean waitOk ;
 
-extern uint32_t cntSameMove ;
+//extern uint32_t cntSameMove ;
 extern uint8_t jog_status  ;
 extern boolean jogCancelFlag ;
 extern boolean jogCmdFlag  ; 
@@ -40,7 +40,7 @@ extern boolean jogCmdFlag  ;
 extern int8_t jogDistX ;
 extern int8_t jogDistY ;
 extern int8_t jogDistZ ;
-//extern float moveMultiplier ;
+extern float moveMultiplier ;
 
 uint32_t prevAutoMoveMillis ;
 
@@ -185,11 +185,12 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
                                       // param contains the touch being pressed or the released if no touch has been pressed
 #define AUTO_MOVE_REPEAT_DELAY 100
   uint8_t pressedBtn  = 0 ;
-  float moveMultiplier ;
+  static uint32_t cntSameAutoMove = 0 ;
+  //float moveMultiplier ;
   uint32_t autoMoveMillis = millis() ;
   if ( justReleasedBtn )  {
       jogCancelFlag = true ;                                // cancel any previous move when a button is released (even before asking for another jog
-      cntSameMove = 0 ;             // reset the counter
+      cntSameAutoMove = 0 ;             // reset the counter
        //Serial.println("cancel jog") ;
   } else {
       jogCancelFlag = false ;
@@ -198,7 +199,7 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
     return ;   
   }
   if ( justPressedBtn) {
-    cntSameMove = 0 ;                    // reset the counter when we just press the button
+    cntSameAutoMove = 0 ;                    // reset the counter when we just press the button
     pressedBtn = justPressedBtn ;
     prevAutoMoveMillis = autoMoveMillis ;
   } else if ( longPressedBtn  ) {
@@ -206,20 +207,20 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
       prevAutoMoveMillis = autoMoveMillis ;
     }
   if ( ( pressedBtn ) && (jogCmdFlag == false) ) {
-    if (cntSameMove == 0 ) { 
+    if (cntSameAutoMove == 0 ) { 
       moveMultiplier = 0.01 ; 
-    } else if (cntSameMove < 5 ) {   // avoid to send to fast a new move
+    } else if (cntSameAutoMove < 5 ) {   // avoid to send to fast a new move
       moveMultiplier = 0.0 ;
-    } else if (cntSameMove < 10 ) {
+    } else if (cntSameAutoMove < 10 ) {
       moveMultiplier = 0.01 ;
-    } else if (cntSameMove < 15 ) {
+    } else if (cntSameAutoMove < 15 ) {
       moveMultiplier = 0.1 ;
-    } else if (cntSameMove < 20 ) {
+    } else if (cntSameAutoMove < 20 ) {
       moveMultiplier = 1 ;
     } else {
       moveMultiplier = 2 ;
     } 
-    cntSameMove++ ;
+    cntSameAutoMove++ ;
     jogDistX = 0 ;           // reset all deplacements
     jogDistY = 0 ;
     jogDistZ = 0 ;
