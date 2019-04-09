@@ -154,7 +154,9 @@ void setup() {
   initWifi() ;
   telnetInit() ;
 #endif 
-
+  Serial2.print(0X18) ; // send a soft reset
+  Serial2.println(" ") ;Serial2.println(" ") ;
+  Serial2.flush();
  
 }
 
