@@ -1,6 +1,7 @@
 // compilé dans mon cas avec la board WEMOS LOLIN32
 
 // to do
+// au démarrage, GRBL donne parfois des messages d'erreurs. Chercher pourquoi.
 // tester l'impression par SD et par CMD
 // tester l'impression par telnet et BCC
 // prévoir des icones pour les boutons; on peut créer des charactères en format RLE

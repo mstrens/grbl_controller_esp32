@@ -55,9 +55,9 @@ extern char lastMsg[23] ;
  */
 void nunchuk_init() {
     Wire.begin();
-    // Change TWI speed for nuchuk, which uses Fast-TWI (400kHz)
+    // Change TWI speed for nunchuk, which uses Fast-TWI (400kHz)
     // Normally this will be set in twi_init(), but this hack works without modifying the original source
-    Wire.setClock(100000);
+    Wire.setClock(400000);
     delay(500);    // delay ajouté pour donner le temps à la nunchuk de s'initialiser
 
     Wire.beginTransmission(NUNCHUK_ADDRESS);
@@ -66,6 +66,8 @@ void nunchuk_init() {
       memccpy( lastMsg , "No nunchuk" , '\0' , 22) ;
     } else {
        nunchukOK = true ;
+       nunchuk_read() ;  // read once to (perhaps) avoid error message at start up
+       delay(100);
     }
     disableEncription() ;
 }
@@ -89,10 +91,6 @@ void disableEncription() {
 uint8_t nunchuk_read() {
     I2C_START(NUNCHUK_ADDRESS);
     I2C_WRITE(0x00);
-//#define NUNCHUK_DELAY
-#ifdef NUNCHUK_DELAY
-    delayMicroseconds(100);
-#endif
     I2C_STOP();
     uint8_t i;
     uint8_t error = 0 ;
@@ -122,12 +120,12 @@ uint8_t nunchuk_buttonC() {      // Checks the current state of button C
 }
 
 
-#define NUNCHUK_READ_DELAY 100 // read nunchuk every 200 msec (about)
+#define NUNCHUK_READ_DELAY 100 // read nunchuk every 100 msec (about)
 //#define NUNCHUK_READ_DELAY_FIRST_CMD  5000 
-// if statusPrinting = PRINTING_STOPPED  and if machineStatus= Idle or Jog, then if delay since previous read exceed 10msec, then read nunchuk data
+// (if statusPrinting = PRINTING_STOPPED  and) if machineStatus= Idle or Jog, then if delay since previous read exceed 100msec, then read nunchuk data
 //  and if buttonZ or buttonC is released while it was pressed bebore, then send a command to cancel JOG (= char 0x85 )
 //  If button buttonZ or buttonC is pressed and if joysttick is moved, then send a jog command accordingly
-//  sending grbl jogging commands is done in communications.cpp because it has to wait for ok after sending a command.
+//  sending grbl jogging commands is done in com.cpp because it has to wait for "ok" after sending a command.
 // There are 2 type of grbl commands  : one for canceling and some for jogging
 
 void handleNunchuk (void) {
