@@ -119,8 +119,8 @@ mButton[_FILE3].pLabel = fileNames[3] ;
 
 mPages[_P_INFO].titel = "Info" ;
 mPages[_P_INFO].pfBase = fInfoBase ;
-fillMPage (_P_INFO , 3 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
-fillMPage (_P_INFO , 7 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;
+fillMPage (_P_INFO , 3 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;   // those buttons are changed dynamically based on status (no print, ...)
+fillMPage (_P_INFO , 7 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;   // those buttons are changed dynamically based on status (no print, ...)
 
 mPages[_P_SETUP].titel = "Setup" ;
 mPages[_P_SETUP].pfBase = fSetupBase ;

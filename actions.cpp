@@ -119,6 +119,7 @@ void fPause(uint8_t param) {
   #define PAUSE_CMD "!" 
     Serial2.print(PAUSE_CMD) ;
     statusPrinting = PRINTING_PAUSED ;
+    updateFullPage = true ;  // 
   }
   waitReleased = true ;          // discard "pressed" until a release   
 }
