@@ -57,6 +57,7 @@ extern float moveMultiplier ;
 extern uint8_t jog_status  ;
 extern boolean jogCancelFlag ;
 extern boolean jogCmdFlag  ; 
+extern uint32_t startMoveMillis ;
 
 extern volatile boolean waitOk ;
 extern boolean newGrblStatusReceived ;
@@ -347,7 +348,7 @@ void sendToGrbl( void ) {
       if ( jog_status == JOG_NO ) {
         //Serial.println( bufferAvailable[0] ) ;
         if (bufferAvailable[0] > 15) {    // tests shows that GRBL gives errors when we fill to much the block buffer
-          sendJogCmd() ;                
+          sendJogCmd(startMoveMillis) ;                
           waitOk = true ;
           jog_status = JOG_WAIT_END_CMD ;
         }  
@@ -383,7 +384,41 @@ void sendToGrbl( void ) {
   }
 }  
 
-void sendJogCmd() {
+void sendJogCmd(uint32_t startTime) {
+#define MINDIST 0.01    // mm
+#define MINSPEED 10     // mm
+#define MAXSPEEDXY 2000 // mm/sec
+#define MAXSPEEDZ 400   // mm/sec
+#define DELAY_BEFORE_REPEAT_MOVE 500 //msec
+#define DELAY_BETWEEN_MOVE 100       //msec
+#define DELAY_TO_REACH_MAX_SPEED 2000 // msec
+        float distanceMove ;
+        uint32_t speedMove ;
+        int32_t counter = millis() - startTime ;
+        if ( counter < 10 ) {
+          distanceMove = MINDIST ;
+          speedMove = MINSPEED ;
+        } else {
+          counter = counter - DELAY_BEFORE_REPEAT_MOVE ;
+          if (counter < 0) {
+            Serial.println("counter neg");
+            return;              // do not send a move
+          }
+          if ( counter > (  DELAY_TO_REACH_MAX_SPEED - DELAY_BEFORE_REPEAT_MOVE) ) {
+            counter = DELAY_TO_REACH_MAX_SPEED - DELAY_BEFORE_REPEAT_MOVE ;
+          }
+          if (jogDistZ ) {
+            speedMove = MAXSPEEDZ ;
+          } else {
+            speedMove = MAXSPEEDXY ;
+          } 
+          speedMove = speedMove * counter / ( DELAY_TO_REACH_MAX_SPEED  - DELAY_BEFORE_REPEAT_MOVE ) ;
+          if (speedMove < MINSPEED) {
+            speedMove = MINSPEED;
+          }
+          distanceMove = speedMove * DELAY_BETWEEN_MOVE / 60000.0 * 1.2;   // speed is in mm/min and time in millisec.  1.2 is to increase a little the distance to be sure buffer is filled 
+        }
+          
         Serial2.print("$J=G91 G21") ;
         if (jogDistX > 0) {
           Serial2.print(" X") ;
@@ -391,7 +426,7 @@ void sendJogCmd() {
           Serial2.print(" X-") ;
         }
         if (jogDistX ) {
-          Serial2.print(moveMultiplier) ;
+          Serial2.print(distanceMove) ;
         }  
         if (jogDistY > 0) {
           Serial2.print(" Y") ;
@@ -399,7 +434,8 @@ void sendJogCmd() {
           Serial2.print(" Y-") ;
         }
         if (jogDistY ) {
-          Serial2.print(moveMultiplier) ;
+          //Serial2.print(moveMultiplier) ;
+          Serial2.print(distanceMove) ;
         }
         if (jogDistZ > 0) {
           Serial2.print(" Z") ;
@@ -407,12 +443,13 @@ void sendJogCmd() {
           Serial2.print(" Z-") ;
         }
         if (jogDistZ ) {
-          Serial2.print(moveMultiplier) ;
+          Serial2.print(distanceMove) ;
         }
-        Serial2.print(" F2000");  Serial2.print( (char) 0x0A) ;
+        //Serial2.print(" F2000");  Serial2.print( (char) 0x0A) ;
+        Serial2.print(" F"); Serial2.print(speedMove); Serial2.print( (char) 0x0A) ;
         Serial2.flush() ;       // wait that all char are really sent
         
-        //Serial.print("Send cmd jog " ); Serial.print(moveMultiplier) ; Serial.print(" " ); 
+        Serial.print("Send cmd jog " ); Serial.print(distanceMove) ; Serial.print(" " ); Serial.print(speedMove) ;Serial.print(" " ); Serial.println(millis() - startTime );
         //Serial.print(prevMoveX) ; Serial.print(" " ); Serial.print(prevMoveY) ; Serial.print(" " ); Serial.print(prevMoveZ) ;Serial.print(" ") ; Serial.println(millis()) ;
 }
 

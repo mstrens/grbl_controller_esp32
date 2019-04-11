@@ -36,7 +36,7 @@ extern boolean waitOk ;
 extern uint8_t jog_status  ;
 extern boolean jogCancelFlag ;
 extern boolean jogCmdFlag  ; 
-
+extern uint32_t startMoveMillis ;
 extern int8_t jogDistX ;
 extern int8_t jogDistY ;
 extern int8_t jogDistZ ;
@@ -210,6 +210,7 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
   if ( ( pressedBtn ) && (jogCmdFlag == false) ) {
     if (cntSameAutoMove == 0 ) { 
       moveMultiplier = 0.01 ; 
+      startMoveMillis = millis();
     } else if (cntSameAutoMove < 5 ) {   // avoid to send to fast a new move
       moveMultiplier = 0.0 ;
     } else if (cntSameAutoMove < 10 ) {

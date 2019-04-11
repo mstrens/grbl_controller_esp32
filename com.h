@@ -10,7 +10,7 @@ void handleLastNumericField(void) ;
 
 void sendToGrbl( void ) ;
 //int8_t waitForOK() ;
-void sendJogCmd(void ) ;
+void sendJogCmd(uint32_t startTime ) ; // parameter is the original time (millis) when we start a move
 void fillErrorMsg( char * errorMsg ) ; 
 void fillAlarmMsg( char * alarmMsg ) ;
 

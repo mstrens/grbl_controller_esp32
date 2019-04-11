@@ -40,6 +40,7 @@ int8_t jogDistY = 0;
 int8_t jogDistZ = 0;
 float moveMultiplier ;
 uint32_t cntSameMove = 0 ;
+uint32_t startMoveMillis = 0;
 
 uint8_t jog_status = JOG_NO ;
 boolean jogCancelFlag = false ;
@@ -178,7 +179,8 @@ void handleNunchuk (void) {
       }
       if ( moveX || moveY || moveZ) {    // if at least one move is asked
         if (cntSameMove == 0 ) { 
-          moveMultiplier = 0.01 ; 
+          moveMultiplier = 0.01 ;
+          startMoveMillis = millis() ; 
         } else if (cntSameMove < 5 ) {   // avoid to send to fast a new move
           moveMultiplier = 0.0 ;
         } else if (cntSameMove < 10 ) {
