@@ -449,7 +449,7 @@ void sendJogCmd(uint32_t startTime) {
         Serial2.print(" F"); Serial2.print(speedMove); Serial2.print( (char) 0x0A) ;
         Serial2.flush() ;       // wait that all char are really sent
         
-        Serial.print("Send cmd jog " ); Serial.print(distanceMove) ; Serial.print(" " ); Serial.print(speedMove) ;Serial.print(" " ); Serial.println(millis() - startTime );
+        //Serial.print("Send cmd jog " ); Serial.print(distanceMove) ; Serial.print(" " ); Serial.print(speedMove) ;Serial.print(" " ); Serial.println(millis() - startTime );
         //Serial.print(prevMoveX) ; Serial.print(" " ); Serial.print(prevMoveY) ; Serial.print(" " ); Serial.print(prevMoveZ) ;Serial.print(" ") ; Serial.println(millis()) ;
 }
 

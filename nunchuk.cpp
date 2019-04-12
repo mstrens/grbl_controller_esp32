@@ -10,6 +10,7 @@
 #include "config.h"
 #include "com.h"
 #include "nunchuk.h"
+#include "draw.h"
 
 
 // Calibration joystick values
@@ -49,7 +50,7 @@ boolean jogCmdFlag = false ;
 boolean nunchukOK ;  // keep flag to detect a nunchuk at startup
 
 extern char machineStatus[9];
-extern char lastMsg[23] ;
+extern char lastMsg[40] ;
 
 /**
  * Initializes the Nunchuk communication by sending a sequence of bytes
@@ -64,7 +65,7 @@ void nunchuk_init() {
     Wire.beginTransmission(NUNCHUK_ADDRESS);
     if ( Wire.endTransmission()  ) {    // return 0 if the I2C device replies without error
       nunchukOK = false ;
-      memccpy( lastMsg , "No nunchuk" , '\0' , 22) ;
+      fillMsg( "No nunchuk" ) ;
     } else {
        nunchukOK = true ;
        nunchuk_read() ;  // read once to (perhaps) avoid error message at start up
@@ -179,19 +180,20 @@ void handleNunchuk (void) {
       }
       if ( moveX || moveY || moveZ) {    // if at least one move is asked
         if (cntSameMove == 0 ) { 
-          moveMultiplier = 0.01 ;
+        //  moveMultiplier = 0.01 ;
           startMoveMillis = millis() ; 
-        } else if (cntSameMove < 5 ) {   // avoid to send to fast a new move
-          moveMultiplier = 0.0 ;
-        } else if (cntSameMove < 10 ) {
-          moveMultiplier = 0.01 ;
-        } else if (cntSameMove < 15 ) {
-          moveMultiplier = 0.1 ;
-        } else if (cntSameMove < 20 ) {
-          moveMultiplier = 1 ;
-        } else {
-          moveMultiplier = 4;
         } 
+        //else if (cntSameMove < 5 ) {   // avoid to send to fast a new move
+        //  moveMultiplier = 0.0 ;
+        //} else if (cntSameMove < 10 ) {
+        //  moveMultiplier = 0.01 ;
+        //} else if (cntSameMove < 15 ) {
+        //  moveMultiplier = 0.1 ;
+        //} else if (cntSameMove < 20 ) {
+        //  moveMultiplier = 1 ;
+        //} else {
+        //  moveMultiplier = 4;
+        //} 
         cntSameMove++ ;
         jogCmdFlag = true ;
         jogDistX = moveX;
@@ -199,7 +201,7 @@ void handleNunchuk (void) {
         jogDistZ = moveZ;
       } else {               // no move asked ( moveX || moveY || moveZ) 
         cntSameMove = 0 ;
-        moveMultiplier = 0 ; // put the value on 0 to avoid an old move to be execute  ; let the flag to be reset by the com.cpp file after a OK being received
+      //  moveMultiplier = 0 ; // put the value on 0 to avoid an old move to be execute  ; let the flag to be reset by the com.cpp file after a OK being received
         //jogCmdFlag = false ;
       } // end if ( moveX || moveY || moveZ)
       prevMoveX = moveX ;

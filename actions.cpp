@@ -209,19 +209,20 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
     }
   if ( ( pressedBtn ) && (jogCmdFlag == false) ) {
     if (cntSameAutoMove == 0 ) { 
-      moveMultiplier = 0.01 ; 
+    //  moveMultiplier = 0.01 ; 
       startMoveMillis = millis();
-    } else if (cntSameAutoMove < 5 ) {   // avoid to send to fast a new move
-      moveMultiplier = 0.0 ;
-    } else if (cntSameAutoMove < 10 ) {
-      moveMultiplier = 0.01 ;
-    } else if (cntSameAutoMove < 15 ) {
-      moveMultiplier = 0.1 ;
-    } else if (cntSameAutoMove < 20 ) {
-      moveMultiplier = 1 ;
-    } else {
-      moveMultiplier = 2 ;
     } 
+    //else if (cntSameAutoMove < 5 ) {   // avoid to send to fast a new move
+    //  moveMultiplier = 0.0 ;
+    //} else if (cntSameAutoMove < 10 ) {
+    //  moveMultiplier = 0.01 ;
+    //} else if (cntSameAutoMove < 15 ) {
+    //  moveMultiplier = 0.1 ;
+    //} else if (cntSameAutoMove < 20 ) {
+    //  moveMultiplier = 1 ;
+    //} else {
+    //  moveMultiplier = 2 ;
+    //} 
     cntSameAutoMove++ ;
     jogDistX = 0 ;           // reset all deplacements
     jogDistY = 0 ;

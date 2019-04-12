@@ -43,7 +43,7 @@ extern char machineStatus[9];
 extern float feedSpindle[2] ;  
 
 extern char lastMsg[40] ;        // last message to display
-extern boolean lastMsgChanged ;  
+  
 
 //char sdStatusText[][20]  = { "No Sd card" , "Sd card to check" , "Sd card OK" , "Sd card error"} ;  // pour affichage en clair sur le lcd;
 char printingStatusText[][20] = { " " , "SD-->Grbl" , "Error SD-->Grbl" , "Pause SD-->Grbl" , "Usb-->Grbl" ,  "CMD" , "Telnet-->Grbl"} ; 
@@ -60,6 +60,13 @@ extern boolean jogCmdFlag  ;
 extern boolean statusTelnetIsConnected ;
 
 float wposMoveInitXYZ[3] ;
+
+// previous values used to optimise redraw of INFO screen
+uint8_t statusPrintingPrev;
+uint8_t machineStatus0Prev;   // we keep only the first char for fast testing, so we can't use ir when equal to A or H
+extern boolean lastMsgChanged ;
+boolean statusTelnetIsConnectedPrev ;
+boolean newInfoPage ;
 
 // rempli le paramétrage des boutons de chaque page 
 void fillMPage (uint8_t _page , uint8_t _btnPos , uint8_t _boutons, uint8_t _actions , void (*_pfNext)(uint8_t) , uint8_t _parameters ) {
@@ -399,13 +406,15 @@ void executeMainActionBtn( ) {   // find and execute main action for ONE button 
 // Basis functions
 void blankTft(char * titel, uint16_t x , uint16_t y) {    // blank screen and display one titel
   tft.fillScreen( TFT_BLACK ) ;
-  tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
-  tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
-  tft.setTextSize(1) ;           // char is 2 X magnified => 
-  tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
-  tft.drawString( titel , x , y ) ;     // affiche un texte
-  tft.setCursor( x , y + 30 , 2) ; // x, y, font
+  // currently titel is not used so folowwing lines can be skipped; uncomment if titel would be used
+  //tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+  //tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
+  //tft.setTextSize(1) ;           // char is 2 X magnified => 
+  //tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
+  //tft.drawString( titel , x , y ) ;     // affiche un texte
+  //tft.setCursor( x , y + 30 , 2) ; // x, y, font
 }
+
 void printTft(char * text ) {     // print a text on screen
   tft.print( text ) ;
 }
@@ -455,6 +464,11 @@ void drawPartPage() {          // update only the data on screen (not the button
 //************************************************************************************************************                                  
 void fInfoBase(void) { 
   updateButtonsInfoPage() ; // met à jour le set up de la page en fonction du statut d'impression
+  statusPrintingPrev = 0xFF ;  // fill with a dummy value to force a redraw
+  machineStatus0Prev = 0 ;  // fill with a dummy value to force a redraw
+  lastMsgChanged = true ;   // force a redraw of Last Msg
+  statusTelnetIsConnectedPrev = ! statusTelnetIsConnected ;
+  newInfoPage = true ; 
   drawDataOnInfoPage() ;    // affiche les données sur la page info  
 }
 
@@ -497,59 +511,76 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
 //                                                 So, printing status (blanco, ,SD-->Grbl  xxx%, USB<-->Grbl , Pause,  Cmd)  = printing status
 //                                                 and GRBL status (or Run, Alarm, ... grbl status)
 //            Last message                   (ex : card inserted, card removed, card error, Error: 2 
+//            Wifi icon
 //              Wpos          Mpos
 //            X xxxxxpos      xxxxxpos                 
 //            Y yyyyypos      yyyyypos       
 //            Z zzzzzpos      zzzzzpos  
 //            F 100           S 10000
-  tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
-  tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
-  tft.setTextSize(2) ;           // char is 2 X magnified => 
-  tft.setTextDatum( TL_DATUM ) ; // align Left
-  tft.setTextPadding (200) ; 
-  tft.drawString ( &printingStatusText[statusPrinting][0] , 5 , 0 )  ;
-  tft.setTextDatum( TR_DATUM ) ;
+   
+  if ( statusPrintingPrev != statusPrinting ) {
+    tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+    tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when only 1 parameter, background = fond);
+    tft.setTextSize(2) ;           // char is 2 X magnified => 
+    tft.setTextDatum( TL_DATUM ) ; // align Left
+    tft.setTextPadding (200) ; 
+    tft.drawString ( &printingStatusText[statusPrinting][0] , 5 , 0 )  ;
+    statusPrintingPrev = statusPrinting ;
+  }
+  
   if ( statusPrinting == PRINTING_FROM_SD ) {
+      tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+      tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when only 1 parameter, background = fond);
+      tft.setTextSize(2) ;           // char is 2 X magnified =>
+      tft.setTextDatum( TR_DATUM ) ;
       tft.setTextPadding (40) ;
       tft.drawNumber( ( (100 * sdNumberOfCharSent) / sdFileSize), 170 , 0 ) ;
       tft.setTextPadding (1) ;
       tft.drawString( "%" , 190 , 0 ) ;
   }
-  tft.setTextPadding (120) ;      // expect to clear 70 pixel when drawing text or 
-  tft.drawString( &machineStatus[0] , 315  , 0 ) ; // affiche le status GRBL (Idle,....)
-  
-  //tft.setTextFont( 1 );
-  tft.setTextDatum( TL_DATUM ) ; // align Left
-  tft.setTextColor(TFT_RED, TFT_BLACK ) ;
-  tft.setTextPadding (320) ;  
-  tft.drawString ( &lastMsg[0] , 5 , 32) ;
 
-  tft.setTextColor(TFT_GREEN, TFT_BLACK ) ;
-  tft.setTextPadding (10) ;  
-  
-  //if ( statusTelnetIsConnected ) {
-  //  tft.drawString ( "T" , 2 , 62 ) ;
-  //} else {
-  //  tft.drawString ( "#" , 2 , 62 ) ;
-  //}  
-  if ( statusTelnetIsConnected ) {
-    tft.setTextSize(1) ;
-    tft.setTextColor(TFT_GREEN, TFT_BLACK ) ;    // display in green when connected
-  } else {
-    tft.setTextSize(1) ;
-    tft.setTextColor(TFT_RED, TFT_BLACK ) ;      // display in red when not connected
-  } 
-  tft.setTextFont( 4 );
-  
-  tft.drawChar (  0x7F , 2 , 62 ) ;  // char 0x7E in font 4 has been redesigned to get the Wifi logo
+  if ( machineStatus0Prev != machineStatus[0] && machineStatus[0] == 'A' || machineStatus[0] == 'H') {
+      tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+      tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when only 1 parameter, background = fond);
+      tft.setTextSize(2) ;           // char is 2 X magnified =>
+      tft.setTextDatum( TR_DATUM ) ;
+      tft.setTextPadding (120) ;      // expect to clear 70 pixel when drawing text or 
+      tft.drawString( &machineStatus[0] , 315  , 0 ) ; // affiche le status GRBL (Idle,....)
+      machineStatus0Prev = machineStatus[0] ;
+  }
+
+  if ( lastMsgChanged ) {    
+      tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+      tft.setTextColor(TFT_RED, TFT_BLACK ) ;
+      tft.setTextDatum( TL_DATUM ) ; // align Left
+      tft.setTextPadding (320) ;  
+      tft.drawString ( &lastMsg[0] , 5 , 32) ;
+      lastMsgChanged = false ;
+  }
+
+  if ( statusTelnetIsConnectedPrev != statusTelnetIsConnected) {    
+      tft.setTextFont( 4);
+      tft.setTextPadding (10) ;
+      tft.setTextSize(1) ;  
+      if ( statusTelnetIsConnected ) {
+        tft.setTextColor(TFT_GREEN, TFT_BLACK ) ;    // display in green when connected
+      } else {
+        tft.setTextColor(TFT_RED, TFT_BLACK ) ;      // display in red when not connected
+      } 
+      tft.drawChar (  0x7F , 2 , 62 ) ;  // char 0x7E in font 4 has been redesigned to get the Wifi logo
+      statusTelnetIsConnectedPrev = statusTelnetIsConnected ;
+  }    
   
   tft.setTextFont( 2 );
   tft.setTextColor(TFT_WHITE ,  TFT_BLACK) ; 
   tft.setTextDatum( TR_DATUM ) ; 
-  tft.setTextSize(1) ;           // char is 2 X magnified => 
-  tft.setTextPadding (0) ;      // expect to clear 70 pixel when drawing text or 
   uint16_t line = 90 ;
-  tft.drawString( "Wpos             Mpos" , 190 , line ) ;     // affiche un texte
+  if (newInfoPage ) {
+    tft.setTextSize(1) ;           // char is 2 X magnified => 
+    tft.setTextPadding (0) ;      // expect to clear 70 pixel when drawing text or 
+    tft.drawString( "Wpos             Mpos" , 190 , line ) ;     // affiche un texte
+    newInfoPage = false ;
+  }
   tft.setTextSize(2) ;
   tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ;
   tft.setTextPadding (121) ;      // expect to clear 100 pixel when drawing text or float
