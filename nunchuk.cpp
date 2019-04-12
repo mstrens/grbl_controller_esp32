@@ -8,6 +8,7 @@
 
 #include <Wire.h>
 #include "config.h"
+#include "language.h"
 #include "com.h"
 #include "nunchuk.h"
 #include "draw.h"
@@ -65,7 +66,7 @@ void nunchuk_init() {
     Wire.beginTransmission(NUNCHUK_ADDRESS);
     if ( Wire.endTransmission()  ) {    // return 0 if the I2C device replies without error
       nunchukOK = false ;
-      fillMsg( "No nunchuk" ) ;
+      fillMsg( __NO_NUNCHUK  ) ;
     } else {
        nunchukOK = true ;
        nunchuk_read() ;  // read once to (perhaps) avoid error message at start up

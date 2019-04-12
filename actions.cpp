@@ -1,4 +1,5 @@
 #include "config.h"
+#include "language.h"
 #include "draw.h"
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 #include "FS.h"
@@ -82,7 +83,7 @@ void fHome(uint8_t param) {
 #define HOME_CMD "$H"
     Serial2.println(HOME_CMD) ;  
   } else {
-    fillMsg("Invalid btn (Home)") ;
+    fillMsg(__INVALID_BTN_HOME ) ;
   }
   waitReleased = true ;          // discard "pressed" until a release 
 }
@@ -316,7 +317,7 @@ void fCmd(uint8_t param) {     // param contient le n° de la commande (valeur =
   spiffsCmdName[4] = param - _CMD1 + '1' ;          // fill the cmd number (from 1...7)
   strcat( spiffsCmdName , cmdName[param - _CMD1]) ; // add the cmd name to the first part 
   if ( ! spiffsOpenCmdFile( spiffsCmdName ) ) {
-      fillMsg("Cmd not retrieved") ;
+      fillMsg(__CMD_NOT_RETRIEVED ) ;
       currentPage = _P_INFO ;
       updateFullPage = true ;
       waitReleased = true ;          // discard "pressed" until a release
@@ -349,7 +350,7 @@ void fStartTelnet(uint8_t param){
       statusPrinting = PRINTING_FROM_TELNET ;
       //fillMsg( "Connected to telnet" );
     } else { 
-      fillMsg( "No telnet connection" );   
+      fillMsg( __NO_TELNET_CONNECTION  );   
     }
   }
   currentPage = _P_INFO ;  // go to page Info

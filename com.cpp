@@ -1,5 +1,6 @@
 #include "com.h"
 #include "config.h"
+#include "language.h"
 //#include "SD.h"
 #include "SdFat.h"
 #include "draw.h"
@@ -330,7 +331,7 @@ void sendToGrbl( void ) {
             jog_status = JOG_NO ; // reset all parameters related to jog .
             jogCancelFlag = false ;
             jogCmdFlag = false ;
-            if(lastMsg[0] || (lastMsg[0] == 32) ) fillMsg( "Can.JOG:missing Ok" ) ; // put a message if there was no message (e.g. alarm:)
+            if(lastMsg[0] || (lastMsg[0] == 32) ) fillMsg( __CAN_JOG_MISSING_OK  ) ; // put a message if there was no message (e.g. alarm:)
           }
         }
       } 
@@ -362,7 +363,7 @@ void sendToGrbl( void ) {
             jog_status = JOG_NO ; // reset all parameters related to jog .
             jogCancelFlag = false ;
             jogCmdFlag = false ;
-            if(lastMsg[0] || (lastMsg[0] == 32) ) fillMsg( "Cmd JOG:missing Ok" ) ; // put a message if there was no message (e.g. alarm:)
+            if(lastMsg[0] || (lastMsg[0] == 32) ) fillMsg( __CMD_JOG_MISSING_OK  ) ; // put a message if there was no message (e.g. alarm:)
           }
         }
       } 
@@ -453,57 +454,57 @@ void sendJogCmd(uint32_t startTime) {
         //Serial.print(prevMoveX) ; Serial.print(" " ); Serial.print(prevMoveY) ; Serial.print(" " ); Serial.print(prevMoveZ) ;Serial.print(" ") ; Serial.println(millis()) ;
 }
 
-char * errorArrayMsg[] = { "Unknown error" , 
-              "1.Expected cmd letter",
-              "2.Bad number format",
-              "3.Invalid $ sytem cmd",
-              "4.Negative value",
-              "5.Homing not enabled",
-              "6.Step pulse <3 usec",
-              "7.EEPROM read fail",
-              "8. $ while not IDLE",
-              "9.Locked(alarm or jog)",
-              "10.Soft limit(no Homing)",
-              "11.Line overflow",
-              "12.Step rate to high",
-              "13.Safety door detected",
-              "14.Line length exceeded",
-              "15.Jog travel exceeded",
-              "16.Invalid jog command",
-              "17.Laser requires PWM",
-              "Unknown error",
-              "Unknown error",
-              "20.Unsupported command",
-              "21.Modal group violation",
-              "22.Undef. feed rate",
-              "23.Cmd requires integer",
-              "24.Several axis Gcode",
-              "25.Repeated Gcode",
-              "26.Axis missing in Gcode",
-              "27.Invalid line number",
-              "28.Value missing in Gcode",
-              "29.G59 WCS not supported",
-              "30.G53 without G0 and G1",
-              "31.Axis not allowed",
-              "32.G2,G3 require a plane",
-              "33.Invalid motion target",
-              "34.Invalid arc radius",
-              "35.G2,G3 require offset",
-              "36.Unused value",
-              "37.G43.1 tool length",
-              "38.Tool number > max"
+char * errorArrayMsg[] = { __UNKNOWN_ERROR  , 
+              __EXPECTED_CMD_LETTER ,
+              __BAD_NUMBER_FORMAT ,
+              __INVALID_$_SYSTEM_CMD ,
+              __NEGATIVE_VALUE ,
+              __HOMING_NOT_ENABLED ,
+              __STEP_PULSE_LESS_3_USEC ,
+              __EEPROM_READ_FAIL ,
+              __$_WHILE_NOT_IDLE ,
+              __LOCKED_ALARM_OR_JOG ,
+              __SOFT_LIMIT_NO_HOMING ,
+              __LINE_OVERFLOW ,
+              __STEP_RATE_TO_HIGH ,
+              __SAFETY_DOOR_DETECTED ,
+              __LINE_LENGHT_EXCEEDED ,
+              __JOG_TRAVEL_EXCEEDED ,
+              __INVALID_JOG_COMMANF ,
+              __LASER_REQUIRES_PWM ,
+              __UNKNOWN_ERROR  ,
+              __UNKNOWN_ERROR ,
+              __UNSUPPORTED_COMMAND ,
+              __MODAL_GROUP_VIOLATION ,
+              __UNDEF_FEED_RATE ,
+              __CMD_REQUIRES_INTEGER ,
+              __SEVERAL_AXIS_GCODE ,
+              __REPEATED_GCODE ,
+              __AXIS_MISSING_IN_GCODE ,
+              __INVALID_LINE_NUMBER ,
+              __VALUE_MISSING_IN_GCODE ,
+              __G59_WCS_NOT_SUPPORTED ,
+              __G53_WITHOUT_G01_AND_G1 ,
+              __AXIS_NOT_ALLOWED ,
+              __G2_G3_REQUIRE_A_PLANE ,
+              __INVALID_MOTION_TARGET ,
+              __INVALID_ARC_RADIUS ,
+              __G2_G3_REQUIRE_OFFSET ,
+              __UNSUSED_VALUE ,
+              __G431_TOOL_LENGTH ,
+              __TOOL_NUMBER_EXCEED_MAX 
 };
 
-char * alarmArrayMsg[] = { "Unknown Alarm" , 
-              "A1.Hard limit reached(P?)",
-              "A2.Motion exceed CNC",
-              "A3.Reset in motion(P?)",
-              "A4.Probe init fail",
-              "A5.Probe travel fail" ,
-              "A6.Reset during homing",
-              "A7.Door open (homing)",
-              "A8.Limit ON(homing)",
-              "A9.Limit missing(homing)"
+char * alarmArrayMsg[] = { __UNKNOWN_ALARM  , 
+              __HARD_LIMIT_REACHED ,
+              __MOTION_EXCEED_CNC ,
+              __RESET_IN_MOTION ,
+              __PROBE_INIT_FAIL ,
+              __PROBE_TRAVEL_FAIL  ,
+              __RESET_DURING_HOMING ,
+              __DOOR_OPEN_HOMING ,
+              __LIMIT_ON_HOMING ,
+              __LIMIT_MISSING_HOMING 
 }; 
 
 

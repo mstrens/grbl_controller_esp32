@@ -1,6 +1,8 @@
 #ifndef _config_h
 #define _config_h
 
+#include "TFT_eSPI_ms/TFT_eSPI.h"
+
 // decide if you will use Wifi or not (and how)
 #define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
 
@@ -9,6 +11,9 @@
 
 // Only for ESP32_ACT_AS_STATION , set the password to get access to your access point (router)
 #define MY_PASSWORD "alineloriejulien"   // replace by the password of your access point
+
+// select your language between EN, FR, DE
+#define LANGUAGE EN
 
 
 // Here some pins (GPIO) being used
@@ -55,7 +60,35 @@
 // After reset, there will be a button named xxxxxxxxx in the "Setup" + "CMD" menu
 // If you upload a file having the same digit (= button position) as an existing button, the new file will replace the button name and content of the previous button. 
 
+// select color between (or define your own) 
+// TFT_BLACK       0x0000      /*   0,   0,   0 */
+// TFT_NAVY        0x000F      /*   0,   0, 128 */
+// TFT_DARKGREEN   0x03E0      /*   0, 128,   0 */
+// TFT_DARKCYAN    0x03EF      /*   0, 128, 128 */
+// TFT_MAROON      0x7800      /* 128,   0,   0 */
+// TFT_PURPLE      0x780F      /* 128,   0, 128 */
+// TFT_OLIVE       0x7BE0      /* 128, 128,   0 */
+// TFT_LIGHTGREY   0xC618      /* 192, 192, 192 */
+// TFT_DARKGREY    0x7BEF      /* 128, 128, 128 */
+// TFT_BLUE        0x001F      /*   0,   0, 255 */
+// TFT_GREEN       0x07E0      /*   0, 255,   0 */
+// TFT_CYAN        0x07FF      /*   0, 255, 255 */
+// TFT_RED         0xF800      /* 255,   0,   0 */
+// TFT_MAGENTA     0xF81F      /* 255,   0, 255 */
+// TFT_YELLOW      0xFFE0      /* 255, 255,   0 */
+// TFT_WHITE       0xFFFF      /* 255, 255, 255 */
+// TFT_ORANGE      0xFDA0      /* 255, 180,   0 */
+// TFT_GREENYELLOW 0xB7E0      /* 180, 255,   0 */
+// TFT_PINK        0xFC9F 
 
+#define BUTTON_BORDER_NOT_PRESSED TFT_WHITE
+#define BUTTON_BORDER_PRESSED     TFT_RED
+#define BUTTON_BACKGROUND         TFT_BLUE
+#define BUTTON_TEXT               TFT_WHITE
+#define SCREEN_BACKGROUND         TFT_BLACK
+#define SCREEN_NORMAL_TEXT        TFT_GREEN
+#define SCREEN_ALERT_TEXT         TFT_RED
+#define SCREEN_HEADER_TEXT        TFT_WHITE
 
 
 // *************************************     normally do not change here below ****************************

@@ -1,6 +1,8 @@
 #include "FS.h"
 #include "SPIFFS.h"
 #include "draw.h"
+#include "config.h"
+#include "language.h"
 
 /* You only need to format SPIFFS the first time you run a
    test or else use the SPIFFS plugin to create a partition
@@ -46,7 +48,7 @@ void deleteFileLike (const char * path) {       // path does not start with "/")
     const char * pchar; 
     File root = SPIFFS.open("/");
     if(!root){
-        fillMsg("SPIFFS fail to open");
+        fillMsg(__SPIFFS_FAIL_TO_OPEN );
         root.close() ;
         return;
     }
@@ -69,7 +71,7 @@ boolean createFileCmd( const char * fileName){
     createdFile.close() ;
     createdFile = SPIFFS.open( fileNamePlus, FILE_WRITE);
     if(!createdFile){
-        fillMsg("failed to create cmd");
+        fillMsg(__FAILED_TO_CREATE_CMD );
         createdFile.close() ;
         return false;
     }

@@ -10,6 +10,7 @@
 #include <WiFi.h>              // Built-in
 #include <WebServer.h>
 #include "config.h"
+#include "language.h"
 #include "browser.h"
 #include "draw.h"
 
@@ -35,7 +36,7 @@ void initWifi() {
     printTft("X") ;
     initWifiCnt--;
     if ( initWifiCnt == 0) {
-      fillMsg(  "WiFi not found" );
+      fillMsg(__WIFI_NOT_FOUND  );
       break;
     }
   }

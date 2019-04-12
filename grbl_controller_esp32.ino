@@ -49,6 +49,7 @@ Sur l'écran de base, prévoir l'affichage des infos
  */
 #include "config.h"
 #include "TFT_eSPI_ms/TFT_eSPI.cpp"   // setup file has to be edited for some parameters like screen device, pins
+#include "language.h"
 #include "draw.h"
 #include "FS.h"
 #include "nunchuk.h"
@@ -133,10 +134,10 @@ void setup() {
   digitalWrite(TFT_LED_PIN , HIGH) ;
   tftInit() ; // init screen and touchscreen, set rotation and calibrate
   if (! spiffsInit() ) {   // just to test. Todo : change for loading the cmd in memory if the file exist in spiffs 
-    fillMsg("SPIFFS formatted") ;
+    fillMsg(__SPIFFS_FORMATTED ) ;
   } else {
     if (! cmdNameInit() ) {
-      fillMsg("Cmd not loaded") ;
+      fillMsg( __CMD_NOT_LOADED ) ;
     }
   }
 //  listSpiffsDir( "/", 0 );   // uncomment to see the SPIFFS content
@@ -176,7 +177,7 @@ void loop() {
   boolean tempTelnetIsConnected = telnetIsConnected() ;
   if ( statusPrinting == PRINTING_FROM_TELNET && !tempTelnetIsConnected ){
     statusPrinting = PRINTING_STOPPED ;
-    fillMsg( "Telnet disconnected" );
+    fillMsg(__TELENET_DISCONNECTED "Telnet disconnected" );
   }
 //  if ( tempTelnetIsConnected && !statusTelnetIsConnected ) {
 //    fillMsg( "Telnet connected" ) ; 
