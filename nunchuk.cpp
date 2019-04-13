@@ -51,7 +51,7 @@ boolean jogCmdFlag = false ;
 boolean nunchukOK ;  // keep flag to detect a nunchuk at startup
 
 extern char machineStatus[9];
-extern char lastMsg[40] ;
+//extern char lastMsg[80] ;
 
 /**
  * Initializes the Nunchuk communication by sending a sequence of bytes

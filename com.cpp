@@ -64,7 +64,7 @@ extern volatile boolean waitOk ;
 extern boolean newGrblStatusReceived ;
 extern volatile uint8_t statusPrinting  ;
 extern char machineStatus[9];
-extern char lastMsg[40] ;        // last message to display
+extern char lastMsg[80] ;        // last message to display
 
 extern boolean updateFullPage ;
 

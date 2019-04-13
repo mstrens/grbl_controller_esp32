@@ -17,7 +17,7 @@ extern boolean updatePartPage ;
 extern boolean waitReleased ;
 extern uint8_t statusPrinting ;
 extern char machineStatus[9];           // Iddle, Run, Alarm, ...
-extern char lastMsg[40]  ;
+//extern char lastMsg[80]  ;
 
 
 extern uint16_t firstFileToDisplay ;

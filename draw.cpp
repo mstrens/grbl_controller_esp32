@@ -43,7 +43,7 @@ extern float mposXYZ[3] ;
 extern char machineStatus[9];
 extern float feedSpindle[2] ;  
 
-extern char lastMsg[40] ;        // last message to display
+extern char lastMsg[80] ;        // last message to display
   
 
 //char sdStatusText[][20]  = { "No Sd card" , "Sd card to check" , "Sd card OK" , "Sd card error"} ;  // pour affichage en clair sur le lcd;
@@ -210,7 +210,7 @@ void tftInit() {
                 //#define TFT_RST  -1  // Set TFT_RST to -1 if display RESET is connected to ESP32 board RST
                 //Cette fonction met les pins en mode input/output; elle envoie aussi les commandes d'initialisation
   // Set the rotation before we calibrate
-  tft.setRotation(3); // normally, this is already done in tft.int() but it is not clear how is rotation set (probably 0); so it can be usefull to change it here
+  tft.setRotation(1); // normally, this is already done in tft.int() but it is not clear how is rotation set (probably 0); so it can be usefull to change it here
   touch_calibrate(); // call screen calibration
   //tft.printCalibration() ;  // print calibration data (print on Serial port the calibration data ; only for debug
   tft.fillScreen(SCREEN_BACKGROUND);   // clear screen
@@ -552,10 +552,11 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
 
   if ( lastMsgChanged ) {    
       tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+      tft.setTextSize(1) ;
       tft.setTextColor(SCREEN_ALERT_TEXT ,  SCREEN_BACKGROUND ) ;
       tft.setTextDatum( TL_DATUM ) ; // align Left
       tft.setTextPadding (320) ;  
-      tft.drawString ( &lastMsg[0] , 5 , 32) ;
+      tft.drawString ( &lastMsg[0] , 2 , 32) ;
       lastMsgChanged = false ;
   }
 
@@ -573,10 +574,10 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   }    
   
   tft.setTextFont( 2 );
-  tft.setTextColor( SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND ) ; 
   tft.setTextDatum( TR_DATUM ) ; 
   uint16_t line = 90 ;
   if (newInfoPage ) {
+    tft.setTextColor( SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND ) ; 
     tft.setTextSize(1) ;           // char is 2 X magnified => 
     tft.setTextPadding (0) ;      // expect to clear 70 pixel when drawing text or 
     tft.drawString( __WPOS , 70 , line ) ;     // affiche un texte
@@ -632,11 +633,11 @@ void drawDataOnSetupPage() {
   tft.drawString( &machineStatus[0] , 315  , 0 ) ; // affiche le status GRBL (Idle,....)
  
   tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
-  tft.setTextSize(2) ;           // char is 2 X magnified => 
+  tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
   tft.setTextPadding (320) ;      // expect to clear 70 pixel when drawing text or 
   tft.setTextColor(SCREEN_ALERT_TEXT ,  SCREEN_BACKGROUND) ;
-  tft.drawString( lastMsg , 10 , 34 );
+  tft.drawString( lastMsg , 2 , 32 );
 }
 
 void fMoveBase(void) {
@@ -815,7 +816,7 @@ void touch_calibrate() {
 }
 
 void fillMsg( char * msg) {
-  memccpy ( lastMsg , msg , '\0' , 39);
+  memccpy ( lastMsg , msg , '\0' , 79);
   lastMsgChanged = true ;
 }
 

@@ -70,7 +70,7 @@ boolean updateFullPage = true ;
 boolean updatePartPage = true ;
 uint8_t justPressedBtn , justReleasedBtn, longPressedBtn ,currentBtn = 0 ; // 0 = nihil, 1 à 9 = position sur l'écran du bouton (donc pas la fonction du bouton)
 uint32_t beginChangeBtnMillis ;
-char lastMsg[40] = { 0} ;        // last message to display
+char lastMsg[80] = { 0} ;        // last message to display
 boolean lastMsgChanged = false ;
 
 //         SD variables  
