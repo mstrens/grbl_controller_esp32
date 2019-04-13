@@ -5,6 +5,8 @@
 // Width has been increased by 1 pixel so pixel lengths are calculated correctly
 // for the displayed string
 
+// this font has been modified in order to display â , ô, û, é instead of [,], {,}
+
 
 PROGMEM const unsigned char widtbl_f16[96] =         // character width table
 {
@@ -15,11 +17,11 @@ PROGMEM const unsigned char widtbl_f16[96] =         // character width table
         9, 8, 8, 8, 8, 8, 8, 8,             // char 64 - 71
         8, 4, 8, 8, 7, 10, 8, 8,            // char 72 - 79
         8, 8, 8, 8, 8, 8, 8, 10,            // char 80 - 87
-        8, 8, 8, 4, 7, 4, 7, 9,             // char 88 - 95
+        8, 8, 8, 7, 7, 8, 7, 9,             // char 88 - 95
         4, 7, 7, 7, 7, 7, 6, 7,             // char 96 - 103
         7, 4, 5, 6, 4, 8, 7, 8,             // char 104 - 111
         7, 8, 6, 6, 5, 7, 8, 8,             // char 112 - 119
-        6, 7, 7, 5, 3, 7, 8, 6              // char 120 - 127
+        6, 7, 7, 7, 3, 7, 8, 6              // char 120 - 127
 };
 //original table
 //        6, 3, 4, 9, 8, 9, 9, 3,             // char 32 - 39
@@ -393,8 +395,8 @@ PROGMEM const unsigned char chr_f16_5A[16] =         // 1 unsigned char per row
 
 PROGMEM const unsigned char chr_f16_5B[16] =         // 1 unsigned char per row
 {
-        0x00, 0x00, 0xE0, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,    // row 1 - 11
-        0x80, 0x80, 0xE0, 0x00, 0x00                                         // row 12 - 16
+        0x00, 0x00, 0x00, 0x00, 0x28, 0x00, 0x70, 0x08, 0x04, 0x74, 0x8C,    // row 1 - 11           // changed to get ä instead of [
+        0x8C, 0x74, 0x00, 0x00, 0x00                                         // row 12 - 16
 };
 
 PROGMEM const unsigned char chr_f16_5C[16] =         // 1 unsigned char per row
@@ -405,8 +407,8 @@ PROGMEM const unsigned char chr_f16_5C[16] =         // 1 unsigned char per row
 
 PROGMEM const unsigned char chr_f16_5D[16] =         // 1 unsigned char per row
 {
-        0x00, 0x00, 0xE0, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,    // row 1 - 11
-        0x20, 0x20, 0xE0, 0x00, 0x00                                         // row 12 - 16
+        0x00, 0x00, 0x00, 0x00, 0x28, 0x00, 0x38, 0x44, 0x82, 0x82, 0x82,    // row 1 - 11           // changed to get ö instead of ]
+        0x44, 0x38, 0x00, 0x00, 0x00                                         // row 12 - 16
 };
 
 PROGMEM const unsigned char chr_f16_5E[32] =         // 1 unsigned chars per row
@@ -584,8 +586,8 @@ PROGMEM const unsigned char chr_f16_7A[16] =         // 1 unsigned char per row
 
 PROGMEM const unsigned char chr_f16_7B[16] =         // 1 unsigned char per row
 {
-        0x00, 0x10, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x40, 0x20, 0x20,    // row 1 - 11
-        0x20, 0x20, 0x20, 0x20, 0x10                                         // row 12 - 16
+		0x00, 0x00, 0x00, 0x00, 0x28, 0x00, 0x84, 0x84, 0x84, 0x84, 0x84,    // row 1 - 11    changed to get ü instead of {
+        0x4C, 0x34, 0x00, 0x00, 0x00                                         // row 12 - 16
 };
 
 PROGMEM const unsigned char chr_f16_7C[16] =         // 1 unsigned char per row
@@ -594,9 +596,9 @@ PROGMEM const unsigned char chr_f16_7C[16] =         // 1 unsigned char per row
         0x40, 0x40, 0x40, 0x40, 0x00                                         // row 12 - 16
 };
 
-PROGMEM const unsigned char chr_f16_7D[16] =         // 1 unsigned char per row
+PROGMEM const unsigned char chr_f16_7D[16] =         // 1 unsigned char per row              changed to get é instead of }
 {
-0x00, 0x00, 0x00, 0x04, 0x08, 0x00, 0x38, 0x44, 0x84, 0xF8, 0x80,    // row 1 - 11
+		0x00, 0x00, 0x00, 0x04, 0x08, 0x00, 0x38, 0x44, 0x84, 0xF8, 0x80,    // row 1 - 11
         0x44, 0x38, 0x00, 0x00, 0x00
 };
 
@@ -642,14 +644,27 @@ PROGMEM const unsigned char chr_f16_81[16] =         // 1 unsigned char per row 
         0x44, 0x38, 0x00, 0x00, 0x00
 };
 
+PROGMEM const unsigned char chr_f16_5BBackup[16] =         // 1 unsigned char per row          = "["
+{
+        0x00, 0x00, 0xE0, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,    // row 1 - 11
+        0x80, 0x80, 0xE0, 0x00, 0x00                                         // row 12 - 16
+};
+
+PROGMEM const unsigned char chr_f16_5DBackup[16] =         // 1 unsigned char per row          = "]"
+{
+        0x00, 0x00, 0xE0, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,    // row 1 - 11
+        0x20, 0x20, 0xE0, 0x00, 0x00                                         // row 12 - 16
+};
+
+PROGMEM const unsigned char chr_f16_7BBackup[16] =         // 1 unsigned char per row         ="{"
+{
+        0x00, 0x10, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x40, 0x20, 0x20,    // row 1 - 11
+        0x20, 0x20, 0x20, 0x20, 0x10                                         // row 12 - 16
+};
+
 
 PROGMEM const unsigned char chr_f16_7DBackup[16] =         // 1 unsigned char per row   = "}"
 {
         0x00, 0x40, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x10, 0x20, 0x20,    // row 1 - 11
         0x20, 0x20, 0x20, 0x20, 0x40                                         // row 12 - 16
-};
-PROGMEM const unsigned char chr_f16_7ABackup[16] =         // 1 unsigned char per row
-{
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFC, 0x04, 0x08, 0x30, 0x40,    // row 1 - 11
-        0x80, 0xFC, 0x00, 0x00, 0x00                                         // row 12 - 16
 };

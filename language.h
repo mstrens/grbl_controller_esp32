@@ -10,7 +10,10 @@
 
 //****************************************
 //      To display "é" use "}" 
-
+//      To display "ä" use "["
+//      To display "ö" use "]"
+//      To display "ü" use "{"
+//****************************************
 #if defined(LANGUAGE) and (LANGUAGE == FR)      // ici la version en Français
 #define __SETUP "Config" 
 #define __PRINT "Fraisage" 

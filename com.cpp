@@ -307,7 +307,7 @@ void sendToGrbl( void ) {
     if ( spiffsAvailableCmdFile() == 0 ) { 
       statusPrinting = PRINTING_STOPPED  ; 
       updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
-      Serial2.print( (char) 0x10 ) ; // sent a new line to be sure that Grbl handle last line.
+      Serial2.print( (char) 0x0A ) ; // sent a new line to be sure that Grbl handle last line.
     }      
   } // end else if  
   if ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_PAUSED ) {   // process nunchuk cancel and commands
