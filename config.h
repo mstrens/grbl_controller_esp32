@@ -13,7 +13,7 @@
 #define MY_PASSWORD "your password"   // replace by the password of your access point
 
 // select your language between EN, FR, DE
-#define LANGUAGE DE
+#define LANGUAGE FR
 
 
 // Here some pins (GPIO) being used

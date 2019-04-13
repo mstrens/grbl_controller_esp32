@@ -253,6 +253,7 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
 //  Serial.print("pos="); Serial.print( pos ) ; Serial.print(" btnIdx="); Serial.print( btnIdx ) ;
 //  Serial.print("first char of btnName ="); Serial.println( *pbtnLabel ) ;
   if ( convertPosToXY( pos , &_xl, &_yl ) ) {          //  Convert position index to colonne and line (top left corner) 
+    tft.setTextFont(2);
     uint8_t r = min(_w, _h) / 4; // Corner radius
     tft.fillRoundRect( _xl , _yl , _w, _h, r, fill);
     tft.drawRoundRect( _xl, _yl , _w, _h, r, outline);
@@ -266,7 +267,7 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
     if ( txtLength <= 4 ) {
       tft.setTextSize(2);                                                 // imprime 1 ligne au milieu en grand
       tft.drawString( pbtnLabel , _xl + (_w/2), _yl + (_h/2));  
-    } else if ( txtLength <= 8 ) {                                        // imprime 1 ligne au milieu  
+    } else if ( txtLength <= 9 ) {                                        // imprime 1 ligne au milieu  
         tft.drawString( pbtnLabel , _xl + (_w/2), _yl + (_h/2));  
     } else { 
       uint8_t numbChar = 8 ; 
@@ -769,7 +770,7 @@ void touch_calibrate() {
       SPIFFS.remove(CALIBRATION_FILE);
     }
     else
-    {
+    { 
       fs::File f = SPIFFS.open(CALIBRATION_FILE, "r");
       if (f) {
         if (f.readBytes((char *)calData, 14) == 14)

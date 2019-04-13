@@ -19,8 +19,23 @@ PROGMEM const unsigned char widtbl_f16[96] =         // character width table
         4, 7, 7, 7, 7, 7, 6, 7,             // char 96 - 103
         7, 4, 5, 6, 4, 8, 7, 8,             // char 104 - 111
         7, 8, 6, 6, 5, 7, 8, 8,             // char 112 - 119
-        6, 7, 7, 5, 3, 5, 8, 6              // char 120 - 127
+        6, 7, 7, 5, 3, 7, 8, 6              // char 120 - 127
 };
+//original table
+//        6, 3, 4, 9, 8, 9, 9, 3,             // char 32 - 39
+//        7, 7, 8, 6, 3, 6, 5, 7,             // char 40 - 47
+//        8, 8, 8, 8, 8, 8, 8, 8,             // char 48 - 55
+//        8, 8, 3, 3, 6, 6, 6, 8,             // char 56 - 63
+//        9, 8, 8, 8, 8, 8, 8, 8,             // char 64 - 71
+//        8, 4, 8, 8, 7, 10, 8, 8,            // char 72 - 79
+//        8, 8, 8, 8, 8, 8, 8, 10,            // char 80 - 87
+//        8, 8, 8, 4, 7, 4, 7, 9,             // char 88 - 95
+//        4, 7, 7, 7, 7, 7, 6, 7,             // char 96 - 103
+//        7, 4, 5, 6, 4, 8, 7, 8,             // char 104 - 111
+//        7, 8, 6, 6, 5, 7, 8, 8,             // char 112 - 119
+//        6, 7, 7, 5, 3, 5, 8, 6              // char 120 - 127
+
+
 
 // Row format, MSB left
 
@@ -581,8 +596,8 @@ PROGMEM const unsigned char chr_f16_7C[16] =         // 1 unsigned char per row
 
 PROGMEM const unsigned char chr_f16_7D[16] =         // 1 unsigned char per row
 {
-        0x00, 0x40, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x10, 0x20, 0x20,    // row 1 - 11
-        0x20, 0x20, 0x20, 0x20, 0x40                                         // row 12 - 16
+0x00, 0x00, 0x00, 0x04, 0x08, 0x00, 0x38, 0x44, 0x84, 0xF8, 0x80,    // row 1 - 11
+        0x44, 0x38, 0x00, 0x00, 0x00
 };
 
 PROGMEM const unsigned char chr_f16_7E[16] =         // 1 unsigned char per row
@@ -596,6 +611,8 @@ PROGMEM const unsigned char chr_f16_7F[16] =         // 1 unsigned char per row
         0x00, 0x00, 0x30, 0x48, 0x48, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00,    // row 1 - 11
         0x00, 0x00, 0x00, 0x00, 0x00                                         // row 12 - 16
 };
+
+
 
 PROGMEM const unsigned char* const chrtbl_f16[96] =       // character pointer table
 {
@@ -611,4 +628,28 @@ PROGMEM const unsigned char* const chrtbl_f16[96] =       // character pointer t
         chr_f16_68, chr_f16_69, chr_f16_6A, chr_f16_6B, chr_f16_6C, chr_f16_6D, chr_f16_6E, chr_f16_6F, 
         chr_f16_70, chr_f16_71, chr_f16_72, chr_f16_73, chr_f16_74, chr_f16_75, chr_f16_76, chr_f16_77, 
         chr_f16_78, chr_f16_79, chr_f16_7A, chr_f16_7B, chr_f16_7C, chr_f16_7D, chr_f16_7E, chr_f16_7F
+		};
+
+PROGMEM const unsigned char chr_f16_80[16] =         // 1 unsigned char per row == "é"
+{
+0x00, 0x00, 0x00, 0x04, 0x08, 0x00, 0x38, 0x44, 0x84, 0xF8, 0x80,    // row 1 - 11
+        0x44, 0x38, 0x00, 0x00, 0x00
+};
+
+PROGMEM const unsigned char chr_f16_81[16] =         // 1 unsigned char per row == "è"
+{
+0x00, 0x00, 0x00, 0x08, 0x04, 0x00, 0x38, 0x44, 0x84, 0xF8, 0x80,    // row 1 - 11
+        0x44, 0x38, 0x00, 0x00, 0x00
+};
+
+
+PROGMEM const unsigned char chr_f16_7DBackup[16] =         // 1 unsigned char per row   = "}"
+{
+        0x00, 0x40, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x10, 0x20, 0x20,    // row 1 - 11
+        0x20, 0x20, 0x20, 0x20, 0x40                                         // row 12 - 16
+};
+PROGMEM const unsigned char chr_f16_7ABackup[16] =         // 1 unsigned char per row
+{
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFC, 0x04, 0x08, 0x30, 0x40,    // row 1 - 11
+        0x80, 0xFC, 0x00, 0x00, 0x00                                         // row 12 - 16
 };
