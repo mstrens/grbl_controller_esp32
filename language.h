@@ -13,6 +13,7 @@
 //      To display "ä" use "["
 //      To display "ö" use "]"
 //      To display "ü" use "{"
+//    For button names only, use a "*" to force a split on 2 lines
 //****************************************
 #if defined(LANGUAGE) and (LANGUAGE == FR)      // ici la version en Français
 #define __SETUP "Config" 
