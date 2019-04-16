@@ -570,7 +570,7 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
       tft.drawString( "%" , 190 , 0 ) ;
   }
 
-  if ( machineStatus0Prev != machineStatus[0] && machineStatus[0] == 'A' || machineStatus[0] == 'H') {
+  if ( machineStatus0Prev != machineStatus[0] || machineStatus[0] == 'A' || machineStatus[0] == 'H') {
       //tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
       //tft.setTextSize(2) ;           // char is 2 X magnified =>
       tft.setFreeFont (LABELS12_FONT) ;
