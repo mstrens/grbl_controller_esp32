@@ -7,13 +7,13 @@
 #define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
 
 // If wifi is used, set the parameter to identify the access point (= the router when ESP32_ACT_AS_STATION or the ESP32 when ESP32_ACT_AS_AP)
-#define MY_SSID "bbox2-58c4"       // replace by the name of your access point 
+#define MY_SSID "bbox2-58c4"       // replace by the name of your access point (when act as station) or the name you assign to your device (when act as acces point)
 
 // Only for ESP32_ACT_AS_STATION , set the password to get access to your access point (router)
-#define MY_PASSWORD "your password"   // replace by the password of your access point
-
+#define MY_PASSWORD "alineloriejulien"   // replace by the password of your access point (when act as station) or the password you want to use to protect your ESP32 (when act as acces point)
+                                      // in this last case, password can remains empty 
 // select your language between EN, FR, DE
-#define LANGUAGE FR
+#define LANGUAGE EN
 
 
 // Here some pins (GPIO) being used
@@ -81,15 +81,23 @@
 // TFT_GREENYELLOW 0xB7E0      /* 180, 255,   0 */
 // TFT_PINK        0xFC9F 
 
-#define BUTTON_BORDER_NOT_PRESSED TFT_WHITE
-#define BUTTON_BORDER_PRESSED     TFT_RED
-#define BUTTON_BACKGROUND         TFT_BLUE
-#define BUTTON_TEXT               TFT_WHITE
-#define SCREEN_BACKGROUND         TFT_BLACK
-#define SCREEN_NORMAL_TEXT        TFT_GREEN
-#define SCREEN_ALERT_TEXT         TFT_RED
-#define SCREEN_HEADER_TEXT        TFT_WHITE
+//#define BUTTON_BORDER_NOT_PRESSED TFT_WHITE
+//#define BUTTON_BORDER_PRESSED     TFT_RED
+//#define BUTTON_BACKGROUND         TFT_BLUE
+//#define BUTTON_TEXT               TFT_WHITE
+//#define SCREEN_BACKGROUND         TFT_BLACK
+//#define SCREEN_NORMAL_TEXT        TFT_GREEN
+//#define SCREEN_ALERT_TEXT         TFT_RED
+//#define SCREEN_HEADER_TEXT        TFT_WHITE
 
+#define BUTTON_BORDER_NOT_PRESSED TFT_BLACK
+#define BUTTON_BORDER_PRESSED TFT_RED
+#define BUTTON_BACKGROUND TFT_GREEN
+#define BUTTON_TEXT TFT_BLACK
+#define SCREEN_BACKGROUND TFT_DARKGREY
+#define SCREEN_NORMAL_TEXT TFT_GREEN
+#define SCREEN_ALERT_TEXT TFT_RED
+#define SCREEN_HEADER_TEXT TFT_WHITE
 
 // *************************************     normally do not change here below ****************************
 //       debugging
