@@ -50,8 +50,8 @@
 #define __FEED "Feed"
 #define __RPM  "Rpm"
 
-#define __TOUCH_CORNER "Touchez les coins comme indiqu}"
-#define __SET_REPEAT_CAL "Definissez REPEAT_CAL sur false pour ne pas r}p}ter cette operation!"
+#define __TOUCH_CORNER "Touchez les coins comme indiqu\x80"
+#define __SET_REPEAT_CAL "Definissez REPEAT_CAL sur false pour ne pas r\x80" "p\x80" "ter cette operation!"
 #define __CAL_COMPLETED "Calibration finie!"
 
 #define __SPIFFS_FORMATTED "SPIFFS format\x80"
@@ -83,7 +83,7 @@
 #define __CMD_CREATED "Cmd cr\x80" "\x80" "e"
 #define __CMD_PART_NOT_READ "Cmd: partie non lue"
 #define __CMD_COULD_NOT_SAVE "Cmd non sauv\x80" "e"
-#define __NO_NUNCHUK "Pas de nunchuk" 
+#define __NO_NUNCHUK "Pas de Nunchuk" 
 
 #define __UNKNOWN_ERROR "Erreur inconnue"  
 #define __EXPECTED_CMD_LETTER "1.Lettre Cmd attendue"
@@ -112,7 +112,7 @@
 #define __AXIS_MISSING_IN_GCODE "26.Axe manquant dans Gcode"
 #define __INVALID_LINE_NUMBER "27.Numero de ligne non valide"
 #define __VALUE_MISSING_IN_GCODE "28.Valeur manquante dans Gcode"
-#define __G59_WCS_NOT_SUPPORTED "29.G59 WCS non support}"
+#define __G59_WCS_NOT_SUPPORTED "29.G59 WCS non support\x80"
 #define __G53_WITHOUT_G01_AND_G1 "30.G53 sans G0 et G1"
 #define __AXIS_NOT_ALLOWED "31.Axe non autoris\x80" "e"
 #define __G2_G3_REQUIRE_A_PLANE "32.G2,G3 requiert un plan"
