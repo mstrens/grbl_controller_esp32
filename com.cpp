@@ -34,6 +34,7 @@
 #define GET_GRBL_STATUS_WCO_DATA 6
 #define GET_GRBL_STATUS_ALARM 7
 #define GET_GRBL_STATUS_BF_DATA 8
+#define GET_GRBL_STATUS_MESSAGE 9
 
 uint8_t wposIdx = 0 ;
 uint8_t wcoIdx = 0 ;
@@ -46,9 +47,11 @@ float wcoXYZ[3] ;
 float wposXYZ[3] ; 
 float mposXYZ[3] ;
 
-#define STR_GRBL_BUF_MAX_SIZE 10 
+
 char strGrblBuf[STR_GRBL_BUF_MAX_SIZE] ; // this buffer is used to store a few char received from GRBL before decoding them
 uint8_t strGrblIdx ;
+extern char grblLastMessage[STR_GRBL_BUF_MAX_SIZE] ;
+extern boolean grblLastMessageChanged;
 
 extern int8_t jogDistX ;
 extern int8_t jogDistY ;
@@ -155,6 +158,12 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
 #ifdef DEBUG_TO_PC
          //Serial.print( "ms= " ) ; Serial.println( machineStatus ) ;
 #endif          
+      } else if (  getGrblPosState == GET_GRBL_STATUS_MESSAGE ) {
+        if ( strGrblIdx < (STR_GRBL_BUF_MAX_SIZE - 1) 
+        ) {
+          strGrblBuf[strGrblIdx++] = c ;
+          strGrblBuf[strGrblIdx] = 0 ;
+        } 
       } else { 
         handleLastNumericField() ;
         getGrblPosState = GET_GRBL_STATUS_HEADER ;
@@ -168,7 +177,8 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
          strGrblIdx = 0 ;
          strGrblBuf[strGrblIdx] = 0 ;
          wposIdx = 0 ;
-      } else if ( (getGrblPosState == GET_GRBL_STATUS_START || getGrblPosState == GET_GRBL_STATUS_CLOSED )&& strGrblIdx < (STR_GRBL_BUF_MAX_SIZE - 1) ) {    // save the : as part of the text (for error 
+      } else if ( (getGrblPosState == GET_GRBL_STATUS_START || getGrblPosState == GET_GRBL_STATUS_CLOSED || getGrblPosState == GET_GRBL_STATUS_MESSAGE )
+                && strGrblIdx < (STR_GRBL_BUF_MAX_SIZE - 1) ) {    // save the : as part of the text (for error 
          strGrblBuf[strGrblIdx++] = c ; 
          strGrblBuf[strGrblIdx] = 0 ;
       } else if ( getGrblPosState == GET_GRBL_STATUS_HEADER ) {                     // for other Header, check the type of field
@@ -188,16 +198,50 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
       }
       break ;
     case ',' :                                              // séparateur entre 2 chiffres
-      handleLastNumericField() ;                            // check that we are in data to be processed; if processed, reset strGrblIdx = 0 ; 
+      if ( getGrblPosState != GET_GRBL_STATUS_MESSAGE ) {
+        handleLastNumericField() ;                            // check that we are in data to be processed; if processed, reset strGrblIdx = 0 ; 
+      } else if ( strGrblIdx < (STR_GRBL_BUF_MAX_SIZE - 1) ) {
+        strGrblBuf[strGrblIdx++] = c ;
+        strGrblBuf[strGrblIdx] = 0 ;
+      }
+      
+      break ;  
+    case '[' :                                              // séparateur entre 2 chiffres
+      if( getGrblPosState == GET_GRBL_STATUS_CLOSED ) {
+        getGrblPosState = GET_GRBL_STATUS_MESSAGE ;                            // check that we are in data to be processed; if processed, reset strGrblIdx = 0 ; 
+        strGrblIdx = 0 ;                                        // reset the buffer
+        strGrblBuf[strGrblIdx] = '[' ;
+        strGrblIdx++ ;
+      }
+      break ;  
+    case ' ' :                                              // séparateur entre 2 chiffres
+      if( ( getGrblPosState == GET_GRBL_STATUS_MESSAGE ) && strGrblIdx < (STR_GRBL_BUF_MAX_SIZE - 1) ){
+        strGrblBuf[strGrblIdx++] = ' ' ;
+      }
+      break ;  
+    
+    case ']' :                                              // séparateur entre 2 chiffres
+      if( getGrblPosState == GET_GRBL_STATUS_MESSAGE ) {
+        getGrblPosState = GET_GRBL_STATUS_CLOSED ;                            // check that we are in data to be processed; if processed, reset strGrblIdx = 0 ; 
+        strGrblBuf[strGrblIdx++] = ']' ;
+        strGrblBuf[strGrblIdx] = 0 ;
+        memccpy( grblLastMessage , strGrblBuf , '\0', STR_GRBL_BUF_MAX_SIZE - 1);
+        strGrblIdx = 0 ;                                        // reset the buffer
+        strGrblBuf[strGrblIdx] = 0 ;
+        grblLastMessageChanged = true ;
+      }
       break ;  
     default :
       if (  strGrblIdx < ( STR_GRBL_BUF_MAX_SIZE - 1)) {
         if ( ( c =='-' || (c>='0' && c<='9' ) || c == '.' ) ) { 
-          if ( getGrblPosState == GET_GRBL_STATUS_WPOS_DATA || getGrblPosState == GET_GRBL_STATUS_F_DATA || getGrblPosState == GET_GRBL_STATUS_BF_DATA || getGrblPosState == GET_GRBL_STATUS_WCO_DATA || getGrblPosState == GET_GRBL_STATUS_START || getGrblPosState == GET_GRBL_STATUS_CLOSED ){
+          if ( getGrblPosState == GET_GRBL_STATUS_WPOS_DATA || getGrblPosState == GET_GRBL_STATUS_F_DATA || getGrblPosState == GET_GRBL_STATUS_BF_DATA || 
+                  getGrblPosState == GET_GRBL_STATUS_WCO_DATA || getGrblPosState == GET_GRBL_STATUS_START || getGrblPosState == GET_GRBL_STATUS_CLOSED ||
+                  getGrblPosState == GET_GRBL_STATUS_MESSAGE){
             strGrblBuf[strGrblIdx++] = c ;
             strGrblBuf[strGrblIdx] = 0 ;
           }
-        } else if ( ( (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ) && ( getGrblPosState == GET_GRBL_STATUS_START || getGrblPosState == GET_GRBL_STATUS_HEADER || getGrblPosState == GET_GRBL_STATUS_CLOSED ) ) { 
+        } else if ( ( (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ) && ( getGrblPosState == GET_GRBL_STATUS_START || getGrblPosState == GET_GRBL_STATUS_HEADER ||
+                  getGrblPosState == GET_GRBL_STATUS_CLOSED || getGrblPosState == GET_GRBL_STATUS_MESSAGE ) ) { 
            strGrblBuf[strGrblIdx++] = c ;
            strGrblBuf[strGrblIdx] = 0 ;
         }

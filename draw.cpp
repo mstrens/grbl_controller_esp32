@@ -7,6 +7,7 @@
 #include "menu_file.h"
 #include "SdFat.h"
 #include "browser.h"
+#include "com.h"
 
 #define LABELS9_FONT &FreeSans9pt7b    // Key label font 2
 #define LABELS12_FONT &FreeSans12pt7b
@@ -76,6 +77,10 @@ uint8_t machineStatus0Prev;   // we keep only the first char for fast testing, s
 extern boolean lastMsgChanged ;
 boolean statusTelnetIsConnectedPrev ;
 boolean newInfoPage ;
+
+extern char grblLastMessage[STR_GRBL_BUF_MAX_SIZE] ;
+extern boolean grblLastMessageChanged;
+
 
 // rempli le paramétrage des boutons de chaque page 
 void fillMPage (uint8_t _page , uint8_t _btnPos , uint8_t _boutons, uint8_t _actions , void (*_pfNext)(uint8_t) , uint8_t _parameters ) {
@@ -493,6 +498,7 @@ void fInfoBase(void) {
   statusPrintingPrev = 0xFF ;  // fill with a dummy value to force a redraw
   machineStatus0Prev = 0 ;  // fill with a dummy value to force a redraw
   lastMsgChanged = true ;   // force a redraw of Last Msg
+  grblLastMessageChanged = true ;
   statusTelnetIsConnectedPrev = ! statusTelnetIsConnected ;
   newInfoPage = true ; 
   drawDataOnInfoPage() ;    // affiche les données sur la page info  
@@ -584,7 +590,11 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
 
   if ( lastMsgChanged ) {    
       //tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
-      tft.setFreeFont(LABELS12_FONT);    // added by MS to test
+      if ( strlen( lastMsg) < 30 ) {
+        tft.setFreeFont(LABELS9_FONT);    
+      } else {
+        tft.setTextFont( 1 ); 
+      }
       tft.setTextSize(1) ;
       tft.setTextColor(SCREEN_ALERT_TEXT ,  SCREEN_BACKGROUND ) ;
       tft.setTextDatum( TL_DATUM ) ; // align Left
@@ -602,10 +612,24 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
       } else {
         tft.setTextColor(SCREEN_ALERT_TEXT ,  SCREEN_BACKGROUND ) ;      // display in red when not connected
       } 
+      tft.setTextDatum( TL_DATUM ) ; 
       tft.drawChar (  0x7F , 2 , 62 ) ;  // char 0x7E in font 4 has been redesigned to get the Wifi logo
       statusTelnetIsConnectedPrev = statusTelnetIsConnected ;
   }    
-  
+
+  if ( grblLastMessageChanged ) {    
+      if ( strlen( grblLastMessage) < 30 ) {
+        tft.setFreeFont(LABELS9_FONT);    
+      } else {
+        tft.setTextFont( 1 ); 
+      }
+      tft.setTextSize(1) ;
+      tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ;
+      tft.setTextDatum( TL_DATUM ) ; // align Left
+      tft.setTextPadding (290) ;  
+      tft.drawString ( &grblLastMessage[0] , 30 , 62) ;
+      grblLastMessageChanged = false ;
+  }
   
   tft.setTextDatum( TR_DATUM ) ; 
   uint16_t line = 90 ;

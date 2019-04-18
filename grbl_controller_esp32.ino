@@ -72,6 +72,9 @@ uint8_t justPressedBtn , justReleasedBtn, longPressedBtn ,currentBtn = 0 ; // 0 
 uint32_t beginChangeBtnMillis ;
 char lastMsg[80] = { 0} ;        // last message to display
 boolean lastMsgChanged = false ;
+char grblLastMessage[STR_GRBL_BUF_MAX_SIZE] ;
+boolean grblLastMessageChanged;
+
 
 //         SD variables  
 int8_t dirLevel ; //-1 means that card has to be (re)loaded
@@ -158,14 +161,6 @@ void setup() {
   Serial2.print(0X18) ; // send a soft reset
   Serial2.println(" ") ;Serial2.print("$10=3");Serial2.println(" ") ;   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages
   Serial2.flush();                                                      // this is used to avoid sending to many jogging movements when using the nunchuk  
-  Serial.println( "début du programme");
-  char * a  = "A\x80" "C";
-  Serial.println( *a , HEX ) ;
-  a++ ;
-  Serial.println( *a , HEX) ;
-  a++;
-  Serial.println( *a , HEX) ;
-  
 }
 
 //******************************** Main loop ***************************************

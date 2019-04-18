@@ -7,6 +7,7 @@
 #include "menu_file.h"
 #include "telnet.h"
 #include "cmd.h"
+#include "com.h"
 
 // create for touchscreeen
 extern TFT_eSPI tft ;
@@ -18,6 +19,8 @@ extern boolean waitReleased ;
 extern uint8_t statusPrinting ;
 extern char machineStatus[9];           // Iddle, Run, Alarm, ...
 //extern char lastMsg[80]  ;
+extern char grblLastMessage[STR_GRBL_BUF_MAX_SIZE] ;
+extern boolean grblLastMessageChanged;
 
 
 extern uint16_t firstFileToDisplay ;
@@ -58,6 +61,8 @@ void fGoToPage(uint8_t param) {
 
 void fGoToPageAndClearMsg(uint8_t param) {
   fillMsg(" ") ;
+  grblLastMessage[0] = 0 ; // clear grbl last message ([....]
+  grblLastMessageChanged = true ;
   prevPage = currentPage ;
   currentPage = param ;
   updateFullPage = true ; 
