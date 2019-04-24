@@ -239,7 +239,7 @@ boolean convertPosToXY( uint8_t pos , int32_t *_x, int32_t *_y ){
     } else {
       *_y = 80 ;
     }
-    *_x = pos * 80 + 5 ; //   on suppose un bouton de 70 de large avec un bord de 5
+    *_x = pos * 80 + 1 ; //   on suppose un bouton de 74 de large avec un bord de 3
     return true ;
   } else {
     return false ;
@@ -251,8 +251,8 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
 //                         9               1               1
 //                         17              2               1 ; le . sert de séparateur pour répartir les noms de fichier sur 2 lignes si possible 
   int32_t _xl , _yl ;
-  int32_t _w = 74 ;
-  int32_t _h = 74 ;
+  int32_t _w = 76 ;
+  int32_t _h = 76 ;
   int32_t fill = BUTTON_BACKGROUND ;
   int32_t outline = BUTTON_BORDER_NOT_PRESSED ;
   int32_t text = BUTTON_TEXT ;
@@ -284,20 +284,21 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
     if  ( pch!=NULL ) {
       numbChar = pch - tempLabel ;
       if (numbChar <= 8 ) {
-        tempLabel[numbChar] = 0 ;               // replace ~ by end of string
-        tft.setFreeFont(LABELS9_FONT); // added by MS to test
+        tempLabel[numbChar] = 0 ;               // replace * by end of string
+        tft.setFreeFont(LABELS9_FONT);
+        //tft.setTextFont(2); 
         tft.drawString( &tempLabel[0] , _xl + (_w/2), _yl + (_h/3)); // affiche max 8 char sur la première ligne
         tempLabel[numbChar + 9] = 0 ;           // set a 0 to avoid that second part of name exceed 8 char 
         tft.drawString( &tempLabel[numbChar + 1]  , _xl + (_w/2), _yl + 2 * (_h/3)); // affiche la seconde ligne avec max 8 char
         return;
       }
     }
-    // here it is asked to split in 2 lines (or the split was asked after the 8th char
+    // here it is asked to split in 2 lines (or the split was asked after the 8th char)
     // we can still split if there is more than 8 char; if there is less than 4, we use another font 
-    tft.setFreeFont(LABELS9_FONT); // added by MS to test
+    tft.setFreeFont(LABELS9_FONT);
     uint8_t txtLength = strlen( pbtnLabel ) ;  // get the length of text to be displayed
     if ( txtLength <= 4 ) {                                               // imprime 1 ligne au milieu en grand
-      tft.setFreeFont(LABELS12_FONT); // added by MS to test
+      tft.setFreeFont(LABELS12_FONT); 
       tft.drawString( pbtnLabel , _xl + (_w/2), _yl + (_h/2));  
     } else if ( txtLength <= 8 ) {                                        // imprime 1 ligne au milieu  
         tft.drawString( pbtnLabel , _xl + (_w/2), _yl + (_h/2));  
@@ -306,17 +307,17 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
       pch = strchr(tempLabel , '.') ;
       if  ( pch!=NULL ) {
         numbChar = pch - tempLabel ;
-        if (numbChar > 8 ) numbChar = 8 ;
+        if (numbChar >= 8 ) numbChar = 8 ;
       }
       uint8_t tempChar =  tempLabel[numbChar] ; // sauvegarde le charactère '.' ou un autre
 //      Serial.print("numChar="); Serial.print(numbChar) ;
 //      Serial.print("txtLenth="); Serial.print(txtLength) ;
 //      Serial.print("tempChar="); Serial.print(tempChar) ; Serial.print(" , "); Serial.print(tempChar , HEX) ;
       tempLabel[numbChar] = 0 ;            // put a 0 instead 
-      tft.drawString( tempLabel , _xl + (_w/2), _yl + (_h/3)); // affiche max 8 char sur la première ligne (ou la part avant .)
+      tft.drawString( tempLabel , _xl + (_w/2), _yl + (_h/3)); // affiche max 7 char sur la première ligne (ou la partie avant .)
       tempLabel[numbChar] = tempChar ;    // restore the char
-      if ( (txtLength - numbChar) >= 9 ) {
-        tempLabel[numbChar + numbChar + 8 ] = 0 ;     // put a 0 to avoid a too long string 
+      if ( (txtLength - numbChar) >= 8 ) {
+        tempLabel[numbChar + numbChar + 9 ] = 0 ;     // put a 0 to avoid a too long string 
       }  
       tft.drawString( &tempLabel[numbChar]  , _xl + (_w/2), _yl + 2 * (_h/3)); // affiche la seconde ligne avec max 8 char
     }   
@@ -326,8 +327,8 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
 
 void mButtonBorder(uint8_t pos , uint16_t outline) {  // draw the border of a button at posiition 
   int32_t _xl , _yl ;
-  int32_t _w = 74 ;
-  int32_t _h = 74 ;
+  int32_t _w = 76 ;
+  int32_t _h = 76 ;
   convertPosToXY( pos , &_xl, &_yl ) ;
   uint8_t r = min(_w, _h) / 4; // Corner radius
   tft.drawRoundRect( _xl, _yl , _w, _h, r, outline);
@@ -647,8 +648,8 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   tft.setFreeFont (LABELS12_FONT) ;
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ;
-  tft.setTextPadding (121) ;      // expect to clear 100 pixel when drawing text or float
-  uint8_t c1 = 121, c2 = c1 + 121 ;
+  tft.setTextPadding (120) ;      // expect to clear 100 pixel when drawing text or float
+  uint8_t c1 = 120, c2 = c1 + 120 ;
   line += 20 ; tft.drawFloat( wposXYZ[0] , 2 , c1 , line ); tft.drawFloat( mposXYZ[0] , 2 , c2 , line ); 
   line += 32 ; tft.drawFloat( wposXYZ[1] , 2 , c1 , line ); tft.drawFloat( mposXYZ[1] , 2 , c2 , line );
   line += 32 ; tft.drawFloat( wposXYZ[2] , 2 , c1 , line ); tft.drawFloat( mposXYZ[2] , 2 , c2 , line  ); 
@@ -770,7 +771,7 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
     tft.setFreeFont (LABELS12_FONT) ;
     tft.setTextSize(1) ;
     tft.setTextDatum( TL_DATUM ) ;
-    tft.setCursor(20 , 10 , 2) ; // x, y, font
+    tft.setCursor(20 , 20 ) ; // x, y, font
     tft.print( firstFileToDisplay ) ;
     tft.print( " / " ) ;
     tft.print( sdFileDirCnt ) ;  
