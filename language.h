@@ -134,8 +134,6 @@
 #define __LIMIT_ON_HOMING "A8.Fin de course durant homing"
 #define __LIMIT_MISSING_HOMING "A9.Pas de fin de course(homing)"
 
-
-
 #elif defined(LANGUAGE) and (LANGUAGE == DE)  // here German version
 #define __SETUP "Konfig" 
 #define __PRINT "Fr\x81" "sen" 
@@ -188,11 +186,11 @@
 #define __CARD_MOUNT_FAILED "Einbindung SD fehlgeschlagen"
 #define __ROOT_NOT_FOUND "Root nicht gefunden" 
 #define __CHDIR_ERROR "Fehler Verzeichniswechsel"
-#define __FAILED_TO_OPEN_ROOT "Root "\x82" "ffnen gescheitert!" 
+#define __FAILED_TO_OPEN_ROOT "Root \x82" "ffnen gescheitert!" 
 #define __FIRST_DIR_IS_NOT_ROOT "Erstes Verz. ist nicht root"
 #define __CURRENT_DIR_IS_NOT_A_SUB_DIR "aktuelles Verzeichnis ist kein Unterverzeichnis"
 #define __FILES_MISSING "Dateien fehlen"
-#define __FAILED_TO_OPEN_A_FILE "Fehler beim "\x82" "ffnen einer Datei"
+#define __FAILED_TO_OPEN_A_FILE "Fehler beim \x82" "ffnen einer Datei"
 #define __NO_FILE_NAME  "Kein Dateiname"
 #define __SELECTED_FILE_MISSING "Ausgew\x81" "hlte Datei fehlt"
 #define __FILE_NAME_NOT_FOUND "Dateiname nicht gefunden"
@@ -214,11 +212,11 @@
 #define __$_WHILE_NOT_IDLE "8. $ while not IDLE"
 #define __LOCKED_ALARM_OR_JOG "9.Gesperrt (Alarm oder Jog))"
 #define __SOFT_LIMIT_NO_HOMING "10.Soft limit(kein Homing)"
-#define __LINE_OVERFLOW "11.Zeilen "\x83" "berlauf"
+#define __LINE_OVERFLOW "11.Zeilen \x83" "berlauf"
 #define __STEP_RATE_TO_HIGH "12.Step rate zu hoch"
 #define __SAFETY_DOOR_DETECTED "13.Schutzt\x83" "r erkannt"
 #define __LINE_LENGHT_EXCEEDED "14.Leitungslange uberschritten"
-#define __JOG_TRAVEL_EXCEEDED "15.Jog Fahrweg "\x83" "berschritten"
+#define __JOG_TRAVEL_EXCEEDED "15.Jog Fahrweg \x83" "berschritten"
 #define __INVALID_JOG_COMMANF "16.Ung\x83" "ltiger Jog Befehl"
 #define __LASER_REQUIRES_PWM "17.Laser erfordert PWM"
 #define __UNKNOWN_ERROR  "Unbekannter Fehler"
@@ -253,6 +251,8 @@
 #define __DOOR_OPEN_HOMING "A7.T\x83" "r offen (homing)"
 #define __LIMIT_ON_HOMING "A8.Limit EIN(homing)"
 #define __LIMIT_MISSING_HOMING "A9.Limit fehlt(homing)"
+
+
 
 
 #else                                      // by default English
