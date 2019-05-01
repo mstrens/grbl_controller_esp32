@@ -46,6 +46,7 @@ void initWifi() {
   WiFi.softAP( MY_SSID , MY_PASSWORD);
   //Serial.println("\nESP has IP address: "+ WiFi.softAPIP().toString()); // Report which SSID and IP is in use
 #endif  
+  WiFi.setSleep(false);
   //----------------------------------------------------------------------   
   ///////////////////////////// Server Commands 
   server.on("/",         HomePage);

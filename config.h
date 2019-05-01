@@ -10,7 +10,7 @@
 #define MY_SSID "bbox2-58c4"       // replace by the name of your access point (when act as station) or the name you assign to your device (when act as acces point)
 
 // Only for ESP32_ACT_AS_STATION , set the password to get access to your access point (router)
-#define MY_PASSWORD "alineloriejulien"   // replace by the password of your access point (when act as station) or the password you want to use to protect your ESP32 (when act as acces point)
+#define MY_PASSWORD "yourPassword" // replace by the password of your access point (when act as station) or the password you want to use to protect your ESP32 (when act as acces point)
                                       // in this last case, password can remains empty 
 // select your language between EN, FR, DE
 #define LANGUAGE EN
