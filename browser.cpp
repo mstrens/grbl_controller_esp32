@@ -140,7 +140,7 @@ void File_Download(){ // This gets called twice, the first pass selects the inpu
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void DownloadFile(String filename){
-  //Serial.print("Download file: ") ;Serial.println( "/" + filename ) ;
+  Serial.print("Download file: ") ;Serial.println(  filename ) ;
   //String fileNameS ;
   //fileNameS = "/" + filename ;
   //const char  * fileNameC ;
@@ -156,7 +156,7 @@ void DownloadFile(String filename){
         server.sendHeader("Content-Disposition", "attachment; filename="+filename);
         server.sendHeader("Connection", "close");
         server.streamFile(download, "application/octet-stream");
-        download.close();
+        download.close(); 
       } else {
         //Serial.println("File not opened") ;
         reportError("Error : could not open file to dowload"); 
@@ -229,7 +229,8 @@ void sd_dir(){
     if (root) {
       root.rewind();
       SendHTML_Header();
-      webpage += F("<h3 class='rcorners_m'>SD Card Contents</h3><br>");
+      //webpage += F("<h3 class='rcorners_m'>SD Card Contents</h3><br>");
+      webpage += F("<h3></h3><br>");
       webpage += F("<table align='center'>");
       webpage += F("<tr><th>Name/Type</th><th style='width:20%'>Type File/Dir</th><th>File Size</th><th>Delete</th><th>Download</th></tr>");
       printDirectory("/",0);
@@ -344,8 +345,9 @@ void SelectInput(String heading1, String command, String arg_calling_name, Strin
   SendHTML_Header();
   webpage += F("<h3>"); webpage += heading1 + "</h3>"; 
   webpage += F("<FORM action='/"); webpage += command + "' method='post'>"; // Must match the calling argument e.g. '/chart' calls '/chart' after selection but with arguments!
-  webpage += F("<input type='text' name='"); webpage += arg_calling_name; webpage += F("' value='");  webpage += initialValue ; webpage += F("'><br><br>"); 
-  webpage += F("<input type='submit' name='"); webpage += arg_calling_name; webpage += F("' value='Submit'><br><br>");
+  webpage += F("<input type='hidden' name='"); webpage += arg_calling_name; webpage += F("' value='");  webpage += initialValue ; webpage += F("'>"); 
+  webpage += F("<input type='text' name='fileNameBox' value='");  webpage += initialValue ; webpage += F("' disabled > <br><br>"); 
+  webpage += F("<input type='submit' name='"); webpage += arg_calling_name; webpage += F("' value='Submit' class='buttons' ><br><br>");
  // webpage += F("<a href='/'>[Back]</a><br><br>");
   append_page_footer();
   SendHTML_Content();
@@ -354,7 +356,7 @@ void SelectInput(String heading1, String command, String arg_calling_name, Strin
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void reportError(String textError){
   SendHTML_Header();
-  webpage += textError; 
+  webpage += "<br><br>" + textError; 
   append_page_footer();
   SendHTML_Content();
   SendHTML_Stop();
@@ -404,7 +406,7 @@ void append_page_header() {
   webpage += F("*{box-sizing:border-box;}");
 //  webpage += F("footer{background-color:#eedfff; text-align:center;padding:0.3em 0.3em;border-radius:0.375em;font-size:60%;}");
   webpage += F("button{border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:20%;color:white;font-size:130%;}");
-//  webpage += F(".buttons {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:15%;color:white;font-size:80%;}");
+  webpage += F(".buttons {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:15%;color:white;font-size:80%;}");
 //  webpage += F(".buttonsm{border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:9%; color:white;font-size:70%;}");
 //  webpage += F(".buttonm {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:15%;color:white;font-size:70%;}");
 //  webpage += F(".buttonw {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:40%;color:white;font-size:70%;}");
@@ -419,11 +421,12 @@ void append_page_header() {
 //  webpage += F("<li><a href='/delete'>Delete</a></li>"); 
 //  webpage += F("<li><a href='/dir'>Directory</a></li>");
 //  webpage += F("</ul>"); 
-  webpage += F("<a href='/download'><button>Download</button></a>");
+  webpage += F("<a href='/dir'><button>Directory</button></a>");
+  //webpage += F("<a href='/download'><button>Download</button></a>");
   webpage += F("<a href='/upload'><button>Upload</button></a>");
 //  webpage += F("<a href='/stream'><button>Stream</button></a>");
-  webpage += F("<a href='/delete'><button>Delete</button></a>");
-  webpage += F("<a href='/dir'><button>Directory</button></a>");
+  //webpage += F("<a href='/delete'><button>Delete</button></a>");
+  
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void append_page_footer(){ // Saves repeating many lines of code for HTML page footers
