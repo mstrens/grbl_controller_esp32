@@ -140,7 +140,7 @@ void File_Download(){ // This gets called twice, the first pass selects the inpu
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void DownloadFile(String filename){
-  Serial.print("Download file: ") ;Serial.println(  filename ) ;
+  //Serial.print("Download file: ") ;Serial.println(  filename ) ;
   //String fileNameS ;
   //fileNameS = "/" + filename ;
   //const char  * fileNameC ;
