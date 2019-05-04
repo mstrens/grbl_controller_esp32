@@ -56,7 +56,8 @@ void initWifi() {
   //server.on("/stream",   File_Stream);
   server.on("/delete",   File_Delete);
   server.on("/dir",      sd_dir);
-  
+  server.on("/confirmDelete",      confirmDelete);
+  server.on("/confirmDownload",      confirmDownload);
   ///////////////////////////// End of Request commands
   server.begin();
   //Serial.println("HTTP server started");  
@@ -116,13 +117,26 @@ boolean checkSd() {
   return true ;
 }
 
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void confirmDelete(){ 
+  if (server.args() > 0 ) { // check that arguments were received
+    if (server.hasArg("fileName")) SelectInput("Confirm filename to delete","delete","delete" , server.arg(0)); 
+  }
+}
+
+void confirmDownload(){ 
+  if (server.args() > 0 ) { // check that arguments were received
+    if (server.hasArg("fileName")) SelectInput("Confirm filename to download","download","download" , server.arg(0)); 
+  }
+}
+
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void File_Download(){ // This gets called twice, the first pass selects the input, the second pass then processes the command line arguments
   if (server.args() > 0 ) { // Arguments were received
     if (server.hasArg("download")) DownloadFile(server.arg(0));
   }
-  else SelectInput("Enter filename to download","download","download");
+  else SelectInput("Enter filename to download","download","download","");
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void DownloadFile(String filename){
@@ -217,7 +231,7 @@ void sd_dir(){
       SendHTML_Header();
       webpage += F("<h3 class='rcorners_m'>SD Card Contents</h3><br>");
       webpage += F("<table align='center'>");
-      webpage += F("<tr><th>Name/Type</th><th style='width:20%'>Type File/Dir</th><th>File Size</th></tr>");
+      webpage += F("<tr><th>Name/Type</th><th style='width:20%'>Type File/Dir</th><th>File Size</th><th>Delete</th><th>Download</th></tr>");
       printDirectory("/",0);
       webpage += F("</table>");
       SendHTML_Content(); 
@@ -257,7 +271,7 @@ void printDirectory(const char * dirname, uint8_t levels){
     //P(fileName);
     //if ( file1.isDir()) P("is dir") ;
     if(file1.isDir()){
-      webpage += "<tr><td>" +String(fileName)+ "</td><td>Dir</td><td></td></tr>";
+      webpage += "<tr><td>" +String(fileName)+ "</td><td>Dir</td><td></td><td></td><td></td></tr>";
             //printDirectory(fileName, levels-1);
     } else {
       int bytes = file1.size();
@@ -266,7 +280,11 @@ void printDirectory(const char * dirname, uint8_t levels){
       else if(bytes < (1024 * 1024))        fsize = String(bytes/1024.0,3)+" KB";
       else if(bytes < (1024 * 1024 * 1024)) fsize = String(bytes/1024.0/1024.0,3)+" MB";
       else                                  fsize = String(bytes/1024.0/1024.0/1024.0,3)+" GB";
-      webpage += "<tr><td>"  + String(fileName) +  "</td><td>File</td><td>" + fsize + "</td></tr>";
+      webpage += "<tr><td>"  + String(fileName) +  "</td><td>File</td><td>" + fsize + "</td>"; //</tr>";
+      //<td onClick="location.href='http://www.stackoverflow.com';"> Cell content goes here </td>
+      webpage += "<td><form action='/confirmDelete'> <input type='hidden' name='fileName' value='" + String(fileName) +  "' ><input type='submit' value='Delete' ></form></td>" ;
+      webpage += "<td><form action='/confirmDownload'> <input type='hidden' name='fileName' value='" + String(fileName) +  "' ><input type='submit' value='Download' ></form></td>" ;
+      webpage +=  "</tr>";
     }   
     file1.close();   
   }
@@ -278,7 +296,7 @@ void File_Delete(){
   if (server.args() > 0 ) { // Arguments were received
     if (server.hasArg("delete")) SD_file_delete(server.arg(0));
   }
-  else SelectInput("Select a File to Delete","delete","delete");
+  else SelectInput("Select a File to Delete","delete","delete","");
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void SD_file_delete(String filename) { // Delete the file 
@@ -322,11 +340,11 @@ void SendHTML_Stop(){
   server.client().stop(); // Stop is needed because no content length was sent
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void SelectInput(String heading1, String command, String arg_calling_name){
+void SelectInput(String heading1, String command, String arg_calling_name, String initialValue){
   SendHTML_Header();
   webpage += F("<h3>"); webpage += heading1 + "</h3>"; 
   webpage += F("<FORM action='/"); webpage += command + "' method='post'>"; // Must match the calling argument e.g. '/chart' calls '/chart' after selection but with arguments!
-  webpage += F("<input type='text' name='"); webpage += arg_calling_name; webpage += F("' value=''><br><br>");
+  webpage += F("<input type='text' name='"); webpage += arg_calling_name; webpage += F("' value='");  webpage += initialValue ; webpage += F("'><br><br>"); 
   webpage += F("<input type='submit' name='"); webpage += arg_calling_name; webpage += F("' value='Submit'><br><br>");
  // webpage += F("<a href='/'>[Back]</a><br><br>");
   append_page_footer();

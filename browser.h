@@ -15,7 +15,7 @@ void SendHTML_Header();
 void SendHTML_Content();
 void SendHTML_Stop(); 
 void reportError(String textError);
-void SelectInput(String heading1, String command, String arg_calling_name);
+void SelectInput(String heading1, String command, String arg_calling_name , String initialValue);
 String file_size(int bytes) ;
 void initWifi() ;
 void processWifi(void);
@@ -23,5 +23,7 @@ void P( char * text) ;
 void append_page_header() ;
 void append_page_footer();
 boolean getWifiIp( char * ipBuf ) ;
+void confirmDelete();
+void confirmDownload() ;
 #endif                                       
 
