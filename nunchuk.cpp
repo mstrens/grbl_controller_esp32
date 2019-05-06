@@ -69,10 +69,11 @@ void nunchuk_init() {
       fillMsg( __NO_NUNCHUK  ) ;
     } else {
        nunchukOK = true ;
+       disableEncription() ;
        nunchuk_read() ;  // read once to (perhaps) avoid error message at start up
-       delay(100);
+       delay(20);
     }
-    disableEncription() ;
+    //disableEncription() ;
 }
 
 void disableEncription() {
@@ -92,26 +93,26 @@ void disableEncription() {
  * @return A boolean if the data transfer was successful
  */
 uint8_t nunchuk_read() {
-    I2C_START(NUNCHUK_ADDRESS);
-    I2C_WRITE(0x00);
-    I2C_STOP();
     uint8_t i;
     uint8_t error = 0 ;
     Wire.requestFrom(NUNCHUK_ADDRESS, 6);
-    delayMicroseconds(10);
+    //delayMicroseconds(10);
     for (i = 0; i < 6 && Wire.available(); i++) {
           nunchuk_data[i] = I2C_READ();
           if ( nunchuk_data[i] == 0 || nunchuk_data[i] == 0xFF) { 
             error |= (1 << i) ;
           }
-//          Serial.print( (uint8_t) nunchuk_data[i] , HEX) ;
+    //      Serial.print( (uint8_t) nunchuk_data[i] , HEX) ;
     }
-    if ( error == 0b00111111) {    // error when all received bytes are 00 or FF. 
+    //Serial.println(" ");
+    error = ( error == 0b00111111 ); // error when all received bytes are 00 or FF.
+    if ( error ) {     
       disableEncription() ;  // try to reactivate nunchunck in case of error.
-      return false ;
-    }
-//    Serial.println(" ");
-    return i == 6;
+    }  
+    I2C_START(NUNCHUK_ADDRESS);
+    I2C_WRITE(0x00);
+    I2C_STOP();
+    return !error ; // return true when there is no error
 }
 
 uint8_t nunchuk_buttonZ() {      // Checks the current state of button Z
@@ -142,74 +143,69 @@ void handleNunchuk (void) {
   int8_t moveY = 0 ; //static int8 prevMoveY = 0;
   int8_t moveZ = 0 ; //static int8 prevMoveZ = 0;
   //float moveMultiplier ;
-
-  if ( machineStatus[0] == 'J' || machineStatus[0] == 'I' ) {    //read only if the GRBL status is Idle or Jog
-  //if ( jogCancelFlag == false && jogCmdFlag == false ) { // read only if the is no pending jog flag 
-    //if ( ( ( nunchukMillis - lastNunchukMillis ) > NUNCHUK_READ_DELAY  ) && ( (cntSameMove !=1)  || (( nunchukMillis - lastNunchukMillis ) > NUNCHUK_READ_DELAY_FIRST_CMD  ) ) ) {                // we can not read to fast
+  //Serial.print("handle=");Serial.println( machineStatus[0] , HEX);
     if  ( ( nunchukMillis - lastNunchukMillis ) > NUNCHUK_READ_DELAY  )    {                // we can not read to fast
       lastNunchukMillis = nunchukMillis  ;
-      nunchuk_read() ;
-      //Serial.print(nunchuk_read()) ;
-      //Serial.print(nunchuk_data[0],HEX); Serial.print(",");Serial.print(nunchuk_data[1],HEX);Serial.print(",");Serial.print(nunchuk_data[2],HEX);
-      //Serial.print(",");Serial.print(nunchuk_data[3],HEX);Serial.print(",");Serial.print(nunchuk_data[4],HEX);Serial.print(",");Serial.println(nunchuk_data[5],HEX);
-      if ( nunchuk_buttonC() && nunchuk_buttonZ() == 0 ) {     // si le bouton C est enfoncé mais pas le bouton Z  
-        //Serial.print( ( int )nunchuk_data[0] ) ; Serial.print(" ") ; Serial.println( ( int )nunchuk_data[1] ) ; 
-        if (nunchuk_data[0] < 50 ) {
-          moveX = - 1 ;
-        } else if (nunchuk_data[0] > 200 ) {
-          moveX =  1 ;
-        }
-        if (nunchuk_data[1] < 50 ) {
-          moveY = - 1 ;
-        } else if (nunchuk_data[1] > 200 ) {
-          moveY =  1 ;
-        }
-      } else if ( nunchuk_buttonZ() && nunchuk_buttonC() == 0 ) {   // si le bouton Z est enfoncé mais pas le bouton C
-         if (nunchuk_data[1] < 50 ) {
-          moveZ = - 1 ;
-        } else if (nunchuk_data[1] > 200 ) {
-          moveZ =  1 ;
-        } 
-      }
-      //if ( (machineStatus[0] == 'J' ) && ( ( prevMoveX != moveX) || ( prevMoveY != moveY)  || ( prevMoveZ != moveZ) ) ) { // cancel Jog if jogging and t least one direction change 
-      if ( (machineStatus[0] == 'J' || machineStatus[0] == 'I' ) && ( ( prevMoveX != moveX) || ( prevMoveY != moveY)  || ( prevMoveZ != moveZ) ) ) { // cancel Jog if jogging and at least one direction change       
-        jogCancelFlag = true ; 
-        cntSameMove = 0 ;             // reset the counter
-        //Serial.println("cancel jog") ;
-      } else {
-        //jogCancelFlag = false ;
-      }
-      if ( moveX || moveY || moveZ) {    // if at least one move is asked
-        if (cntSameMove == 0 ) { 
-        //  moveMultiplier = 0.01 ;
-          startMoveMillis = millis() ; 
-        } 
-        //else if (cntSameMove < 5 ) {   // avoid to send to fast a new move
-        //  moveMultiplier = 0.0 ;
-        //} else if (cntSameMove < 10 ) {
-        //  moveMultiplier = 0.01 ;
-        //} else if (cntSameMove < 15 ) {
-        //  moveMultiplier = 0.1 ;
-        //} else if (cntSameMove < 20 ) {
-        //  moveMultiplier = 1 ;
-        //} else {
-        //  moveMultiplier = 4;
-        //} 
-        cntSameMove++ ;
-        jogCmdFlag = true ;
-        jogDistX = moveX;
-        jogDistY = moveY;
-        jogDistZ = moveZ;
-      } else {               // no move asked ( moveX || moveY || moveZ) 
-        cntSameMove = 0 ;
-      //  moveMultiplier = 0 ; // put the value on 0 to avoid an old move to be execute  ; let the flag to be reset by the com.cpp file after a OK being received
-        //jogCmdFlag = false ;
-      } // end if ( moveX || moveY || moveZ)
-      prevMoveX = moveX ;
-      prevMoveY = moveY ;
-      prevMoveZ = moveZ ;
-      //Serial.print("cnt= ") ; Serial.println( cntSameMove ) ;
-    }
-  }  // end of test on flags  
+      if (nunchuk_read() ) {
+          //Serial.print(nunchuk_data[0],HEX); Serial.print(",");Serial.print(nunchuk_data[1],HEX); Serial.print(",");Serial.println(nunchuk_data[5] & 0x03 , HEX);
+          if ( nunchuk_buttonC() && nunchuk_buttonZ() == 0 ) {     // si le bouton C est enfoncé mais pas le bouton Z  
+            //Serial.print( ( int )nunchuk_data[0] ) ; Serial.print(" ") ; Serial.println( ( int )nunchuk_data[1] ) ; 
+            if (nunchuk_data[0] < 50 ) {
+              moveX = - 1 ;
+            } else if (nunchuk_data[0] > 200 ) {
+              moveX =  1 ;
+            }
+            if (nunchuk_data[1] < 50 ) {
+              moveY = - 1 ;
+            } else if (nunchuk_data[1] > 200 ) {
+              moveY =  1 ;
+            }
+          } else if ( nunchuk_buttonZ() && nunchuk_buttonC() == 0 ) {   // si le bouton Z est enfoncé mais pas le bouton C
+             if (nunchuk_data[1] < 50 ) {
+              moveZ = - 1 ;
+            } else if (nunchuk_data[1] > 200 ) {
+              moveZ =  1 ;
+            } 
+          }
+          //if ( (machineStatus[0] == 'J' ) && ( ( prevMoveX != moveX) || ( prevMoveY != moveY)  || ( prevMoveZ != moveZ) ) ) { // cancel Jog if jogging and t least one direction change 
+          if ( (machineStatus[0] == 'J' || machineStatus[0] == 'I' ) && ( ( prevMoveX != moveX) || ( prevMoveY != moveY)  || ( prevMoveZ != moveZ) ) ) { // cancel Jog if jogging and at least one direction change       
+            jogCancelFlag = true ; 
+            cntSameMove = 0 ;             // reset the counter
+            //Serial.println("cancel jog") ;
+          } else {
+            //jogCancelFlag = false ;
+          }
+          if ( moveX || moveY || moveZ) {    // if at least one move is asked
+            if (cntSameMove == 0 ) { 
+            //  moveMultiplier = 0.01 ;
+              startMoveMillis = millis() ; 
+            } 
+            //else if (cntSameMove < 5 ) {   // avoid to send to fast a new move
+            //  moveMultiplier = 0.0 ;
+            //} else if (cntSameMove < 10 ) {
+            //  moveMultiplier = 0.01 ;
+            //} else if (cntSameMove < 15 ) {
+            //  moveMultiplier = 0.1 ;
+            //} else if (cntSameMove < 20 ) {
+            //  moveMultiplier = 1 ;
+            //} else {
+            //  moveMultiplier = 4;
+            //} 
+            cntSameMove++ ;
+            jogCmdFlag = true ;
+            jogDistX = moveX;
+            jogDistY = moveY;
+            jogDistZ = moveZ;
+          } else {               // no move asked ( moveX || moveY || moveZ) 
+            cntSameMove = 0 ;
+          //  moveMultiplier = 0 ; // put the value on 0 to avoid an old move to be execute  ; let the flag to be reset by the com.cpp file after a OK being received
+            //jogCmdFlag = false ;
+          } // end if ( moveX || moveY || moveZ)
+          prevMoveX = moveX ;
+          prevMoveY = moveY ;
+          prevMoveZ = moveZ ;
+          //Serial.print("cnt= ") ; Serial.println( cntSameMove ) ;
+      }  // end of nunchukRead is true
+    }  //end of test on delay  
 } // end handleNunchuk
 

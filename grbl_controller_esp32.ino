@@ -191,7 +191,7 @@ void loop() {
  executeMainActionBtn () ; // 
 
  // handle nunchuk if implemented
-  if ( nunchukOK && (statusPrinting == PRINTING_STOPPED && ( machineStatus[0] == 'I' || machineStatus[0] == 'J') ) )  {
+  if ( nunchukOK && statusPrinting == PRINTING_STOPPED && ( machineStatus[0] == 'I' || machineStatus[0] == 'J' || machineStatus[0] == '?') )  {  //read only if the GRBL status is Idle or Jog or ?? (this last is only for testing without GRBL
     handleNunchuk() ;
   }
 
