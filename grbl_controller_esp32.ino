@@ -159,7 +159,7 @@ void setup() {
   telnetInit() ;
 #endif 
   Serial2.print(0X18) ; // send a soft reset
-  Serial2.println(" ") ;Serial2.print("$10=3");Serial2.println(" ") ;   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages
+  Serial2.println(" ") ;Serial2.print("$10=3");Serial2.println(" ") ;   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
   Serial2.flush();                                                      // this is used to avoid sending to many jogging movements when using the nunchuk  
 }
 

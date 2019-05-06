@@ -285,7 +285,7 @@ void handleLastNumericField(void) { // decode last numeric field
           if ( wposOrMpos == 'W') {                  // we previously had a WPos so we update MPos
             mposXYZ[wcoIdx] = wposXYZ[wcoIdx] + wcoXYZ[wcoIdx] ;  
           } else {                                   // we previously had a MPos so we update WPos
-            mposXYZ[wcoIdx] = wposXYZ[wcoIdx] + wcoXYZ[wcoIdx] ;
+            wposXYZ[wcoIdx] = mposXYZ[wcoIdx] - wcoXYZ[wcoIdx] ;
           }
           
           wcoIdx++ ;
@@ -446,7 +446,7 @@ void sendJogCmd(uint32_t startTime) {
         } else {
           counter = counter - DELAY_BEFORE_REPEAT_MOVE ;
           if (counter < 0) {
-            Serial.println("counter neg");
+            //Serial.println("counter neg");
             return;              // do not send a move
           }
           if ( counter > (  DELAY_TO_REACH_MAX_SPEED - DELAY_BEFORE_REPEAT_MOVE) ) {

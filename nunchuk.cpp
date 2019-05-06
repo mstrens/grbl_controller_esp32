@@ -150,20 +150,20 @@ void handleNunchuk (void) {
           //Serial.print(nunchuk_data[0],HEX); Serial.print(",");Serial.print(nunchuk_data[1],HEX); Serial.print(",");Serial.println(nunchuk_data[5] & 0x03 , HEX);
           if ( nunchuk_buttonC() && nunchuk_buttonZ() == 0 ) {     // si le bouton C est enfoncé mais pas le bouton Z  
             //Serial.print( ( int )nunchuk_data[0] ) ; Serial.print(" ") ; Serial.println( ( int )nunchuk_data[1] ) ; 
-            if (nunchuk_data[0] < 50 ) {
+            if (nunchuk_data[0] < 80 ) {
               moveX = - 1 ;
-            } else if (nunchuk_data[0] > 200 ) {
+            } else if (nunchuk_data[0] > 170 ) {
               moveX =  1 ;
             }
-            if (nunchuk_data[1] < 50 ) {
+            if (nunchuk_data[1] < 80 ) {
               moveY = - 1 ;
-            } else if (nunchuk_data[1] > 200 ) {
+            } else if (nunchuk_data[1] > 170 ) {
               moveY =  1 ;
             }
           } else if ( nunchuk_buttonZ() && nunchuk_buttonC() == 0 ) {   // si le bouton Z est enfoncé mais pas le bouton C
-             if (nunchuk_data[1] < 50 ) {
+             if (nunchuk_data[1] < 80 ) {
               moveZ = - 1 ;
-            } else if (nunchuk_data[1] > 200 ) {
+            } else if (nunchuk_data[1] > 170 ) {
               moveZ =  1 ;
             } 
           }
