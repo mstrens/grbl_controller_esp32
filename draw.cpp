@@ -702,11 +702,17 @@ void drawDataOnSetupPage() {
  
   //tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
   //tft.setTextSize(1) ;           // char is 2 X magnified => 
-  
-  tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
-  tft.setTextPadding (320) ;      // expect to clear 70 pixel when drawing text or 
-  tft.setTextColor(SCREEN_ALERT_TEXT ,  SCREEN_BACKGROUND) ;
-  tft.drawString( lastMsg , 2 , 32 );
+
+  if ( strlen( lastMsg) < 30 ) {
+        tft.setFreeFont(LABELS9_FONT);    
+  } else {
+      tft.setTextFont( 1 ); 
+  }
+  tft.setTextSize(1) ;
+  tft.setTextColor(SCREEN_ALERT_TEXT ,  SCREEN_BACKGROUND ) ;
+  tft.setTextDatum( TL_DATUM ) ; // align Left
+  tft.setTextPadding (320) ;  
+  tft.drawString ( &lastMsg[0] , 2 , 32) ;
 }
 
 void fMoveBase(void) {

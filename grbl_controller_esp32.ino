@@ -205,20 +205,21 @@ void loop() {
   if (newGrblStatusReceived == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP ) ) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
     updatePartPage = true ;
   }
-  if (newGrblStatusReceived == true && ( currentPage == _P_SETUP) ) { //force a refresh if a message has been received from GRBL and we are in a setup screen
+  newGrblStatusReceived = false ;
+  if (lastMsgChanged == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP) ) { //force a refresh if a message has been filled
     updatePartPage = true ;
   }
-  newGrblStatusReceived = false ;
+  
   if (  ( updateFullPage ) ) {
     drawFullPage() ; 
 
   } else if ( updatePartPage ) {   // si l'écran doit être réaffiché, construit l'écran et l'affiche
     drawPartPage() ;                           // si l'écran doit être mis à jour, exécute une fonction plus limitée qui ne redessine pas les boutons        
   }    
-  
+  lastMsgChanged = false ; // lastMsgChanged is used in drawPartPage; so, it can not be set on false before
   updateFullPage = false ;
   updatePartPage = false ;
-  lastMsgChanged = false ;
+  
 }
 
 

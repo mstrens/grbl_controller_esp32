@@ -356,8 +356,6 @@ void sendToGrbl( void ) {
   } // end else if  
   if ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_PAUSED ) {   // process nunchuk cancel and commands
     if ( jogCancelFlag ) {
-
-
       if ( jog_status == JOG_NO ) {
         Serial2.print( (char) 0x85) ; Serial2.print("G4P0") ; Serial2.print( (char) 0x0A) ;    // to be execute after a cancel jog in order to get an OK that says that grbl is Idle.
         Serial2.flush() ;             // wait that all outgoing char are really sent.
@@ -370,7 +368,7 @@ void sendToGrbl( void ) {
           jog_status = JOG_NO ;
           jogCancelFlag = false ;
            
-         } else {
+        } else {
           if ( millis() >  exitMillis ) {  // si on ne reçoit pas le OK dans le délai maximum prévu
             jog_status = JOG_NO ; // reset all parameters related to jog .
             jogCancelFlag = false ;
@@ -379,24 +377,17 @@ void sendToGrbl( void ) {
           }
         }
       } 
-
-/*
-      Serial2.print( '!') ;
-      Serial2.flush() ;
-      delay(10);
-      Serial2.print( '~') ;
-      jogCancelFlag = false ;
-*/      
-    }
+    } // end of jogCancelFlag
     
     if ( jogCmdFlag ) {
       if ( jog_status == JOG_NO ) {
         //Serial.println( bufferAvailable[0] ) ;
         if (bufferAvailable[0] > 15) {    // tests shows that GRBL gives errors when we fill to much the block buffer
-          sendJogCmd(startMoveMillis) ;                
-          waitOk = true ;
-          jog_status = JOG_WAIT_END_CMD ;
-          exitMillis = millis() + 500 ; //expect a OK before 500 msec
+          if ( sendJogCmd(startMoveMillis) ) { // if command has been sent
+            waitOk = true ;
+            jog_status = JOG_WAIT_END_CMD ;
+            exitMillis = millis() + 500 ; //expect a OK before 500 msec
+          }
         }  
               
       } else if ( jog_status == JOG_WAIT_END_CMD  ) {
@@ -430,7 +421,7 @@ void sendToGrbl( void ) {
   }
 }  
 
-void sendJogCmd(uint32_t startTime) {
+boolean sendJogCmd(uint32_t startTime) {
 #define MINDIST 0.01    // mm
 #define MINSPEED 10     // mm
 #define MAXSPEEDXY 2000 // mm/sec
@@ -448,7 +439,7 @@ void sendJogCmd(uint32_t startTime) {
           counter = counter - DELAY_BEFORE_REPEAT_MOVE ;
           if (counter < 0) {
             //Serial.println("counter neg");
-            return;              // do not send a move
+            return false ;              // do not send a move; // false means that cmd has not been sent
           }
           if ( counter > (  DELAY_TO_REACH_MAX_SPEED - DELAY_BEFORE_REPEAT_MOVE) ) {
             counter = DELAY_TO_REACH_MAX_SPEED - DELAY_BEFORE_REPEAT_MOVE ;
@@ -497,6 +488,7 @@ void sendJogCmd(uint32_t startTime) {
         
         //Serial.print("Send cmd jog " ); Serial.print(distanceMove) ; Serial.print(" " ); Serial.print(speedMove) ;Serial.print(" " ); Serial.println(millis() - startTime );
         //Serial.print(prevMoveX) ; Serial.print(" " ); Serial.print(prevMoveY) ; Serial.print(" " ); Serial.print(prevMoveZ) ;Serial.print(" ") ; Serial.println(millis()) ;
+        return true ; // true means that cmd has been sent
 }
 
 char * errorArrayMsg[] = { __UNKNOWN_ERROR  , 
