@@ -97,7 +97,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
     c=Serial2.read() ;
 //#define DEBUG_RECEIVED_CHAR
 #ifdef DEBUG_RECEIVED_CHAR      
-      Serial.print( (char) c) ; 
+      Serial.print( (char) c) ;
       //if  (c == 0x0A || c == 0x0C ) Serial.println(millis()) ;
 #endif      
     if ( statusPrinting == PRINTING_FROM_USB ) {
@@ -396,8 +396,9 @@ void sendToGrbl( void ) {
           sendJogCmd(startMoveMillis) ;                
           waitOk = true ;
           jog_status = JOG_WAIT_END_CMD ;
+          exitMillis = millis() + 500 ; //expect a OK before 500 msec
         }  
-        exitMillis = millis() + 500 ; //expect a OK before 500 msec      
+              
       } else if ( jog_status == JOG_WAIT_END_CMD  ) {
         if ( !waitOk ) {
           jog_status = JOG_NO ;
