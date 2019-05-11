@@ -116,9 +116,9 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
 
     case '\r' : // CR is sent after "error:xx"
       if( getGrblPosState == GET_GRBL_STATUS_CLOSED ) {
-        if ( ( strGrblBuf[0] == 'e' && strGrblBuf[1] == 'r' ) || ( strGrblBuf[0] == 'A' && strGrblBuf[1] == 'L' ) ) {  // we got an error message or an ALARM message
+        if (  strGrblBuf[0] == 'e' && strGrblBuf[1] == 'r' )   {  // we got an error message or an ALARM message
           fillErrorMsg( strGrblBuf );           // save the error or ALARM
-        } else if ( ( strGrblBuf[0] == 'A' && strGrblBuf[1] == 'L' ) ) {
+        } else if  ( strGrblBuf[0] == 'A' && strGrblBuf[1] == 'L' )  {
           fillAlarmMsg( strGrblBuf );  
         }
         
@@ -250,7 +250,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
     lastC = c ;
   } // end while
   
-  if ( (millis() - millisLastGetGBL ) > 5500 ) {           // if we did not get a GRBL status since 5500 ms, status become "?"
+  if ( (millis() - millisLastGetGBL ) > 2500 ) {           // if we did not get a GRBL status since 2500 ms, status become "?"
     machineStatus[0] = '?' ; machineStatus[1] = '?' ; machineStatus[2] = 0 ; 
     //Serial.print( "force reset ") ; Serial.print( millis()) ; Serial.print( " LG> = ") ; Serial.print( millis()) ;
     millisLastGetGBL = millis() ;
