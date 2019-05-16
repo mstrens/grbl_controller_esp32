@@ -81,6 +81,7 @@ extern uint32_t sdNumberOfCharSent ;
 extern WiFiClient telnetClient;
 
 uint8_t wposOrMpos ;
+uint32_t waitOkWhenSdMillis ;  // timeout when waiting for OK while sending form SD
 
 // ----------------- fonctions pour lire de GRBL -----------------------------
 void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if statusprinting = PRINTING_FROM_PC and decode the data (look for "OK", for <xxxxxx> sentence
@@ -304,28 +305,35 @@ void sendToGrbl( void ) {
   static uint32_t exitMillis ;
  
   if ( statusPrinting == PRINTING_FROM_SD) {
-    while ( aDir[dirLevel+1].available() > 0 && (! waitOk) && statusPrinting == PRINTING_FROM_SD && Serial2.availableForWrite() > 2 ) {
-      sdChar = aDir[dirLevel+1].read() ;
-      if ( sdChar < 0 ) {
-        statusPrinting = PRINTING_STOPPED  ;
-        updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
-      } else {
-        sdNumberOfCharSent++ ;
-        if( sdChar != 13){
-          Serial2.print( (char) sdChar ) ;
-        }
-        if ( sdChar == '\n' ) {
-           waitOk = true ;
-        }
+    if ( waitOk ) {
+      if ( millis() > waitOkWhenSdMillis ) {
+        fillMsg(__MISSING_OK_WHEN_SENDING_FRM_SD ) ;   // give an error if we have to wait to much to get an OK from grbl
+        waitOkWhenSdMillis = millis()  + 20000;  // wait for 20 sec before generating the message again
       }
-    } // end while
-    if ( aDir[dirLevel+1].available() == 0 ) { 
-      statusPrinting = PRINTING_STOPPED  ; 
-      updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
-      //Serial2.print( (char) 0x18 ) ; //0x85) ;   // cancel jog (just for testing); must be removed
-      Serial2.print( (char) 10 ) ; // sent a new line to be sure that Grbl handle last line.
-    }
-    
+    } else {
+      waitOkWhenSdMillis = millis()  + 20000;  // set time out on 20 sec (20000msec)
+      while ( aDir[dirLevel+1].available() > 0 && (! waitOk) && statusPrinting == PRINTING_FROM_SD && Serial2.availableForWrite() > 2 ) {
+          sdChar = aDir[dirLevel+1].read() ;
+          if ( sdChar < 0 ) {
+            statusPrinting = PRINTING_STOPPED  ;
+            updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
+          } else {
+            sdNumberOfCharSent++ ;
+            if( sdChar != 13){
+              Serial2.print( (char) sdChar ) ;
+            }
+            if ( sdChar == '\n' ) {
+               waitOk = true ;
+            }
+          }
+      } // end while
+      if ( aDir[dirLevel+1].available() == 0 ) { 
+        statusPrinting = PRINTING_STOPPED  ; 
+        updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
+        //Serial2.print( (char) 0x18 ) ; //0x85) ;   // cancel jog (just for testing); must be removed
+        Serial2.print( (char) 10 ) ; // sent a new line to be sure that Grbl handle last line.
+      }
+    } // end of else waitOk
   } else if ( statusPrinting == PRINTING_FROM_USB ) {
     while ( Serial.available() && statusPrinting == PRINTING_FROM_USB ) {
       sdChar = Serial.read() ;

@@ -575,6 +575,7 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
       tft.drawNumber( ( (100 * sdNumberOfCharSent) / sdFileSize), 170 , 0 ) ;
       tft.setTextPadding (1) ;
       tft.drawString( "%" , 190 , 0 ) ;
+      Serial.print( sdNumberOfCharSent ); Serial.print(  " / ") ; Serial.println( sdFileSize ); 
   }
 
   if ( machineStatus0Prev != machineStatus[0] || machineStatus[0] == 'A' || machineStatus[0] == 'H') {
