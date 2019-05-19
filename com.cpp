@@ -307,7 +307,7 @@ void sendToGrbl( void ) {
   if ( statusPrinting == PRINTING_FROM_SD) {
     if ( waitOk ) {
       if ( millis() > waitOkWhenSdMillis ) {
-        fillMsg(__MISSING_OK_WHEN_SENDING_FRM_SD ) ;   // give an error if we have to wait to much to get an OK from grbl
+        fillMsg(__MISSING_OK_WHEN_SENDING_FROM_SD ) ;   // give an error if we have to wait to much to get an OK from grbl
         waitOkWhenSdMillis = millis()  + 20000;  // wait for 20 sec before generating the message again
       }
     } else {
@@ -319,10 +319,10 @@ void sendToGrbl( void ) {
             updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
           } else {
             sdNumberOfCharSent++ ;
-            if( sdChar != 13){
+            if( sdChar != 13){             // 13 = carriage return
               Serial2.print( (char) sdChar ) ;
             }
-            if ( sdChar == '\n' ) {
+            if ( sdChar == '\n' ) {        // n= new line = line feed = 10 decimal
                waitOk = true ;
             }
           }
