@@ -591,16 +591,15 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   }
 
   if ( lastMsgChanged ) {    
-      //tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
-      if ( strlen( lastMsg) < 30 ) {
-        tft.setFreeFont(LABELS9_FONT);    
-      } else {
-        tft.setTextFont( 1 ); 
-      }
       tft.setTextSize(1) ;
       tft.setTextColor(SCREEN_ALERT_TEXT ,  SCREEN_BACKGROUND ) ;
       tft.setTextDatum( TL_DATUM ) ; // align Left
-      tft.setTextPadding (320) ;  
+      tft.setTextPadding (320) ; 
+      tft.setFreeFont(LABELS9_FONT); 
+      if ( strlen( lastMsg) > 30 ) {
+        tft.drawString ( " " , 2 , 32) ; // print space first in the larger font to clear the pixels
+        tft.setTextFont( 1 );           
+      }
       tft.drawString ( &lastMsg[0] , 2 , 32) ;
       lastMsgChanged = false ;
   }
@@ -620,15 +619,16 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   }    
 
   if ( grblLastMessageChanged ) {    
-      if ( strlen( grblLastMessage) < 30 ) {
-        tft.setFreeFont(LABELS9_FONT);    
-      } else {
-        tft.setTextFont( 1 ); 
-      }
+     
       tft.setTextSize(1) ;
       tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ;
       tft.setTextDatum( TL_DATUM ) ; // align Left
-      tft.setTextPadding (290) ;  
+      tft.setTextPadding (290) ; 
+      tft.setFreeFont(LABELS9_FONT);
+      if ( strlen( grblLastMessage) > 30 ) {
+        tft.drawString ( " " , 30 , 62) ; // print space first in the larger font to clear the pixels
+        tft.setTextFont( 1 ); 
+      }
       tft.drawString ( &grblLastMessage[0] , 30 , 62) ;
       grblLastMessageChanged = false ;
   }
@@ -701,18 +701,16 @@ void drawDataOnSetupPage() {
   tft.setTextPadding (120) ;      // expect to clear 70 pixel when drawing text or 
   tft.drawString( &machineStatus[0] , 315  , 0 ) ; // affiche le status GRBL (Idle,....)
  
-  //tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
-  //tft.setTextSize(1) ;           // char is 2 X magnified => 
-
-  if ( strlen( lastMsg) < 30 ) {
-        tft.setFreeFont(LABELS9_FONT);    
-  } else {
-      tft.setTextFont( 1 ); 
-  }
+  
   tft.setTextSize(1) ;
   tft.setTextColor(SCREEN_ALERT_TEXT ,  SCREEN_BACKGROUND ) ;
   tft.setTextDatum( TL_DATUM ) ; // align Left
   tft.setTextPadding (320) ;  
+  tft.setFreeFont(LABELS9_FONT);    
+  if ( strlen( lastMsg) > 30 ) {
+      tft.drawString ( " " , 2 , 32) ;
+      tft.setTextFont( 1 ); 
+  }
   tft.drawString ( &lastMsg[0] , 2 , 32) ;
 }
 

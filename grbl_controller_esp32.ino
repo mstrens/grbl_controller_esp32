@@ -104,7 +104,7 @@ uint8_t statusPrinting = PRINTING_STOPPED ;
 // grbl data
 boolean newGrblStatusReceived = false ;
 char machineStatus[9];           // Iddle, Run, Alarm, ...
-boolean waitOk = false ;
+volatile boolean waitOk = false ;
 
 // Nunchuk data.
 extern boolean nunchukOK ;  // keep flag to detect a nunchuk at startup

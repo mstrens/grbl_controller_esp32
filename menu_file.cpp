@@ -40,7 +40,7 @@ extern int16_t encoderTopLine ;
 extern uint32_t sdFileSize ;
 extern uint32_t sdNumberOfCharSent ;
 
-extern boolean waitOk ;
+extern volatile boolean waitOk ;
 //extern File * sdFiles[DIR_LEVEL_MAX] ; // normally max 6 dir level
 extern int8_t dirLevel ;
 

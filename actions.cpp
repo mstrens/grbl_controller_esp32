@@ -34,7 +34,7 @@ extern uint8_t justPressedBtn;
 extern uint8_t justReleasedBtn;
 extern uint8_t longPressedBtn;
 extern uint32_t beginChangeBtnMillis ;
-extern boolean waitOk ;
+extern volatile boolean waitOk ;
 
 //extern uint32_t cntSameMove ;
 extern uint8_t jog_status  ;
