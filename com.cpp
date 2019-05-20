@@ -303,15 +303,15 @@ void sendToGrbl( void ) {
   static uint32_t nextSendMillis = 0 ;
   uint32_t currSendMillis  ;
   static uint32_t exitMillis ;
- 
+  #define WAIT_OK_SD_TIMEOUT 120000
   if ( statusPrinting == PRINTING_FROM_SD) {
     if ( waitOk ) {
       if ( millis() > waitOkWhenSdMillis ) {
         fillMsg(__MISSING_OK_WHEN_SENDING_FROM_SD ) ;   // give an error if we have to wait to much to get an OK from grbl
-        waitOkWhenSdMillis = millis()  + 20000;  // wait for 20 sec before generating the message again
+        waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // wait for 20 sec before generating the message again
       }
     } else {
-      waitOkWhenSdMillis = millis()  + 20000;  // set time out on 20 sec (20000msec)
+      waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // set time out on 20 sec (20000msec)
       while ( aDir[dirLevel+1].available() > 0 && (! waitOk) && statusPrinting == PRINTING_FROM_SD && Serial2.availableForWrite() > 2 ) {
           sdChar = aDir[dirLevel+1].read() ;
           if ( sdChar < 0 ) {
