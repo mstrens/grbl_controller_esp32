@@ -46,17 +46,21 @@ boolean cmdNameInit() {  // seach op SPIFFS the names of the commands
 
 void deleteFileLike (const char * path) {       // path does not start with "/")
     const char * pchar; 
+    Serial.print("path="); Serial.println(path);
     File root = SPIFFS.open("/");
     if(!root){
         fillMsg(__SPIFFS_FAIL_TO_OPEN );
+        Serial.println("fail to open SPIFFS");
         root.close() ;
         return;
     }
     File file = root.openNextFile();
     while(file){
         pchar = file.name() ;
-        if(pchar[0] == 'C' && pchar[1] == 'm' && pchar[2] == 'd' && pchar[3] == path[3] && pchar[4] == '_' ) {
+        Serial.print("fileName=");Serial.println(pchar);
+        if(pchar[1] == 'C' && pchar[2] == 'm' && pchar[3] == 'd' && pchar[4] == path[3] && pchar[5] == '_' ) {
             SPIFFS.remove(pchar );          // delete file having a name that begins with Cmdx_ (with same x)
+            Serial.println("remove 1 file");
         }
         file = root.openNextFile();
     }
