@@ -8,6 +8,7 @@
 #include "SdFat.h"
 #include "browser.h"
 #include "com.h"
+#include "log.h"
 
 #define LABELS9_FONT &FreeSans9pt7b    // Key label font 2
 #define LABELS12_FONT &FreeSans12pt7b
@@ -53,6 +54,12 @@ extern char machineStatus[9];
 extern float feedSpindle[2] ;  
 
 extern char lastMsg[80] ;        // last message to display
+
+extern uint8_t logBuffer[MAX_BUFFER_SIZE] ;
+extern uint8_t * pNext ; // position of the next char to be written
+extern uint8_t * pFirst ; // position of the first char
+extern uint8_t * pGet ; // position of the last char to be read for display
+
   
 
 //char sdStatusText[][20]  = { "No Sd card" , "Sd card to check" , "Sd card OK" , "Sd card error"} ;  // pour affichage en clair sur le lcd;
@@ -69,6 +76,12 @@ extern boolean jogCmdFlag  ;
 
 extern boolean statusTelnetIsConnected ;
 
+extern uint8_t logBuffer[MAX_BUFFER_SIZE] ;                              // log data
+//extern uint8_t * pNext ; // position of the next char to be written
+//extern uint8_t * pFirst ; // position of the first char
+extern uint8_t * pGet ; // position of the last char to be read for display
+uint8_t * pLastLogLine ; // pointer to the last Log line
+boolean endOfLog = true ;
 float wposMoveInitXYZ[3] ;
 
 // previous values used to optimise redraw of INFO screen
@@ -77,6 +90,8 @@ uint8_t machineStatus0Prev;   // we keep only the first char for fast testing, s
 extern boolean lastMsgChanged ;
 boolean statusTelnetIsConnectedPrev ;
 boolean newInfoPage ;
+
+char lineOfText[50] ; // Store 1 line of text for Log screen
 
 extern char grblLastMessage[STR_GRBL_BUF_MAX_SIZE] ;
 extern boolean grblLastMessageChanged;
@@ -137,76 +152,87 @@ mButton[_FILE0].pLabel = fileNames[0] ;  // labels are defined during execution 
 mButton[_FILE1].pLabel = fileNames[1] ;
 mButton[_FILE2].pLabel = fileNames[2] ;
 mButton[_FILE3].pLabel = fileNames[3] ;
+mButton[_MASKED1].pLabel = " " ;
+mButton[_PG_PREV].pLabel = __PREV ;
+mButton[_PG_NEXT].pLabel = __NEXT ;
 
 mPages[_P_INFO].titel = "Info" ;
 mPages[_P_INFO].pfBase = fInfoBase ;
-fillMPage (_P_INFO , 3 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;   // those buttons are changed dynamically based on status (no print, ...)
-fillMPage (_P_INFO , 7 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;   // those buttons are changed dynamically based on status (no print, ...)
+fillMPage (_P_INFO , 0 , _MASKED1 , _JUST_PRESSED , fGoToPage , _P_LOG ) ; // this button is masked but clicking on the zone call another screen
+fillMPage (_P_INFO , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;   // those buttons are changed dynamically based on status (no print, ...)
+fillMPage (_P_INFO , 11 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;   // those buttons are changed dynamically based on status (no print, ...)
 
 mPages[_P_SETUP].titel = "Setup" ;
 mPages[_P_SETUP].pfBase = fSetupBase ;
-fillMPage (_P_SETUP , 0 , _HOME , _JUST_PRESSED , fHome , 0) ;
-fillMPage (_P_SETUP , 1 , _UNLOCK , _JUST_PRESSED , fUnlock , 0) ;
-fillMPage (_P_SETUP , 2 , _RESET , _JUST_PRESSED , fReset , 0) ;
-fillMPage (_P_SETUP , 3 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT ) ;
-fillMPage (_P_SETUP , 4 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE ) ;
-fillMPage (_P_SETUP , 5 , _SETXYZ , _JUST_PRESSED , fGoToPage , _P_SETXYZ ) ;
-fillMPage (_P_SETUP , 6 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;
-fillMPage (_P_SETUP , 7 , _INFO , _JUST_PRESSED , fGoToPageAndClearMsg ,  _P_INFO) ;
+fillMPage (_P_SETUP , 4 , _HOME , _JUST_PRESSED , fHome , 0) ;
+fillMPage (_P_SETUP , 5 , _UNLOCK , _JUST_PRESSED , fUnlock , 0) ;
+fillMPage (_P_SETUP , 6 , _RESET , _JUST_PRESSED , fReset , 0) ;
+fillMPage (_P_SETUP , 7 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT ) ;
+fillMPage (_P_SETUP , 8 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE ) ;
+fillMPage (_P_SETUP , 9 , _SETXYZ , _JUST_PRESSED , fGoToPage , _P_SETXYZ ) ;
+fillMPage (_P_SETUP , 10 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;
+fillMPage (_P_SETUP , 11 , _INFO , _JUST_PRESSED , fGoToPageAndClearMsg ,  _P_INFO) ;
 
 mPages[_P_PRINT].titel = "Print" ;
 mPages[_P_PRINT].pfBase = fNoBase ;
-fillMPage (_P_PRINT , 0 , _SD , _JUST_PRESSED , fGoToPage , _P_SD) ;
-fillMPage (_P_PRINT , 1 , _USB_GRBL , _JUST_PRESSED , fStartUsb , 0) ;
-fillMPage (_P_PRINT , 2 , _TELNET_GRBL , _JUST_PRESSED , fStartTelnet , 0) ;
-fillMPage (_P_PRINT , 3 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
-fillMPage (_P_PRINT , 6 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;
-fillMPage (_P_PRINT , 7 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
+fillMPage (_P_PRINT , 4 , _SD , _JUST_PRESSED , fGoToPage , _P_SD) ;
+fillMPage (_P_PRINT , 5 , _USB_GRBL , _JUST_PRESSED , fStartUsb , 0) ;
+fillMPage (_P_PRINT , 6 , _TELNET_GRBL , _JUST_PRESSED , fStartTelnet , 0) ;
+fillMPage (_P_PRINT , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
+fillMPage (_P_PRINT , 10 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;
+fillMPage (_P_PRINT , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
 
 mPages[_P_PAUSE].titel = "Paused" ;
 mPages[_P_PAUSE].pfBase = fNoBase ;
-fillMPage (_P_PAUSE , 0 , _CANCEL , _JUST_PRESSED , fCancel , 0) ;
-fillMPage (_P_PAUSE , 1 , _RESUME , _JUST_PRESSED , fResume , 0) ;
-fillMPage (_P_PAUSE , 2 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE) ;
-fillMPage (_P_PAUSE , 7 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
+fillMPage (_P_PAUSE , 4 , _CANCEL , _JUST_PRESSED , fCancel , 0) ;
+fillMPage (_P_PAUSE , 5 , _RESUME , _JUST_PRESSED , fResume , 0) ;
+fillMPage (_P_PAUSE , 6 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE) ;
+fillMPage (_P_PAUSE , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
 
 mPages[_P_MOVE].titel = "Move" ;
 mPages[_P_MOVE].pfBase = fMoveBase ;
-fillMPage (_P_MOVE , 0 , _XP , _JUST_LONG_PRESSED_RELEASED , fMove , _XP) ;
-fillMPage (_P_MOVE , 1 , _YP , _JUST_LONG_PRESSED_RELEASED , fMove , _YP) ;
-fillMPage (_P_MOVE , 2 , _ZP , _JUST_LONG_PRESSED_RELEASED , fMove , _ZP) ;
-fillMPage (_P_MOVE , 3 , _D_AUTO , _JUST_PRESSED , fDist , 0) ;
-fillMPage (_P_MOVE , 4 , _XM , _JUST_LONG_PRESSED_RELEASED , fMove , _XM) ;
-fillMPage (_P_MOVE , 5 , _YM , _JUST_LONG_PRESSED_RELEASED , fMove , _YM) ;
-fillMPage (_P_MOVE , 6 , _ZM , _JUST_LONG_PRESSED_RELEASED , fMove , _ZM) ;
-fillMPage (_P_MOVE , 7 , _BACK , _JUST_PRESSED , fGoBack , 0) ;
+fillMPage (_P_MOVE , 4 , _XP , _JUST_LONG_PRESSED_RELEASED , fMove , _XP) ;
+fillMPage (_P_MOVE , 5 , _YP , _JUST_LONG_PRESSED_RELEASED , fMove , _YP) ;
+fillMPage (_P_MOVE , 6 , _ZP , _JUST_LONG_PRESSED_RELEASED , fMove , _ZP) ;
+fillMPage (_P_MOVE , 7 , _D_AUTO , _JUST_PRESSED , fDist
+, 0) ;
+fillMPage (_P_MOVE , 8 , _XM , _JUST_LONG_PRESSED_RELEASED , fMove , _XM) ;
+fillMPage (_P_MOVE , 9 , _YM , _JUST_LONG_PRESSED_RELEASED , fMove , _YM) ;
+fillMPage (_P_MOVE , 10 , _ZM , _JUST_LONG_PRESSED_RELEASED , fMove , _ZM) ;
+fillMPage (_P_MOVE , 11 , _BACK , _JUST_PRESSED , fGoBack , 0) ;
 
 mPages[_P_SETXYZ].titel = "Set X, Y, Z to 0" ;
 mPages[_P_SETXYZ].pfBase = fSetXYZBase ;
-fillMPage (_P_SETXYZ , 0 , _SETX , _JUST_PRESSED , fSetXYZ , _SETX) ;
-fillMPage (_P_SETXYZ , 1 , _SETY , _JUST_PRESSED , fSetXYZ , _SETY) ;
-fillMPage (_P_SETXYZ , 2 , _SETZ, _JUST_PRESSED , fSetXYZ , _SETZ) ;
-fillMPage (_P_SETXYZ , 3 , _SETXYZ , _JUST_PRESSED , fSetXYZ , _SETXYZ) ;
-fillMPage (_P_SETXYZ , 5 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP ) ;
-fillMPage (_P_SETXYZ , 7 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
+fillMPage (_P_SETXYZ , 4 , _SETX , _JUST_PRESSED , fSetXYZ , _SETX) ;
+fillMPage (_P_SETXYZ , 5 , _SETY , _JUST_PRESSED , fSetXYZ , _SETY) ;
+fillMPage (_P_SETXYZ , 6 , _SETZ, _JUST_PRESSED , fSetXYZ , _SETZ) ;
+fillMPage (_P_SETXYZ , 7 , _SETXYZ , _JUST_PRESSED , fSetXYZ , _SETXYZ) ;
+fillMPage (_P_SETXYZ , 9 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP ) ;
+fillMPage (_P_SETXYZ , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
 mPages[_P_SD].titel = "Select a file on Sd card" ;
 mPages[_P_SD].pfBase = fSdBase ;   // cette fonction doit remplir les 4 premiers boutons en fonction des fichiers disponibles
-fillMPage (_P_SD , 4 , _UP , _JUST_PRESSED , fSdMove , _UP) ;
-fillMPage (_P_SD , 5 , _LEFT , _JUST_PRESSED , fSdMove , _LEFT) ;
-fillMPage (_P_SD , 6 , _RIGHT , _JUST_PRESSED , fSdMove , _RIGHT) ;
-fillMPage (_P_SD , 7 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
+fillMPage (_P_SD , 8 , _UP , _JUST_PRESSED , fSdMove , _UP) ;
+fillMPage (_P_SD , 9 , _LEFT , _JUST_PRESSED , fSdMove , _LEFT) ;
+fillMPage (_P_SD , 10 , _RIGHT , _JUST_PRESSED , fSdMove , _RIGHT) ;
+fillMPage (_P_SD , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
 mPages[_P_CMD].titel = "Select a command" ;
 mPages[_P_CMD].pfBase = fCmdBase ; // 
-if (cmdName[0][0] ) fillMPage (_P_CMD , 0 , _CMD1 , _JUST_PRESSED , fCmd , _CMD1) ; // le paramètre contient le n° du bouton
-if (cmdName[1][0] ) fillMPage (_P_CMD , 1 , _CMD2 , _JUST_PRESSED , fCmd , _CMD2) ; // le paramètre contient le n° du bouton
-if (cmdName[2][0] ) fillMPage (_P_CMD , 2 , _CMD3 , _JUST_PRESSED , fCmd , _CMD3) ; // le paramètre contient le n° du bouton
-if (cmdName[3][0] ) fillMPage (_P_CMD , 3 , _CMD4 , _JUST_PRESSED , fCmd , _CMD4) ; // le paramètre contient le n° du bouton
-if (cmdName[4][0] ) fillMPage (_P_CMD , 4 , _CMD5 , _JUST_PRESSED , fCmd , _CMD5) ; // le paramètre contient le n° du bouton
-if (cmdName[5][0] ) fillMPage (_P_CMD , 5 , _CMD6 , _JUST_PRESSED , fCmd , _CMD6) ; // le paramètre contient le n° du bouton
-if (cmdName[6][0] ) fillMPage (_P_CMD , 6 , _CMD7 , _JUST_PRESSED , fCmd , _CMD7) ; // le paramètre contient le n° du bouton
-fillMPage (_P_CMD , 7 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
+if (cmdName[0][0] ) fillMPage (_P_CMD , 4 , _CMD1 , _JUST_PRESSED , fCmd , _CMD1) ; // le paramètre contient le n° du bouton
+if (cmdName[1][0] ) fillMPage (_P_CMD , 5 , _CMD2 , _JUST_PRESSED , fCmd , _CMD2) ; // le paramètre contient le n° du bouton
+if (cmdName[2][0] ) fillMPage (_P_CMD , 6 , _CMD3 , _JUST_PRESSED , fCmd , _CMD3) ; // le paramètre contient le n° du bouton
+if (cmdName[3][0] ) fillMPage (_P_CMD , 7 , _CMD4 , _JUST_PRESSED , fCmd , _CMD4) ; // le paramètre contient le n° du bouton
+if (cmdName[4][0] ) fillMPage (_P_CMD , 8 , _CMD5 , _JUST_PRESSED , fCmd , _CMD5) ; // le paramètre contient le n° du bouton
+if (cmdName[5][0] ) fillMPage (_P_CMD , 9 , _CMD6 , _JUST_PRESSED , fCmd , _CMD6) ; // le paramètre contient le n° du bouton
+if (cmdName[6][0] ) fillMPage (_P_CMD , 10 , _CMD7 , _JUST_PRESSED , fCmd , _CMD7) ; // le paramètre contient le n° du bouton
+fillMPage (_P_CMD , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
+
+mPages[_P_LOG].titel = "Log" ;
+mPages[_P_LOG].pfBase = fLogBase ;
+fillMPage (_P_LOG , 3 , _PG_PREV , _JUST_PRESSED , fLogPrev , 0) ;
+fillMPage (_P_LOG , 7 , _PG_NEXT , _JUST_PRESSED , fLogNext , 0) ;
+fillMPage (_P_LOG , 11 , _BACK , _JUST_PRESSED , fGoBack , 0) ;
 
 }  // end of init
 
@@ -226,18 +252,21 @@ void tftInit() {
   tft.setRotation(1); // normally, this is already done in tft.int() but it is not clear how is rotation set (probably 0); so it can be usefull to change it here
   touch_calibrate(); // call screen calibration
   //tft.printCalibration() ;  // print calibration data (print on Serial port the calibration data ; only for debug
-  tft.fillScreen(SCREEN_BACKGROUND);   // clear screen
+  clearScreen();   // clear screen
 }
 
 
 boolean convertPosToXY( uint8_t pos , int32_t *_x, int32_t *_y ){
-  if (pos > 0 && pos < 9 ) {                // accept only value from 1 to 8
+  if (pos > 0 && pos < 13 ) {                // accept only value from 1 to 12
     pos--;
-    if (pos >= 4) { 
-      pos -= 4 ;
+    if (pos >= 8) { 
+      pos -= 8 ;
       *_y = 160 ;  // to do, test if 150 is ok for second row of buttons
+    } else if (pos >= 4) { 
+      pos -= 4 ;
+      *_y = 80 ;  
     } else {
-      *_y = 80 ;
+      *_y = 0 ;
     }
     *_x = pos * 80 + 1 ; //   on suppose un bouton de 74 de large avec un bord de 3
     return true ;
@@ -246,10 +275,26 @@ boolean convertPosToXY( uint8_t pos , int32_t *_x, int32_t *_y ){
   }
 } ;
 
-void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (from 1 to 8) 
+void drawAllButtons(){
+  uint8_t i = 0;
+  uint8_t btnIdx;
+  while ( i < 12 ) {           // pour chacun des 12 boutons possibles
+    btnIdx = mPages[currentPage].boutons[i] ;
+    if ( btnIdx && btnIdx != _MASKED1 ) {  // si un n° de bouton est précisé, l'affiche sauf si c'est un bouton masqué (ex: _MASKED1)
+      //Serial.print("va afficher le bouton ") ; Serial.println( i) ;
+      //Serial.print("bouton code= " ) ; Serial.println( mPages[currentPage].boutons[i] ) ;
+      mButtonDraw( i + 1 , btnIdx ) ; // affiche le bouton
+    }
+    i++ ;
+  } 
+}
+
+
+void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (from 1 to 12) ; btnIdx = n° du bouton à afficher
 //  si le texte a moins de 5 char, affiche 1 ligne en size 2
 //                         9               1               1
 //                         17              2               1 ; le . sert de séparateur pour répartir les noms de fichier sur 2 lignes si possible 
+// si le btnIdx est un bouton masqué (ex _MASKED1), alors on n'affiche rien
   int32_t _xl , _yl ;
   int32_t _w = 76 ;
   int32_t _h = 76 ;
@@ -337,15 +382,15 @@ void mButtonBorder(uint8_t pos , uint16_t outline) {  // draw the border of a bu
 
 
 uint8_t getButton( int16_t x, int16_t y ) {    // convert x y into a button if possible
-                                                 // return 1 à 8 suivant le bouton; return 0 if no button
-  if (y < 80 || y > 240 || x > 320 ) return 0 ;
+                                                 // return 1 à 12 suivant le bouton; return 0 if no button
+  if ( y > 240 || x > 320 ) return 0 ;
   int16_t x1 , xReste;
   int16_t y1 , yReste;
   x1 = (x + 5) / 80;
   xReste = (x + 5) % 80;
-  y1 = (y - 80) / 80  ;          // to do check if this is ok
-  yReste = (y - 80) % 80  ; 
-  if  ( (x1 >= 0 && x1 < 4) && (y1 >= 0 && y1 < 2) && ( xReste >= 5 && xReste <= 75 ) && ( yReste >= 5 && yReste <= 75 ) ) {
+  y1 = (y ) / 80  ;          // to do check if this is ok
+  yReste = (y ) % 80  ; 
+  if  ( (x1 >= 0 && x1 < 4) && (y1 >= 0 && y1 < 3) && ( xReste >= 5 && xReste <= 75 ) && ( yReste >= 5 && yReste <= 75 ) ) {
     return ( x1 + 1) + (y1 * 4 ) ;
   } else {
     return 0 ;
@@ -355,7 +400,7 @@ uint8_t getButton( int16_t x, int16_t y ) {    // convert x y into a button if p
 
 //********************************************************************************
 //                    look if touch screen has been pressed/released
-//                    if pressed, convert the x,y position into a button number (from 1 ...8)
+//                    if pressed, convert the x,y position into a button number (from 1 ...12)
 //                    compare to previous state; if previous state is the same, then take new state into account
 //                    fill justPressedBtn, justReleasedBtn, currentBtn , longPressedBtn , beginChangeBtnMillis
 //*********************************************************************************
@@ -366,16 +411,16 @@ void updateBtnState( void) {
   static uint8_t prevBt0 ; 
   uint32_t touchMillis = millis(); 
   uint8_t bt ;
-  uint8_t bt0 = 0; // bt0 is the button nr based on the touched position (0 if not touched, or if touched is not at a valid position, otherwise 1...8)
+  uint8_t bt0 = 0; // bt0 is the button nr based on the touched position (0 if not touched, or if touched is not at a valid position, otherwise 1...12)
   boolean touchPressed ;
   justPressedBtn = 0 ;
   justReleasedBtn = 0 ;  
-  if ( touchMillis > nextMillis ) {    // s'il n'y a pas assez longtemp depuis la dernière lecture, on fait juste un reset des justPressedBtn et justReleasedBtn
+  if ( touchMillis > nextMillis ) {    // s'il n'y a pas assez longtemps depuis la dernière lecture, on fait juste un reset des justPressedBtn et justReleasedBtn
     touchPressed = tft.getTouch( &x,  &y, 600);   // read the touch screen; // later perhaps exit immediately if IrqPin is HIGH (not touched)
                                                 // false = key not pressed
     nextMillis = touchMillis + WAIT_TIME_BETWEEN_TOUCH ;
     if ( touchPressed)  {
-      bt0 = getButton(x , y);  // convertit x, y en n° de bouton ; retourne 0 si en dehours de la zone des boutons; sinon retourne 1 à 9
+      bt0 = getButton(x , y);  // convertit x, y en n° de bouton ; retourne 0 si en dehors de la zone des boutons; sinon retourne 1 à 12
 //    Serial.print("x=") ; Serial.print(x) ; Serial.print( " ," ) ; Serial.print( y) ; Serial.print( " ," ) ; Serial.println(bt0) ;
     } else {
 //      Serial.print("!") ; 
@@ -398,19 +443,19 @@ void updateBtnState( void) {
       }
     }
   }
-  if (justPressedBtn){
-    //Serial.print( "just pressed") ;   Serial.println( justPressedBtn) ;    
-  }
-  if (justReleasedBtn){
-    //Serial.print( "just released") ;   Serial.println( justReleasedBtn) ;    
-  }
+  //if (justPressedBtn){
+  //  Serial.print( "just pressed") ;   Serial.println( justPressedBtn) ;    
+  //}
+  //if (justReleasedBtn){
+  //  Serial.print( "just released") ;   Serial.println( justReleasedBtn) ;    
+  //}
 }
 
 void drawUpdatedBtn( ) {   // update the color of the buttons on a page (based on currentPage, justPressedBtn , justReleasedBtn, longPressedBtn)
-  if ( justReleasedBtn && mPages[currentPage].boutons[justReleasedBtn - 1]) {  // si justReleased contient un bouton et que ce bouton est affiché sur la page
+  if ( justReleasedBtn && mPages[currentPage].boutons[justReleasedBtn - 1] && ( mPages[currentPage].boutons[justReleasedBtn - 1] != _MASKED1) ) {  // si justReleased contient un bouton et que ce bouton est affiché sur la page
     mButtonBorder( justReleasedBtn , BUTTON_BORDER_NOT_PRESSED ) ; // affiche le bord du bouton dans sa couleur normale
   }
-  if ( justPressedBtn && mPages[currentPage].boutons[justPressedBtn - 1]) {  // si justPressed contient un bouton et que ce bouton est affiché sur la page
+  if ( justPressedBtn && mPages[currentPage].boutons[justPressedBtn - 1] && ( mPages[currentPage].boutons[justPressedBtn - 1] != _MASKED1) ) {  // si justPressed contient un bouton et que ce bouton est affiché sur la page
     mButtonBorder( justPressedBtn , BUTTON_BORDER_PRESSED ) ; // affiche le bord du bouton dans la couleur de sélection
   }
 }
@@ -437,7 +482,8 @@ void executeMainActionBtn( ) {   // find and execute main action for ONE button 
 
 // Basis functions
 void blankTft(char * titel, uint16_t x , uint16_t y) {    // blank screen and display one titel
-  tft.fillScreen( SCREEN_BACKGROUND ) ;
+  clearScreen() ;
+  //tft.fillScreen( SCREEN_BACKGROUND ) ;
   // currently titel is not used so folowwing lines can be skipped; uncomment if titel would be used
   //tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
   //tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
@@ -447,6 +493,10 @@ void blankTft(char * titel, uint16_t x , uint16_t y) {    // blank screen and di
   //tft.setCursor( x , y + 30 , 2) ; // x, y, font
 }
 
+void clearScreen() {
+  tft.fillScreen( SCREEN_BACKGROUND ) ;
+}
+
 void printTft(char * text ) {     // print a text on screen
   tft.print( text ) ;
 }
@@ -454,27 +504,16 @@ void printTft(char * text ) {     // print a text on screen
 // affichage d'une nouvelle page = fonction drawPage(pageIdx)
 //          remplir la page d'une couleur
 //          exécuter le pointeur correspondant aux paramètres de la page
-//          8 fois:
+//          12 fois:
 //                 si le n° du bouton existe
 //                    afficher le bouton
 void drawFullPage() {
   //uint32_t fullPageMillis = millis();
-  tft.fillScreen( SCREEN_BACKGROUND ) ;
+  clearScreen() ;
   mPages[currentPage].pfBase();   // exécute la fonction de base prévue pour la page
   //Serial.println("drawFullPage: fin de l'appel de la page de base") ;
-  uint8_t i = 0;
-  while ( i < 8 ) {           // pour chacun des 8 boutons possibles
-    if ( mPages[currentPage].boutons[i] ) {  // si un n° de bouton est précisé, l'affiche)
-//      Serial.print("va afficher le bouton ") ; Serial.println( i) ;
-//      Serial.print("bouton code= " ) ; Serial.println( mPages[currentPage].boutons[i] ) ;
-//      delay(3000) ;
-      
-      mButtonDraw( i + 1 , mPages[currentPage].boutons[i] ) ; // affiche le bouton
-    }
-    i++ ;
-//    Serial.print(i); 
-  }
   //Serial.print("drawFullPage takes");Serial.println(millis() - fullPageMillis); // most of time it takes about 100msec to redraw the full screen
+  drawAllButtons();
 }
 
 void drawPartPage() {          // update only the data on screen (not the button)
@@ -508,32 +547,32 @@ void fInfoBase(void) {
 void updateButtonsInfoPage (void) { // met à jour le set up de la page en fonction du statut d'impression
   switch ( statusPrinting ) {
     case PRINTING_STOPPED :
-      fillMPage (_P_INFO , 3 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
-      fillMPage (_P_INFO , 7 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;
+      fillMPage (_P_INFO , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
+      fillMPage (_P_INFO , 11 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;
       break ;
     case PRINTING_FROM_SD :
-      fillMPage (_P_INFO , 3 , _PAUSE , _JUST_PRESSED , fPause , 0 ) ;
-      fillMPage (_P_INFO , 7 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
+      fillMPage (_P_INFO , 7 , _PAUSE , _JUST_PRESSED , fPause , 0 ) ;
+      fillMPage (_P_INFO , 11 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
       break ;
     case PRINTING_ERROR :                                              // to do; not clear what we should do
-      fillMPage (_P_INFO , 3 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
-      fillMPage (_P_INFO , 7 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;
+      fillMPage (_P_INFO , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
+      fillMPage (_P_INFO , 11 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;
       break ;
     case PRINTING_PAUSED :
-      fillMPage (_P_INFO , 3 , _RESUME , _JUST_PRESSED , fResume , 0 ) ;
-      fillMPage (_P_INFO , 7 , _MORE_PAUSE , _JUST_PRESSED , fGoToPage , _P_PAUSE) ;
+      fillMPage (_P_INFO , 7 , _RESUME , _JUST_PRESSED , fResume , 0 ) ;
+      fillMPage (_P_INFO , 11 , _MORE_PAUSE , _JUST_PRESSED , fGoToPage , _P_PAUSE) ;
       break ;
     case PRINTING_FROM_USB :
-      fillMPage (_P_INFO , 3 , _STOP_PC_GRBL , _JUST_PRESSED , fStopPc , 0 ) ;
-      fillMPage (_P_INFO , 7 , _NO_BUTTON , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
+      fillMPage (_P_INFO , 7 , _STOP_PC_GRBL , _JUST_PRESSED , fStopPc , 0 ) ;
+      fillMPage (_P_INFO , 11 , _NO_BUTTON , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
       break ;
     case PRINTING_FROM_TELNET :
-      fillMPage (_P_INFO , 3 , _STOP_PC_GRBL , _JUST_PRESSED , fStopPc , 0 ) ;
-      fillMPage (_P_INFO , 7 ,_NO_BUTTON , _JUST_PRESSED , fGoToPage, _P_INFO ) ;
+      fillMPage (_P_INFO , 7 , _STOP_PC_GRBL , _JUST_PRESSED , fStopPc , 0 ) ;
+      fillMPage (_P_INFO , 11 ,_NO_BUTTON , _JUST_PRESSED , fGoToPage, _P_INFO ) ;
       break ;
     case PRINTING_CMD :
-      fillMPage (_P_INFO , 3 , _PAUSE , _JUST_PRESSED , fPause , 0 ) ;
-      fillMPage (_P_INFO , 7 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
+      fillMPage (_P_INFO , 7 , _PAUSE , _JUST_PRESSED , fPause , 0 ) ;
+      fillMPage (_P_INFO , 11 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
       break ;
   }
 }
@@ -575,7 +614,7 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
       tft.drawNumber( ( (100 * sdNumberOfCharSent) / sdFileSize), 170 , 0 ) ;
       tft.setTextPadding (1) ;
       tft.drawString( "%" , 190 , 0 ) ;
-      Serial.print( sdNumberOfCharSent ); Serial.print(  " / ") ; Serial.println( sdFileSize ); 
+      // Serial.print( sdNumberOfCharSent ); Serial.print(  " / ") ; Serial.println( sdFileSize ); 
   }
 
   if ( machineStatus0Prev != machineStatus[0] || machineStatus[0] == 'A' || machineStatus[0] == 'H') {
@@ -675,30 +714,32 @@ void fNoBase(void) {
 void fSetupBase(void) {
   //tft.setTextFont( 1 ); // use Font2 = 16 pixel X 7 probably
   //tft.setTextSize(2) ;           // char is 2 X magnified => 
-  tft.setFreeFont (LABELS12_FONT) ;
+  tft.setFreeFont (LABELS9_FONT) ;
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
   //tft.setTextPadding (240) ;      // expect to clear 70 pixel when drawing text or 
   uint8_t line = 2 ;
-  uint8_t col = 10 ;
+  uint8_t col = 1 ;
   char ipBuffer[20] ;
   if ( getWifiIp( ipBuffer ) ) { 
-    tft.drawString( "IP=" , col , line );
-    tft.drawString( ipBuffer , col + 40 , line ); // affiche la valeur avec 3 décimales 
+    tft.drawString( "IP:" , col , line );
+    tft.drawString( ipBuffer , col + 20 , line ); // affiche la valeur avec 3 décimales 
   } else {
     tft.drawString( "No WiFi" , col , line ); 
   }
+  tft.drawString( ESP32_VERSION,  col + 140 , line ) ;
 }
 
 void drawDataOnSetupPage() {  
   //tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
   //tft.setTextSize(2) ;           // char is 2 X magnified => 
-  tft.setFreeFont (LABELS12_FONT) ;
+  tft.setFreeFont (LABELS9_FONT) ;
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND) ; // when oly 1 parameter, background = fond);
   tft.setTextDatum( TR_DATUM ) ;
   tft.setTextPadding (120) ;      // expect to clear 70 pixel when drawing text or 
+  tft.setFreeFont (LABELS12_FONT) ;
   tft.drawString( &machineStatus[0] , 315  , 0 ) ; // affiche le status GRBL (Idle,....)
  
   
@@ -716,7 +757,7 @@ void drawDataOnSetupPage() {
 
 void fMoveBase(void) {
   
-  fillMPage (_P_MOVE , 3 , _D_AUTO , _JUST_LONG_PRESSED , fDist , 0) ;  // reset the button for autochange of speed
+  fillMPage (_P_MOVE , 7 , _D_AUTO , _JUST_LONG_PRESSED , fDist , 0) ;  // reset the button for autochange of speed
   wposMoveInitXYZ[0] = wposXYZ[0];             // save the position when entering (so we calculate distance between current pos and init pos on this screen)
   wposMoveInitXYZ[1] = wposXYZ[1];
   wposMoveInitXYZ[2] = wposXYZ[2];
@@ -803,6 +844,36 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
 void fCmdBase(void) {            //  En principe il n'y a rien à faire; 
 }
 
+void fLogBase(void) { // fonction pour l'affichage de l'écran Log // todo  : à remplir avec autre chose que les boutons
+  //Serial.print("justPressedBtn= ") ; Serial.println( justPressedBtn ) ; // to debug
+  if (justPressedBtn == 1 ) { // when we go on this function directly from a previous screen using the MASKED button (btn 1 of 12)
+                              // then we have to set up pGet in order to view the last lines
+    uint8_t count = 0;
+    pGet = pNext ;
+    if (pGet != pFirst) {
+      if (pGet == logBuffer) pGet = logBuffer + MAX_BUFFER_SIZE ;
+      pGet--;         // Set Pget on last written Car
+    }
+    getPrevLogLine();
+    pLastLogLine = pGet ;
+    endOfLog = true ;
+    if (pGet != pFirst) {
+      fillMPage (_P_LOG , 3 , _PG_PREV , _JUST_PRESSED , fLogPrev , 0) ; // activate PREV btn 
+    } else {
+      fillMPage (_P_LOG , 3 , 0 , _NO_ACTION , fLogPrev , 0) ;  // deactivate PREV btn
+    }
+    fillMPage (_P_LOG , 7 , 0 , _NO_ACTION , fLogNext , 0) ; // deactivate the NEXT button
+    //Serial.println("begin fLogBase");
+    //Serial.print("pFirst at begin ") ; Serial.println( pFirst - logBuffer) ; // to debug
+    //Serial.print("pget at begin ") ; Serial.println( pGet - logBuffer) ; // to debug
+    //Serial.print("pNext at begin ") ; Serial.println( pNext - logBuffer) ; // to debug
+    //Serial.print("pNext char (hex) = ") ;  Serial.println( *pNext, HEX ) ; // to debug
+    while ( (count < ( N_LOG_LINE_MAX - 1) ) && ( getPrevLogLine()>=0 ) ) count++ ; // move back max 6 line before
+    //Serial.print("nbr line to display"); Serial.println(count) ; // to debug
+  }
+  drawDataOnLogPage() ; // display from current position  
+}
+
 void drawWposOnMovePage() {
   tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
   tft.setTextSize(1) ;           // char is 2 X magnified => 
@@ -824,9 +895,44 @@ void drawWposOnMovePage() {
 }
 
 
+void drawDataOnLogPage() {
+  // tft has already been cleared before we call this functionSerial.println("begin drawing a page");
+  //Serial.print("pFirst at begin ") ; Serial.println( pFirst - logBuffer) ; // to debug
+  //Serial.print("pget at begin ") ; Serial.println( pGet - logBuffer) ; // to debug
+  //Serial.print("pNext at begin ") ; Serial.println( pNext - logBuffer) ; // to debug
+  tft.setFreeFont (LABELS9_FONT) ;
+    //    tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+  tft.setTextSize(1) ;           // char is 2 X magnified => 
+  tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when only 1 parameter, background = fond);
+  tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
+  tft.setTextPadding (0) ;
+  
+  uint8_t line = 2 ;
+  uint8_t col = 0 ;
+  uint8_t count = N_LOG_LINE_MAX ;
+  int16_t nCar = 0 ;
+  while (count ) {
+    printOneLogLine(col , line );
+    count--;
+    line += 20 ; // goes to next line on screen
+    if (getNextLogLine() < 0 ) count = 0 ; // stop if next line is not complete
+  }
+  //Serial.println("End drawing a page");
+  //Serial.print("pFirst at End ") ; Serial.println( pFirst - logBuffer) ; // to debug
+  //Serial.print("pGet at End ") ; Serial.println( pGet - logBuffer) ; // to debug
+  //Serial.print("pNext at End ") ; Serial.println( pNext - logBuffer) ; // to debug
+  //tft.setTextPadding (0) ;
+  //  if ( pGet == pLastLogLine || pGet == pNext)  tft.drawString( "End" , 200 , line - 20) ;
+}
+
+void printOneLogLine(uint8_t col , uint8_t line ) {
+  lineOfText[49] = 0 ; //make sure there is an 0 at the end
+  cpyLineToArray( lineOfText , pGet , 48) ; // copy one line
+  tft.drawString( lineOfText , col , line) ;
+}
 
 
-
+// ******************************** touch calibrate ********************************************
 void touch_calibrate() {
   uint16_t calData[5];
   uint8_t calDataOK = 0;
@@ -861,7 +967,7 @@ void touch_calibrate() {
     tft.setTouch(calData);
   } else {
     // data not valid so recalibrate
-    tft.fillScreen( SCREEN_BACKGROUND);
+    clearScreen();
     tft.setCursor(20, 0);
     tft.setTextFont(2);
     tft.setTextSize(1);

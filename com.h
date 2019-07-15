@@ -7,6 +7,8 @@
 
 void getFromGrblAndForward( void ) ;   //get char from GRBL, forward them is statusprinting = PRINTING_FROM_PC and decode the data (look for "OK", for <xxxxxx> sentence
                                        // fill machineStatus[] and mPosXYZ[]
+
+void parseToLog(uint8_t c , uint8_t lastC) ;   // do not store in log the OK and the status message.
 void handleLastNumericField(void) ;
 
 void sendToGrbl( void ) ;

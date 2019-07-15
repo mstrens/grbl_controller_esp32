@@ -21,6 +21,9 @@ void fCmd(uint8_t param) ;
 void fStartUsb(uint8_t param) ;
 void fStartTelnet(uint8_t param) ;
 void fStopPc(uint8_t param) ;
+void fLogPrev(uint8_t param) ;
+void fLogNext(uint8_t param) ;
+
 
 void handleAutoMove( uint8_t param) ;
 

@@ -1,5 +1,10 @@
 // compilé dans mon cas avec la board WEMOS LOLIN32
 
+// attention: pour recevoir tous les caractères envoyés par GRBL en réponse à $$, il faut augmenter la taille du buffer des Serial
+// pour cela, j'ai modifier le fichier hardwareSerial.cpp dans l'appel de la fonction ci-dessous, j'ai mis 512 au lieu de 256
+// _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, 512, invert);
+// on peut peut être employer aussi une fonction prévue Serial2.setRxBufferSize(size_t)
+
 // to do
 // au démarrage, GRBL donne parfois des messages d'erreurs. Chercher pourquoi.
 // tester l'impression par SD et par CMD
@@ -60,6 +65,8 @@ Sur l'écran de base, prévoir l'affichage des infos
 #include "browser.h"
 #include "telnet.h"
 #include "cmd.h"
+#include "log.h"
+
 
 extern TFT_eSPI tft ;       // Invoke custom library
 
@@ -128,11 +135,12 @@ void setup() {
 // initialiser Wifi server
 // teste la présence et initialise le nunchuck
 // initialiser les status (notamment affichage de l'écran)
-
+  logBufferInit() ; // initialise the log buffer
   Serial.begin(115200); // init UART for debug and for Gcode passthrough via USB PC
   
     // initialise le port série vers grbl
   Serial2.begin(115200, SERIAL_8N1, SERIAL2_RXPIN, SERIAL2_TXPIN); // initialise le port série vers grbl
+  Serial2.setRxBufferSize(1024);
   pinMode(TFT_LED_PIN , OUTPUT) ;
   digitalWrite(TFT_LED_PIN , HIGH) ;
   tftInit() ; // init screen and touchscreen, set rotation and calibrate
@@ -158,6 +166,8 @@ void setup() {
   initWifi() ;
   telnetInit() ;
 #endif 
+  delay(100);
+  while ( Serial2.available() )  Serial2.read() ; // clear input buffer which can contains messages sent by GRBL in reply to noise captured before Serial port was initialised.
   Serial2.print(0X18) ; // send a soft reset
   Serial2.println(" ") ;Serial2.print("$10=3");Serial2.println(" ") ;   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
   Serial2.flush();                                                      // this is used to avoid sending to many jogging movements when using the nunchuk  

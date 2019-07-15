@@ -140,10 +140,10 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
 //     il faut remplir les 4 premiers boutons (max) avec les noms des 4 fichiers à partir de l'index
 //     S'il y a moins de 4 fichiers, on ne crée pas les dernier boutons
   
-  fillMPage (_P_SD , 0 , 0 , _JUST_PRESSED , fSdFilePrint , 0 ) ; // deactive all buttons
-  fillMPage (_P_SD , 1 , 0 , _JUST_PRESSED , fSdFilePrint , 0 ) ; 
-  fillMPage (_P_SD , 2 , 0 , _JUST_PRESSED , fSdFilePrint , 0 ) ; 
-  fillMPage (_P_SD , 3 , 0 , _JUST_PRESSED , fSdFilePrint , 0 ) ; 
+  fillMPage (_P_SD , 4 , 0 , _JUST_PRESSED , fSdFilePrint , 0 ) ; // deactive all buttons
+  fillMPage (_P_SD , 5 , 0 , _JUST_PRESSED , fSdFilePrint , 0 ) ; 
+  fillMPage (_P_SD , 6 , 0 , _JUST_PRESSED , fSdFilePrint , 0 ) ; 
+  fillMPage (_P_SD , 7 , 0 , _JUST_PRESSED , fSdFilePrint , 0 ) ; 
   aDir[dirLevel].rewind();
   uint16_t cnt = 1 ;
   File file ;
@@ -181,7 +181,7 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
     }
     //Serial.print("i= " ) ; Serial.print(i) ; Serial.print(" cnt= " ) ; Serial.println(cnt) ;    
     //Serial.println( fileNames[i] );
-    fillMPage (_P_SD , i , _FILE0 + i , _JUST_PRESSED , fSdFilePrint , i) ; // activate the button; param contains the index of the file (0,...3)
+    fillMPage (_P_SD , i+4 , _FILE0 + i , _JUST_PRESSED , fSdFilePrint , i) ; // activate the button; param contains the index of the file (0,...3)
     i++ ;
     cnt++ ;
     file.close() ;

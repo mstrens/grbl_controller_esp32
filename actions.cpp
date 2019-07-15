@@ -8,6 +8,7 @@
 #include "telnet.h"
 #include "cmd.h"
 #include "com.h"
+#include "log.h"
 
 // create for touchscreeen
 extern TFT_eSPI tft ;
@@ -45,6 +46,11 @@ extern int8_t jogDistX ;
 extern int8_t jogDistY ;
 extern int8_t jogDistZ ;
 extern float moveMultiplier ;
+
+extern uint8_t * pNext ; // position of the next char to be written
+extern uint8_t * pFirst ; // position of the first char
+extern uint8_t * pGet ; // position of the last char to be read for display
+
 
 uint32_t prevAutoMoveMillis ;
 
@@ -141,11 +147,11 @@ void fResume(uint8_t param) {
 }
 
 void fDist( uint8_t param ) {
-  uint8_t newDist =  mPages[_P_MOVE].boutons[3] ;       // convertit la position du bouton en type de bouton 
+  uint8_t newDist =  mPages[_P_MOVE].boutons[7] ;       // convertit la position du bouton en type de bouton 
   //Serial.print("newDist=") ; Serial.println(newDist) ;
   if ( ++newDist > _D10 ) newDist = _D_AUTO ; // increase and reset to min value if to big
-  mPages[_P_MOVE].boutons[3] = newDist ;   // update the button to display
-  mButtonDraw( 4 , newDist ) ;  // draw a button at position (from 1 to 8)
+  mPages[_P_MOVE].boutons[7] = newDist ;   // update the button to display
+  mButtonDraw( 8 , newDist ) ;  // draw a button at position (from 1 to 12)
   //updateFullPage = true ;                     // force a redraw of buttons
   waitReleased = true ;          // discard "pressed" until a release 
 }  
@@ -154,10 +160,10 @@ void fMove( uint8_t param ) {
     float distance ;
     uint32_t moveMillis = millis() ;
     static uint32_t prevMoveMillis ;
-    if ( mPages[_P_MOVE].boutons[3] == _D_AUTO ) {
+    if ( mPages[_P_MOVE].boutons[7] == _D_AUTO ) {
       handleAutoMove(param) ; // process in a similar way as Nunchuk
     } else if (justPressedBtn) {                      // just pressed in non auto mode
-      switch ( mPages[_P_MOVE].boutons[3] ) {         //  we suppose that the distance is defined by the 4th button on first line so idx = 3
+      switch ( mPages[_P_MOVE].boutons[7] ) {         //  we suppose that the distance is defined by the 4th button on second line so idx = 7
       case _D0_01 :
         distance = 0.01;
         break ;
@@ -173,12 +179,12 @@ void fMove( uint8_t param ) {
       }
       Serial2.println("") ; Serial2.print("$J=G91 G21 ") ;
       switch ( justPressedBtn ) {  // we convert the position of the button into the type of button
-        case 1 :  Serial2.print("X")  ;  break ;
-        case 5 :  Serial2.print("X-") ;  break ;
-        case 2 :  Serial2.print("Y")  ;  break ;
-        case 6 :  Serial2.print("Y-") ;  break ;
-        case 3 :  Serial2.print("Z")  ;  break ;
-        case 7 :  Serial2.print("Z-") ;  break ;
+        case 5 :  Serial2.print("X")  ;  break ;
+        case 9 :  Serial2.print("X-") ;  break ;
+        case 6 :  Serial2.print("Y")  ;  break ;
+        case 10 :  Serial2.print("Y-") ;  break ;
+        case 7 :  Serial2.print("Z")  ;  break ;
+        case 11 :  Serial2.print("Z-") ;  break ;
       }
       Serial2.print(distance) ; Serial2.println (" F100") ;
       //Serial.print("move for button") ; Serial.print(justPressedBtn) ;Serial.print(" ") ;  Serial.print(distance) ; Serial.println (" F100") ;
@@ -234,12 +240,12 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
     jogDistY = 0 ;
     jogDistZ = 0 ;
     switch ( pressedBtn ) {  // fill one direction of move
-      case 1 :  jogDistX = 1  ;  break ;
-      case 5 :  jogDistX = -1 ;  break ;
-      case 2 :  jogDistY = 1  ;  break ;
-      case 6 :  jogDistY = -1 ;  break ;
-      case 3 :  jogDistZ = 1 ;  break ;
-      case 7 :  jogDistZ = -1 ;  break ;
+      case 5 :  jogDistX = 1  ;  break ;
+      case 9 :  jogDistX = -1 ;  break ;
+      case 6 :  jogDistY = 1  ;  break ;
+      case 10 :  jogDistY = -1 ;  break ;
+      case 7 :  jogDistZ = 1 ;  break ;
+      case 11 :  jogDistZ = -1 ;  break ;
     }
     jogCmdFlag = true ;                 // the flag will inform the send module that there is a command to be sent based on moveMultiplier and preMove. 
   }
@@ -370,5 +376,49 @@ void fStopPc(uint8_t param){
   updateFullPage = true ;  // force a redraw even if current page does not change
   waitReleased = true ;          // discard "pressed" until a release 
   
+}
+
+void fLogPrev(uint8_t param) {
+  fillMPage (_P_LOG , 7 , _PG_NEXT , _JUST_PRESSED , fLogNext , 0) ; //active the next button
+  uint8_t count = 0 ;
+  fillMPage (_P_LOG , 3 , _PG_PREV , _JUST_PRESSED , fLogPrev , 0) ; // activate PREV btn
+  while  (count < ( N_LOG_LINE_MAX * 2 ) ) {
+    if ( getPrevLogLine()>=0 )  { 
+      count++ ; // move back max 6 line before
+    } else {
+      count = N_LOG_LINE_MAX * 2 ; // force exit of while
+      fillMPage (_P_LOG , 3 , 0 , _NO_ACTION , fLogPrev , 0) ;  // deactivate PREV btn
+    }
+  }
+  updateFullPage = true ; 
+  waitReleased = true ;          // discard "pressed" until a release 
+  //drawDataOnLogPage() ;
+}
+
+void fLogNext(uint8_t param) {
+  uint8_t count = 0 ;
+  fillMPage (_P_LOG , 3 , _PG_PREV , _JUST_PRESSED , fLogPrev , 0) ; // activate PREV btn (even if not needed)
+  fillMPage (_P_LOG , 7 , _PG_NEXT , _JUST_PRESSED , fLogNext , 0) ; //active the next button
+  while ( count < N_LOG_LINE_MAX) { // move max line ahead (to be sure that we can display many lines when we are close to the end
+    if ( getNextLogLine()>=0 ){
+      count++ ; 
+    } else {                       // When move is not possible, Pget point the last valid line; to display it we have to move back 1 line less 
+      count = N_LOG_LINE_MAX ;
+      fillMPage(_P_LOG , 7 , 0 , _NO_ACTION , fLogNext , 0) ; // deactivate the NEXT button
+    }
+  }
+  count = 0 ;
+  while  (count <  N_LOG_LINE_MAX ) {
+    if ( getPrevLogLine()>=0 )  { 
+      count++ ; // move back max 6 line before
+    } else {
+      count = N_LOG_LINE_MAX; // force exit of while
+      fillMPage(_P_LOG , 3 , 0 , _NO_ACTION , fLogPrev , 0) ;  // deactivate PREV btn
+    }
+  }
+  clearScreen() ;
+  //drawDataOnLogPage() ;
+  updateFullPage = true ; 
+  waitReleased = true ;          // discard "pressed" until a release 
 }
 

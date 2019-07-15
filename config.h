@@ -3,6 +3,8 @@
 
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 
+#define ESP32_VERSION "v1.0.a"
+
 // decide if you will use Wifi or not (and how)
 #define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
 
@@ -10,7 +12,7 @@
 #define MY_SSID "bbox2-58c4"       // replace by the name of your access point (when act as station) or the name you assign to your device (when act as acces point)
 
 // Only for ESP32_ACT_AS_STATION , set the password to get access to your access point (router)
-#define MY_PASSWORD "yourpassword" // replace by the password of your access point (when act as station) or the password you want to use to protect your ESP32 (when act as acces point)
+#define MY_PASSWORD "alineloriejulien" // replace by the password of your access point (when act as station) or the password you want to use to protect your ESP32 (when act as acces point)
                                       // in this last case, password can remains empty 
 // select your language between EN, FR, DE
 #define LANGUAGE EN
@@ -111,6 +113,8 @@
 #define DIR_LEVEL_MAX 6
 
 #define MAX_FILES 4
+
+#define N_LOG_LINE_MAX 12
 
 //        commands available in menu ; this part is normally not used anymore because cmd are defined in SPIFFS
 //#define CMD1_GRBL_CODE "*X"

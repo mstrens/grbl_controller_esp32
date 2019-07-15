@@ -45,6 +45,8 @@
 #define __RIGHT "->" 
 #define __UP "Haut" 
 #define __MORE_PAUSE "Plus" 
+#define __PREV "Pr\x80" "c"
+#define __NEXT "Suiv"
 
 #define __WPOS "Wpos"
 #define __MPOS "Mpos"
@@ -163,6 +165,9 @@
 #define __RIGHT "->" 
 #define __UP "Oben" 
 #define __MORE_PAUSE "Mehr" 
+#define __PREV "Prev"
+#define __NEXT "Next"
+
 
 #define __WPOS "Wpos"
 #define __MPOS "Mpos"
@@ -285,6 +290,9 @@
 #define __RIGHT "->" 
 #define __UP "UP" 
 #define __MORE_PAUSE "More" 
+#define __PREV "Prev"
+#define __NEXT "Next"
+
 
 #define __WPOS "Wpos"
 #define __MPOS "Mpos"

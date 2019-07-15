@@ -8,6 +8,7 @@
 #include <WiFi.h> 
 #include "telnet.h"
 #include "cmd.h"
+#include "log.h"
 
 // GRBL status are : Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep
 // a message should look like (note : GRBL sent or WPOS or MPos depending on grbl parameter : to get WPos, we have to set "$10=0"
@@ -90,7 +91,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
   static uint8_t lastC = 0 ;
   static uint32_t millisLastGetGBL = 0 ;
   uint8_t i = 0 ;
-  static int cntOk = 0 ; 
+  static int cntOk = 0 ;
   while (Serial2.available() ) {
 #ifdef DEBUG_TO_PC
     //Serial.print(F("s=")); Serial.print( getGrblPosState ); Serial.println() ;
@@ -207,7 +208,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
       }
       
       break ;  
-    case '[' :                                              // séparateur entre 2 chiffres
+    case '[' :                                              // annonce un message
       if( getGrblPosState == GET_GRBL_STATUS_CLOSED ) {
         getGrblPosState = GET_GRBL_STATUS_MESSAGE ;                            // check that we are in data to be processed; if processed, reset strGrblIdx = 0 ; 
         strGrblIdx = 0 ;                                        // reset the buffer
@@ -215,13 +216,13 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
         strGrblIdx++ ;
       }
       break ;  
-    case ' ' :                                              // séparateur entre 2 chiffres
+    case ' ' :                                              // 
       if( ( getGrblPosState == GET_GRBL_STATUS_MESSAGE ) && strGrblIdx < (STR_GRBL_BUF_MAX_SIZE - 1) ){
         strGrblBuf[strGrblIdx++] = ' ' ;
       }
       break ;  
     
-    case ']' :                                              // séparateur entre 2 chiffres
+    case ']' :                                              // ferme le message
       if( getGrblPosState == GET_GRBL_STATUS_MESSAGE ) {
         getGrblPosState = GET_GRBL_STATUS_CLOSED ;                            // check that we are in data to be processed; if processed, reset strGrblIdx = 0 ; 
         strGrblBuf[strGrblIdx++] = ']' ;
@@ -248,6 +249,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
         }
       }
     } // end switch 
+    parseToLog(c , lastC ) ;
     lastC = c ;
   } // end while
   
@@ -262,6 +264,35 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
   }
 }
 
+void parseToLog(uint8_t c , uint8_t lastC) {   // do not store in log the OK and the status message.
+  //Serial.print("To Parse "); Serial.print( (char) c , HEX) ; Serial.print(" , "); Serial.println( (char) c) ;
+  if ( getGrblPosState == GET_GRBL_STATUS_CLOSED ) {
+    if (c == 'o' && lastC != 'o') {
+      return ; // skip 'o' because next char can be K (for an OK) 
+    }
+    if ( lastC == 'o' ) {
+      if ( c == 'k' ) {
+        return ; // skip k as part of OK
+      } else {
+        logBufferWrite(lastC) ; // save previous 'o' when not part of OK
+      }  
+    } 
+    if ( c == '>' ) {
+      return ; // skip '>' as begin of status
+    }
+    if ( c == '\r' ) {
+      if ( lastC == '>' || lastC == 'k' ) {
+        // skip return after a status line or a OK
+      } else {
+        logBufferWrite( BUFFER_EOL) ; // replace "new line " by 0 for string handling
+      }  
+    } else {
+      logBufferWrite( c) ;
+    } 
+  } else if ( getGrblPosState == GET_GRBL_STATUS_MESSAGE ) {
+    logBufferWrite( c) ;
+  } 
+}
 
 void handleLastNumericField(void) { // decode last numeric field
   float temp = atof (&strGrblBuf[0]) ;
@@ -365,6 +396,7 @@ void sendToGrbl( void ) {
   if ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_PAUSED ) {   // process nunchuk cancel and commands
     if ( jogCancelFlag ) {
       if ( jog_status == JOG_NO ) {
+        //Serial.println("send a jog cancel");
         Serial2.print( (char) 0x85) ; Serial2.print("G4P0") ; Serial2.print( (char) 0x0A) ;    // to be execute after a cancel jog in order to get an OK that says that grbl is Idle.
         Serial2.flush() ;             // wait that all outgoing char are really sent.
         waitOk = true ;
@@ -463,7 +495,8 @@ boolean sendJogCmd(uint32_t startTime) {
           }
           distanceMove = speedMove * DELAY_BETWEEN_MOVE / 60000.0 * 1.2;   // speed is in mm/min and time in millisec.  1.2 is to increase a little the distance to be sure buffer is filled 
         }
-          
+        //
+        //Serial.println("send a jog") ;  
         Serial2.print("$J=G91 G21") ;
         if (jogDistX > 0) {
           Serial2.print(" X") ;
