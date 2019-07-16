@@ -27,7 +27,7 @@ struct M_Button {
 enum { _NO_BUTTON = 0 , _SETUP , _PRINT , _HOME, _UNLOCK , _RESET , _SD , _USB_GRBL , _TELNET_GRBL, _PAUSE , _CANCEL , _INFO , _CMD ,
 _MOVE , _RESUME , _STOP_PC_GRBL , _XP , _XM , _YP , _YM , _ZP , _ZM, _D_AUTO , _D0_01 , _D0_1 , _D1, _D10 ,
 _SETX , _SETY , _SETZ, _SETXYZ , _BACK , _LEFT, _RIGHT , _UP ,
- _CMD1 ,_CMD2 ,_CMD3 ,_CMD4 ,_CMD5 ,_CMD6 ,_CMD7 , _MORE_PAUSE , _FILE0 , _FILE1 , _FILE2 , _FILE3 , _MASKED1 , _PG_PREV , _PG_NEXT, _MAX_BTN} ; // keep _MAX_BTN latest
+ _CMD1 ,_CMD2 ,_CMD3 ,_CMD4 ,_CMD5 ,_CMD6 ,_CMD7 , _CMD8 , _CMD9 , _CMD10 , _CMD11 , _MORE_PAUSE , _FILE0 , _FILE1 , _FILE2 , _FILE3 , _MASKED1 , _PG_PREV , _PG_NEXT, _MAX_BTN} ; // keep _MAX_BTN latest
 
 // Liste des pages définies
 enum { _P_NULL = 0  , _P_INFO , _P_SETUP , _P_PRINT , _P_PAUSE , _P_MOVE , _P_SETXYZ , _P_SD , _P_CMD , _P_LOG , _P_MAX_PAGES} ; // keep _P_MAX_PAGE latest
@@ -64,6 +64,8 @@ void initButtons() ;   // initialise les noms des boutons, les boutons pour chaq
 
 void blankTft(char * titel , uint16_t x , uint16_t y ) ; // clear tft screen
 void printTft(char * text) ;
+
+boolean convertPosToXY( uint8_t pos , int32_t *_x, int32_t *_y , uint16_t btnDef[12][4]) ;
 
 // à chaque loop,
 void updateBtnState( ) ;       // tester le touchscreen et mettre à jour les valeurs de just pressed, long pressed, just released

@@ -45,7 +45,7 @@ extern char fileNames[4][23] ; // 22 car per line + "\0"
 extern uint16_t firstFileToDisplay ;   // 0 = first file in the directory
 extern SdBaseFile aDir[DIR_LEVEL_MAX] ;
 
-extern char cmdName[7][17] ;          // contains the names of the commands
+extern char cmdName[11][17] ;          // contains the names of the commands
 
 extern uint8_t statusPrinting ;
 extern float wposXYZ[3] ;
@@ -95,6 +95,53 @@ char lineOfText[50] ; // Store 1 line of text for Log screen
 
 extern char grblLastMessage[STR_GRBL_BUF_MAX_SIZE] ;
 extern boolean grblLastMessageChanged;
+
+//**************** normal screen definition.
+#define B0 3
+#define E0 3+74
+#define B1 3+80
+#define E1 3+80+74
+#define B2 3+160
+#define E2 3+160+74
+#define B3 3+240
+#define E3 3+240+74
+#define FXB 3
+#define FXE 3+80+74
+#define FYB0 2
+#define FYE0 2 + 56
+#define FYB1 2 + 56 + 4
+#define FYE1 2 + 56 + 4  + 56 
+#define FYB2 2 + 56 + 4  + 56 + 4 
+#define FYE2 2 + 56 + 4  + 56 + 4 + 56 
+#define FYB3 2 + 56 + 4  + 56 + 4 + 56 + 4
+#define FYE3 2 + 56 + 4  + 56 + 4 + 56 + 4 + 56 
+ 
+
+uint16_t btnDefNormal[12][4] = {{ B0 , E0 , B0 , E0 } ,  // each line contains the Xmin, Xmax, Ymin , Ymax of one button.
+                                { B1 , E1 , B0 , E0 } ,
+                                { B2 , E2 , B0 , E0 } ,
+                                { B3 , E3 , B0 , E0 } ,
+                                { B0 , E0 , B1 , E1 } ,
+                                { B1 , E1 , B1 , E1 } ,
+                                { B2 , E2 , B1 , E1 } ,
+                                { B3 , E3 , B1 , E1 } ,
+                                { B0 , E0 , B2 , E2 } ,
+                                { B1 , E1 , B2 , E2 } ,
+                                { B2 , E2 , B2 , E2 } ,
+                                { B3 , E3 , B2 , E2 } } ;
+
+uint16_t btnDefFiles[12][4] = {{ FXB , FXE , FYB0 , FYE0 } ,  // each line contains the Xmin, Xmax, Ymin , Ymax of one button.
+                                { FXB , FXE , FYB1 , FYE1 } ,
+                                { FXB , FXE , FYB2 , FYE2 } ,
+                                { FXB , FXE , FYB3 , FYE3 } ,
+                                { B2 , E2 , B0 , E0 } ,
+                                { B3 , E3 , B0 , E0 } ,
+                                { B2 , E2 , B1 , E1 } ,
+                                { B3 , E3 , B1 , E1 } ,
+                                { B2 , E2 , B2 , E2 } ,
+                                { B3 , E3 , B2 , E2 } ,
+                                { 0 , 0 , 0 , 0 } ,
+                                { 0 , 0 , 0 , 0 }    } ;
 
 
 // rempli le paramétrage des boutons de chaque page 
@@ -147,6 +194,10 @@ mButton[_CMD4].pLabel = &cmdName[3][0] ;
 mButton[_CMD5].pLabel = &cmdName[4][0] ;
 mButton[_CMD6].pLabel = &cmdName[5][0] ;
 mButton[_CMD7].pLabel = &cmdName[6][0] ;
+mButton[_CMD8].pLabel = &cmdName[7][0] ;
+mButton[_CMD9].pLabel = &cmdName[8][0] ;
+mButton[_CMD10].pLabel = &cmdName[9][0] ;
+mButton[_CMD11].pLabel = &cmdName[10][0] ;
 mButton[_MORE_PAUSE].pLabel = __MORE_PAUSE ;
 mButton[_FILE0].pLabel = fileNames[0] ;  // labels are defined during execution in a table
 mButton[_FILE1].pLabel = fileNames[1] ;
@@ -212,20 +263,24 @@ fillMPage (_P_SETXYZ , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
 mPages[_P_SD].titel = "Select a file on Sd card" ;
 mPages[_P_SD].pfBase = fSdBase ;   // cette fonction doit remplir les 4 premiers boutons en fonction des fichiers disponibles
-fillMPage (_P_SD , 8 , _UP , _JUST_PRESSED , fSdMove , _UP) ;
-fillMPage (_P_SD , 9 , _LEFT , _JUST_PRESSED , fSdMove , _LEFT) ;
-fillMPage (_P_SD , 10 , _RIGHT , _JUST_PRESSED , fSdMove , _RIGHT) ;
-fillMPage (_P_SD , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
+fillMPage (_P_SD , 6 , _PG_PREV , _JUST_PRESSED , fSdMove , _PG_PREV ) ;
+fillMPage (_P_SD , 7 , _UP , _JUST_PRESSED , fSdMove , _UP ) ;
+fillMPage (_P_SD , 8 , _PG_NEXT , _JUST_PRESSED , fSdMove , _PG_NEXT) ;
+fillMPage (_P_SD , 9 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
 mPages[_P_CMD].titel = "Select a command" ;
 mPages[_P_CMD].pfBase = fCmdBase ; // 
-if (cmdName[0][0] ) fillMPage (_P_CMD , 4 , _CMD1 , _JUST_PRESSED , fCmd , _CMD1) ; // le paramètre contient le n° du bouton
-if (cmdName[1][0] ) fillMPage (_P_CMD , 5 , _CMD2 , _JUST_PRESSED , fCmd , _CMD2) ; // le paramètre contient le n° du bouton
-if (cmdName[2][0] ) fillMPage (_P_CMD , 6 , _CMD3 , _JUST_PRESSED , fCmd , _CMD3) ; // le paramètre contient le n° du bouton
-if (cmdName[3][0] ) fillMPage (_P_CMD , 7 , _CMD4 , _JUST_PRESSED , fCmd , _CMD4) ; // le paramètre contient le n° du bouton
-if (cmdName[4][0] ) fillMPage (_P_CMD , 8 , _CMD5 , _JUST_PRESSED , fCmd , _CMD5) ; // le paramètre contient le n° du bouton
-if (cmdName[5][0] ) fillMPage (_P_CMD , 9 , _CMD6 , _JUST_PRESSED , fCmd , _CMD6) ; // le paramètre contient le n° du bouton
-if (cmdName[6][0] ) fillMPage (_P_CMD , 10 , _CMD7 , _JUST_PRESSED , fCmd , _CMD7) ; // le paramètre contient le n° du bouton
+if (cmdName[0][0] ) fillMPage (_P_CMD , 0 , _CMD1 , _JUST_PRESSED , fCmd , _CMD1) ; // le paramètre contient le n° du bouton
+if (cmdName[1][0] ) fillMPage (_P_CMD , 1 , _CMD2 , _JUST_PRESSED , fCmd , _CMD2) ; // le paramètre contient le n° du bouton
+if (cmdName[2][0] ) fillMPage (_P_CMD , 2 , _CMD3 , _JUST_PRESSED , fCmd , _CMD3) ; // le paramètre contient le n° du bouton
+if (cmdName[3][0] ) fillMPage (_P_CMD , 3 , _CMD4 , _JUST_PRESSED , fCmd , _CMD4) ; // le paramètre contient le n° du bouton
+if (cmdName[4][0] ) fillMPage (_P_CMD , 4 , _CMD5 , _JUST_PRESSED , fCmd , _CMD5) ; // le paramètre contient le n° du bouton
+if (cmdName[5][0] ) fillMPage (_P_CMD , 5 , _CMD6 , _JUST_PRESSED , fCmd , _CMD6) ; // le paramètre contient le n° du bouton
+if (cmdName[6][0] ) fillMPage (_P_CMD , 6 , _CMD7 , _JUST_PRESSED , fCmd , _CMD7) ; // le paramètre contient le n° du bouton
+if (cmdName[6][0] ) fillMPage (_P_CMD , 7 , _CMD8 , _JUST_PRESSED , fCmd , _CMD8) ; // le paramètre contient le n° du bouton
+if (cmdName[6][0] ) fillMPage (_P_CMD , 8 , _CMD9 , _JUST_PRESSED , fCmd , _CMD9) ; // le paramètre contient le n° du bouton
+if (cmdName[6][0] ) fillMPage (_P_CMD , 9 , _CMD10 , _JUST_PRESSED , fCmd , _CMD10) ; // le paramètre contient le n° du bouton
+if (cmdName[6][0] ) fillMPage (_P_CMD , 10 , _CMD11 , _JUST_PRESSED , fCmd , _CMD11) ; // le paramètre contient le n° du bouton
 fillMPage (_P_CMD , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
 mPages[_P_LOG].titel = "Log" ;
@@ -256,37 +311,29 @@ void tftInit() {
 }
 
 
-boolean convertPosToXY( uint8_t pos , int32_t *_x, int32_t *_y ){
+boolean convertPosToXY( uint8_t pos , int32_t *_x, int32_t *_y , uint16_t btnDef[12][4]){
   if (pos > 0 && pos < 13 ) {                // accept only value from 1 to 12
-    pos--;
-    if (pos >= 8) { 
-      pos -= 8 ;
-      *_y = 160 ;  // to do, test if 150 is ok for second row of buttons
-    } else if (pos >= 4) { 
-      pos -= 4 ;
-      *_y = 80 ;  
-    } else {
-      *_y = 0 ;
-    }
-    *_x = pos * 80 + 1 ; //   on suppose un bouton de 74 de large avec un bord de 3
+    *_x = btnDef[pos-1][0];
+    *_y = btnDef[pos-1][2];
     return true ;
   } else {
     return false ;
   }
+
 } ;
 
 void drawAllButtons(){
-  uint8_t i = 0;
-  uint8_t btnIdx;
-  while ( i < 12 ) {           // pour chacun des 12 boutons possibles
-    btnIdx = mPages[currentPage].boutons[i] ;
-    if ( btnIdx && btnIdx != _MASKED1 ) {  // si un n° de bouton est précisé, l'affiche sauf si c'est un bouton masqué (ex: _MASKED1)
-      //Serial.print("va afficher le bouton ") ; Serial.println( i) ;
-      //Serial.print("bouton code= " ) ; Serial.println( mPages[currentPage].boutons[i] ) ;
-      mButtonDraw( i + 1 , btnIdx ) ; // affiche le bouton
+    uint8_t i = 0;
+    uint8_t btnIdx;
+    while ( i < 12 ) {           // pour chacun des 12 boutons possibles
+      btnIdx = mPages[currentPage].boutons[i] ;
+      if ( btnIdx && btnIdx != _MASKED1 ) {  // si un n° de bouton est précisé, l'affiche sauf si c'est un bouton masqué (ex: _MASKED1)
+        //Serial.print("va afficher le bouton ") ; Serial.println( i) ;
+        //Serial.print("bouton code= " ) ; Serial.println( mPages[currentPage].boutons[i] ) ;
+        mButtonDraw( i + 1 , btnIdx ) ; // affiche le bouton
+      }
+      i++ ;
     }
-    i++ ;
-  } 
 }
 
 
@@ -302,15 +349,47 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
   int32_t outline = BUTTON_BORDER_NOT_PRESSED ;
   int32_t text = BUTTON_TEXT ;
   char * pbtnLabel ; 
+  boolean isFileName = false ;
+  int32_t y1 ;
+  char tempText[9] ;              // keep max 8 char + /0
+  char * pExtensionChar;
+  char * pch;
+  uint8_t numbChar = 8 ; 
+  char tempLabel[50] ;
+  char fileExtension[14] = "." ;
+  char fileNameReduced[21] = "0123456789012345..." ;
+  boolean convertPosIsTrue ;
+    
   pbtnLabel = mButton[btnIdx].pLabel ;
-  if ( *mButton[btnIdx].pLabel == '/' ){    // when first char is "/", invert the color and skip the first char
-    fill = BUTTON_BORDER_NOT_PRESSED ;
-    text = BUTTON_BACKGROUND ;
-    pbtnLabel++ ;
-  }
+  if (  currentPage == _P_SD && btnIdx >= _FILE0 && btnIdx <= _FILE3  ) { // if it is a button for a file name
+    _w = 74+6+80 ;
+    _h = 56 ;
+    isFileName = true ;
+    if ( *mButton[btnIdx].pLabel == '/' ) {    // when first char is "/", invert the color and skip the first char
+      fill = BUTTON_BORDER_NOT_PRESSED ;
+      text = BUTTON_BACKGROUND ;
+      pbtnLabel++ ;
+    }
+    // remove extension if any and put it in fileExtension[]
+    pExtensionChar = strrchr( pbtnLabel , '.' ); // search for first . from the right
+    if ( pExtensionChar ) {
+      *pExtensionChar = 0 ; // if any, replace . by 0 to truncate the string
+      memccpy( fileExtension +1 , pExtensionChar + 1 , '\0' , 12) ; // copy max 12 char
+      fileExtension[12] = 0 ; // put a 0 as last Char for security      
+    } else {
+      fileExtension[0] = 0 ; // reduce size of extension to 0
+    }
+    memccpy( fileNameReduced , pbtnLabel , '\0' , 16) ; // copy max 16 char
+      
+  }  
 //  Serial.print("pos="); Serial.print( pos ) ; Serial.print(" btnIdx="); Serial.print( btnIdx ) ;
 //  Serial.print("first char of btnName ="); Serial.println( *pbtnLabel ) ;
-  if ( convertPosToXY( pos , &_xl, &_yl ) ) {          //  Convert position index to colonne and line (top left corner) 
+  if (  currentPage == _P_SD ) {
+    convertPosIsTrue =  convertPosToXY( pos , &_xl, &_yl , btnDefFiles ) ;          //  Convert position index to colonne and line (top left corner) 
+  } else {
+    convertPosIsTrue =  convertPosToXY( pos , &_xl, &_yl , btnDefNormal ) ;          //  Convert position index to colonne and line (top left corner) 
+  }
+  if ( convertPosIsTrue ) {
     tft.setTextColor(text);
     tft.setTextSize(1);
     //tft.setTextFont(2);
@@ -319,11 +398,16 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
     tft.drawRoundRect( _xl, _yl , _w, _h, r, outline);
     uint8_t tempdatum = tft.getTextDatum(); 
     tft.setTextDatum(MC_DATUM);
-    int32_t y1 ;
-    char tempText[9] ;              // keep max 8 char + /0
-    char * pch;
-    uint8_t numbChar = 8 ; 
-    char tempLabel[50] ;
+    
+    if (isFileName ) {
+      tft.setTextDatum(BC_DATUM);
+      tft.setFreeFont(LABELS9_FONT);
+      tft.drawString( fileNameReduced , _xl + (_w/2), _yl + (_h/2));
+      tft.setTextDatum(TC_DATUM);
+      tft.drawString( fileExtension , _xl + (_w/2), _yl + (_h/2)); 
+      tft.setTextDatum(tempdatum);
+      return ;
+    }
     memccpy( tempLabel , pbtnLabel , '\0' , 16); // copy max 16 char
     pch = strchr(tempLabel , '*') ; //check for a separator in the name in order to split on 2 lines   
     if  ( pch!=NULL ) {
@@ -374,27 +458,28 @@ void mButtonBorder(uint8_t pos , uint16_t outline) {  // draw the border of a bu
   int32_t _xl , _yl ;
   int32_t _w = 76 ;
   int32_t _h = 76 ;
-  convertPosToXY( pos , &_xl, &_yl ) ;
+  if (currentPage == _P_SD ) {
+    convertPosToXY( pos , &_xl, &_yl , btnDefFiles) ;
+    if ( pos < 4) { // if it is a button for a file name
+      _w = 74+6+80 ;
+      _h = 56 ;
+    }  
+  } else {
+    convertPosToXY( pos , &_xl, &_yl , btnDefNormal) ;
+  }
   uint8_t r = min(_w, _h) / 4; // Corner radius
   tft.drawRoundRect( _xl, _yl , _w, _h, r, outline);
 }
-
-
-
-uint8_t getButton( int16_t x, int16_t y ) {    // convert x y into a button if possible
+ 
+uint8_t getButton( int16_t x, int16_t y  , uint16_t btnDef[12][4]) {    // convert x y into a button if possible
                                                  // return 1 à 12 suivant le bouton; return 0 if no button
   if ( y > 240 || x > 320 ) return 0 ;
-  int16_t x1 , xReste;
-  int16_t y1 , yReste;
-  x1 = (x + 5) / 80;
-  xReste = (x + 5) % 80;
-  y1 = (y ) / 80  ;          // to do check if this is ok
-  yReste = (y ) % 80  ; 
-  if  ( (x1 >= 0 && x1 < 4) && (y1 >= 0 && y1 < 3) && ( xReste >= 5 && xReste <= 75 ) && ( yReste >= 5 && yReste <= 75 ) ) {
-    return ( x1 + 1) + (y1 * 4 ) ;
-  } else {
-    return 0 ;
-  }
+  uint8_t i = 12 ;
+  while ( i ) {
+    i--;
+    if ( x > btnDef[i][0] && x < btnDef[i][1] && y > btnDef[i][2] && y < btnDef[i][3] ) return i+1 ; 
+  } 
+  return 0 ;
 }
 
 
@@ -404,7 +489,7 @@ uint8_t getButton( int16_t x, int16_t y ) {    // convert x y into a button if p
 //                    compare to previous state; if previous state is the same, then take new state into account
 //                    fill justPressedBtn, justReleasedBtn, currentBtn , longPressedBtn , beginChangeBtnMillis
 //*********************************************************************************
-#define WAIT_TIME_BETWEEN_TOUCH 100
+#define WAIT_TIME_BETWEEN_TOUCH 50
 void updateBtnState( void) {
   int16_t x , y ;
   static uint32_t nextMillis ;
@@ -420,7 +505,11 @@ void updateBtnState( void) {
                                                 // false = key not pressed
     nextMillis = touchMillis + WAIT_TIME_BETWEEN_TOUCH ;
     if ( touchPressed)  {
-      bt0 = getButton(x , y);  // convertit x, y en n° de bouton ; retourne 0 si en dehors de la zone des boutons; sinon retourne 1 à 12
+      if ( currentPage == _P_SD ) {             // conversion depend on current screen.
+        bt0 = getButton(x , y , btnDefFiles) ;  // convertit x, y en n° de bouton ; retourne 0 si en dehors de la zone des boutons; sinon retourne 1 à 12
+      } else {
+        bt0 = getButton(x , y , btnDefNormal) ;  // convertit x, y en n° de bouton ; retourne 0 si en dehors de la zone des boutons; sinon retourne 1 à 12
+      }  
 //    Serial.print("x=") ; Serial.print(x) ; Serial.print( " ," ) ; Serial.print( y) ; Serial.print( " ," ) ; Serial.println(bt0) ;
     } else {
 //      Serial.print("!") ; 
@@ -564,11 +653,11 @@ void updateButtonsInfoPage (void) { // met à jour le set up de la page en fonct
       break ;
     case PRINTING_FROM_USB :
       fillMPage (_P_INFO , 7 , _STOP_PC_GRBL , _JUST_PRESSED , fStopPc , 0 ) ;
-      fillMPage (_P_INFO , 11 , _NO_BUTTON , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
+      fillMPage (_P_INFO , 11 , _NO_BUTTON , _NO_ACTION , fGoToPage , _P_INFO ) ;
       break ;
     case PRINTING_FROM_TELNET :
       fillMPage (_P_INFO , 7 , _STOP_PC_GRBL , _JUST_PRESSED , fStopPc , 0 ) ;
-      fillMPage (_P_INFO , 11 ,_NO_BUTTON , _JUST_PRESSED , fGoToPage, _P_INFO ) ;
+      fillMPage (_P_INFO , 11 ,_NO_BUTTON , _NO_ACTION , fGoToPage, _P_INFO ) ;
       break ;
     case PRINTING_CMD :
       fillMPage (_P_INFO , 7 , _PAUSE , _JUST_PRESSED , fPause , 0 ) ;
@@ -814,23 +903,23 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
     //Serial.print("Nbr de fichiers") ; Serial.println(sdFileDirCnt) ;
     //Serial.print("firstFileToDisplay") ; Serial.println(firstFileToDisplay) ;
     //tft.setTextSize(2) ;
-    tft.setFreeFont (LABELS12_FONT) ;
+    tft.setFreeFont (LABELS9_FONT) ;
     tft.setTextSize(1) ;
     tft.setTextDatum( TL_DATUM ) ;
-    tft.setCursor(20 , 20 ) ; // x, y, font
+    tft.setCursor(180 , 20 ) ; // x, y, font
     tft.print( firstFileToDisplay ) ;
     tft.print( " / " ) ;
     tft.print( sdFileDirCnt ) ;  
     tft.setTextDatum( TR_DATUM ) ;
     char dirName[23] ;
-    if ( ! aDir[dirLevel].getName( dirName , 22 ) ) { 
+    if ( ! aDir[dirLevel].getName( dirName , 16 ) ) { 
       fillMsg (__DIR_NAME_NOT_FOUND );
       currentPage = _P_INFO ;      // in case of error, go back to Info
       dirLevel = -1 ;              // force a reload of sd data next time we goes to SD card menu
       fInfoBase () ;               // fill info page with basis data (affiche les data et redétermine les boutons à afficher sans les afficher)
       return ;
     }
-    tft.drawString( dirName , 319 , 40 );
+    tft.drawString( dirName , 310 , 40 );
     if ( ! updateFilesBtn() ) {             // met à jour les boutons à afficher; conserve le premier fichier affiché si possible ; retourne false en cas d'erreur
       //Serial.println( "updateFilesBtn retuns false"); 
       fillMsg( __BUG_UPDATE_FILE_BTN  );
@@ -860,9 +949,9 @@ void fLogBase(void) { // fonction pour l'affichage de l'écran Log // todo  : à
     if (pGet != pFirst) {
       fillMPage (_P_LOG , 3 , _PG_PREV , _JUST_PRESSED , fLogPrev , 0) ; // activate PREV btn 
     } else {
-      fillMPage (_P_LOG , 3 , 0 , _NO_ACTION , fLogPrev , 0) ;  // deactivate PREV btn
+      fillMPage (_P_LOG , 3 , _NO_BUTTON , _NO_ACTION , fLogPrev , 0) ;  // deactivate PREV btn
     }
-    fillMPage (_P_LOG , 7 , 0 , _NO_ACTION , fLogNext , 0) ; // deactivate the NEXT button
+    fillMPage (_P_LOG , 7 , _NO_BUTTON , _NO_ACTION , fLogNext , 0) ; // deactivate the NEXT button
     //Serial.println("begin fLogBase");
     //Serial.print("pFirst at begin ") ; Serial.println( pFirst - logBuffer) ; // to debug
     //Serial.print("pget at begin ") ; Serial.println( pGet - logBuffer) ; // to debug

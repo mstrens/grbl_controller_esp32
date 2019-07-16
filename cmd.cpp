@@ -11,16 +11,16 @@
 
 File createdFile ;
 File cmdFileToRead ;
-extern char cmdName[7][17] ;
+extern char cmdName[11][17] ;
 
 boolean spiffsInit() {
   return SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED) ;
 }
 
-boolean cmdNameInit() {  // seach op SPIFFS the names of the commands
+boolean cmdNameInit() {  // seach on SPIFFS the names of the commands
   uint8_t i = 0 ;
   const char * pchar; 
-  for (i ; i< 7 ; i++ ){
+  for (i ; i< 11 ; i++ ){
     cmdName[i][0] = 0 ; // clear fill name   
   }
 
@@ -32,9 +32,14 @@ boolean cmdNameInit() {  // seach op SPIFFS the names of the commands
     File file = root.openNextFile();
     while(file){
         pchar = file.name() ;
-        if(pchar[1] == 'C' && pchar[2] == 'm' && pchar[3] == 'd' && pchar[4] >= '1' && pchar[4] <= '7' && pchar[5] == '_' ) {
-            strncpy( &cmdName[pchar[4] - '1'][0] , &pchar[6] , 16) ;
-            cmdName[pchar[4] - '1'][16] = 0 ;              // for safety fill a 0 in last position because strncpy do not do it when source is to long
+        if(pchar[1] == 'C' && pchar[2] == 'm' && pchar[3] == 'd' && (( pchar[4] >= '1' && pchar[4] <= '9') || pchar[4] == 'A' || pchar[4] == 'B' ) && pchar[5] == '_' ) {
+            if ( pchar[4] <= '9' ) {
+              strncpy( &cmdName[pchar[4] - '1'][0] , &pchar[6] , 16) ;
+              cmdName[pchar[4] - '1'][16] = 0 ;              // for safety fill a 0 in last position because strncpy do not do it when source is to long
+            } else {
+              strncpy( &cmdName[pchar[4] - 'A' + 9 ][0] , &pchar[6] , 16) ;
+              cmdName[pchar[4] - 'A' + 9 ][16] = 0 ;              // for safety fill a 0 in last position because strncpy do not do it when source is to long
+            }
         }
         file = root.openNextFile();
     }

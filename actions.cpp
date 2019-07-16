@@ -27,7 +27,7 @@ extern boolean grblLastMessageChanged;
 extern uint16_t firstFileToDisplay ;
 extern uint16_t sdFileDirCnt ;
 
-extern char cmdName[7][17] ;     // store the names of the commands
+extern char cmdName[11][17] ;     // store the names of the commands
 extern uint8_t cmdToSend ;
 extern M_Page mPages[_P_MAX_PAGES] ;
 extern uint8_t currentBtn ;
@@ -292,13 +292,13 @@ void fSdFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param c
 }
 
 void fSdMove(uint8_t param) {     // param contient _LEFT ou _RIGTH
-  if ( param == _LEFT ) {
+  if ( param == _PG_PREV ) {
     if ( firstFileToDisplay > 4 ) {
       firstFileToDisplay -= 4 ;
     } else {
       firstFileToDisplay = 1 ;
     } 
-  } else if ( ( param == _RIGHT ) && ( (firstFileToDisplay + 4) <= sdFileDirCnt ) ) {
+  } else if ( ( param == _PG_NEXT ) && ( (firstFileToDisplay + 4) <= sdFileDirCnt ) ) {
     firstFileToDisplay += 4 ;
     if ( ( firstFileToDisplay + 4) > sdFileDirCnt ) firstFileToDisplay = sdFileDirCnt - 3 ;
   } else {             // move one level up
@@ -323,9 +323,13 @@ void fSetXYZ(uint8_t param) {     // param contient le n° de la commande
 
 void fCmd(uint8_t param) {     // param contient le n° de la commande (valeur = _CMD1, ...)
   cmdToSend = param ;         // fill the index of the command to send; sending will be done in communication module
-                              // create file name and try to open SPIFFS cmd file
+                              // create file name and try to open SPIFFS cmd file ; filename look like /Cmd
   char spiffsCmdName[21] = "/Cmd0_" ;               // begin with fix text
-  spiffsCmdName[4] = param - _CMD1 + '1' ;          // fill the cmd number (from 1...7)
+  if ( param <= _CMD9 ) {                           // fill the cmd number (from 1...9 or A or B ) ; A = 10 , B = 11
+    spiffsCmdName[4] = param - _CMD1 + '1' ;          
+  } else {
+    spiffsCmdName[4] = param - _CMD10 + 'A' ;   
+  }
   strcat( spiffsCmdName , cmdName[param - _CMD1]) ; // add the cmd name to the first part 
   if ( ! spiffsOpenCmdFile( spiffsCmdName ) ) {
       fillMsg(__CMD_NOT_RETRIEVED ) ;
@@ -387,7 +391,7 @@ void fLogPrev(uint8_t param) {
       count++ ; // move back max 6 line before
     } else {
       count = N_LOG_LINE_MAX * 2 ; // force exit of while
-      fillMPage (_P_LOG , 3 , 0 , _NO_ACTION , fLogPrev , 0) ;  // deactivate PREV btn
+      fillMPage (_P_LOG , 3 , _NO_BUTTON , _NO_ACTION , fLogPrev , 0) ;  // deactivate PREV btn
     }
   }
   updateFullPage = true ; 
@@ -404,7 +408,7 @@ void fLogNext(uint8_t param) {
       count++ ; 
     } else {                       // When move is not possible, Pget point the last valid line; to display it we have to move back 1 line less 
       count = N_LOG_LINE_MAX ;
-      fillMPage(_P_LOG , 7 , 0 , _NO_ACTION , fLogNext , 0) ; // deactivate the NEXT button
+      fillMPage(_P_LOG , 7 , _NO_BUTTON , _NO_ACTION , fLogNext , 0) ; // deactivate the NEXT button
     }
   }
   count = 0 ;
@@ -413,7 +417,7 @@ void fLogNext(uint8_t param) {
       count++ ; // move back max 6 line before
     } else {
       count = N_LOG_LINE_MAX; // force exit of while
-      fillMPage(_P_LOG , 3 , 0 , _NO_ACTION , fLogPrev , 0) ;  // deactivate PREV btn
+      fillMPage(_P_LOG , 3 , _NO_BUTTON , _NO_ACTION , fLogPrev , 0) ;  // deactivate PREV btn
     }
   }
   clearScreen() ;
