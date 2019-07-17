@@ -3,7 +3,7 @@
 
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 
-#define ESP32_VERSION "v1.0.b"
+#define ESP32_VERSION "v1.0.c"
 
 // decide if you will use Wifi or not (and how)
 #define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
@@ -48,19 +48,23 @@
 // Repeat calibration if you change the screen rotation.
 #define REPEAT_CAL false
 
+// the max speed of jogging in X and Y when using the nunchuk or the Move commands on TFT can easily be modified here.
+// it seems that 5000 (mm/min) is a good value for RS-CNC32
+#define MAX_XY_SPEED_FOR_JOGGING 5000 
 
-// note: this project allows to define up to 7 GRBL set of commands (makros) that can be called from setup screen.
+// note: this project allows to define up to 11 GRBL set of commands (makros) that can be called from setup screen.
 // Those are defined by the user on a sd card and loaded on request into the ESP32 flash memory system (SPIFFS)
 // So, once uploaded, they can be called without SD card.
 // To be recognise as command, file name must be like Cmd3_xxxxxxxx.yyyy where
 //       Cmd _ is fixed text (take care to the case)
-//       3 is a digit from 1 up to 7; it defines the position of the button
+//       3 is a digit from 1 up to 9 or the letter "A" or "B"; it defines the position of the button
 //       xxxxxxxx will be the name of the button; first char must be a letter; min 1, max 16 characters, no space
 //       yyy is the file name extension; it will be discarded
 // The files to be used for upload must be placed in the root directory of SD card.
-// To upload one of them, use the "Print" + "SD->GRBL" menus and then select the file.
+// To upload one of them, use the "Mill" + "SD->GRBL" menus and then select the file.
 // After reset, there will be a button named xxxxxxxxx in the "Setup" + "CMD" menu
-// If you upload a file having the same digit (= button position) as an existing button, the new file will replace the button name and content of the previous button. 
+// If you upload a file having the same button position(digit 1...9, A or B) as an existing button, the new file will replace the button name and content of the previous button. 
+// to delete a button create and execute a file having a name like Cmd3_delete where 3 is the button position (digit 1...9, A or B) to delete. 
 
 // select color between (or define your own) 
 // TFT_BLACK       0x0000      /*   0,   0,   0 */

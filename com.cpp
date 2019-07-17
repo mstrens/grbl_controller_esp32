@@ -464,7 +464,7 @@ void sendToGrbl( void ) {
 boolean sendJogCmd(uint32_t startTime) {
 #define MINDIST 0.01    // mm
 #define MINSPEED 10     // mm
-#define MAXSPEEDXY 2000 // mm/sec
+#define MAXSPEEDXY MAX_XY_SPEED_FOR_JOGGING // mm/sec
 #define MAXSPEEDZ 400   // mm/sec
 #define DELAY_BEFORE_REPEAT_MOVE 500 //msec
 #define DELAY_BETWEEN_MOVE 100       //msec

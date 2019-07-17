@@ -102,7 +102,7 @@ uint32_t sdFileSize ;
 uint32_t sdNumberOfCharSent ;
 
 //         Commande à exécuter
-char cmdName[7][17] ;     // store the names of the commands
+char cmdName[11][17] ;     // store the names of the commands
 uint8_t cmdToSend = 0 ;   //store the cmd to be send to grbl
 
 //         printing status
