@@ -1,17 +1,13 @@
 // compilé dans mon cas avec la board WEMOS LOLIN32
 
 // attention: pour recevoir tous les caractères envoyés par GRBL en réponse à $$, il faut augmenter la taille du buffer des Serial
-// pour cela, j'ai modifier le fichier hardwareSerial.cpp dans l'appel de la fonction ci-dessous, j'ai mis 512 au lieu de 256
-// _uart = uartBegin(_uart_nr, baud ? baud : 9600, config, rxPin, txPin, 512, invert);
-// on peut peut être employer aussi une fonction prévue Serial2.setRxBufferSize(size_t)
+// pour cela, on peut employer une fonction prévue Serial2.setRxBufferSize(size_t)
 
 // to do
-// au démarrage, GRBL donne parfois des messages d'erreurs. Chercher pourquoi.
-// tester l'impression par SD et par CMD
-// tester l'impression par telnet et BCC
+// sauver la valeur de calibration en flash (using preferences lib) 
+// prévoir de pouvoir faire un "continue" quand on a une pause alors que l'on est en train d'envoyer des CMD ou des STRING vers GRBL 
 // prévoir des icones pour les boutons; on peut créer des charactères en format RLE
 // sans doute autoriser des déplacements en jog (avec la nunchuk notamment) si le statut est en HOLD ou en DOOR? (actuellement seul les statuts Jog et Idle sont autorisés pour la nunchuk 
-// let the user delete a cmd button in some way (e.g. printing a file name Cmd5.xxx
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.
 
@@ -66,7 +62,9 @@ Sur l'écran de base, prévoir l'affichage des infos
 #include "telnet.h"
 #include "cmd.h"
 #include "log.h"
+#include <Preferences.h>
 
+Preferences prefs;
 
 extern TFT_eSPI tft ;       // Invoke custom library
 
@@ -78,6 +76,7 @@ boolean updatePartPage = true ;
 uint8_t justPressedBtn , justReleasedBtn, longPressedBtn ,currentBtn = 0 ; // 0 = nihil, 1 à 9 = position sur l'écran du bouton (donc pas la fonction du bouton)
 uint32_t beginChangeBtnMillis ;
 char lastMsg[80] = { 0} ;        // last message to display
+uint16_t lastMsgColor ;          // color of last message
 boolean lastMsgChanged = false ;
 char grblLastMessage[STR_GRBL_BUF_MAX_SIZE] ;
 boolean grblLastMessageChanged;
@@ -145,12 +144,14 @@ void setup() {
   digitalWrite(TFT_LED_PIN , HIGH) ;
   tftInit() ; // init screen and touchscreen, set rotation and calibrate
   if (! spiffsInit() ) {   // just to test. Todo : change for loading the cmd in memory if the file exist in spiffs 
-    fillMsg(__SPIFFS_FORMATTED ) ;
+    fillMsg(__SPIFFS_FORMATTED , BUTTON_TEXT ) ;
   } else {
     if (! cmdNameInit() ) {
       fillMsg( __CMD_NOT_LOADED ) ;
     }
   }
+  
+  
 //  listSpiffsDir( "/", 0 );   // uncomment to see the SPIFFS content
   
   initButtons() ; //initialise les noms des boutons, les boutons pour chaque page.
@@ -171,6 +172,8 @@ void setup() {
   Serial2.print(0X18) ; // send a soft reset
   Serial2.println(" ") ;Serial2.print("$10=3");Serial2.println(" ") ;   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
   Serial2.flush();                                                      // this is used to avoid sending to many jogging movements when using the nunchuk  
+  prefs.begin("data") ;
+  //prefs.putFloat("WCS_Z", 12.345);
 }
 
 //******************************** Main loop ***************************************
@@ -212,18 +215,18 @@ void loop() {
   sendToGrbl() ;           // s'il y de la place libre dans le Tx buffer, le rempli avec le fichier de SD, une CMD ou le flux du PC; envoie périodiquement "?" pour demander le statut
 //  if (newGrblStatusReceived) Serial.println( "newStatus");
 
-  if (newGrblStatusReceived == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP ) ) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
+  if (newGrblStatusReceived == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP || currentPage == _P_TOOL) ) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
     updatePartPage = true ;
   }
   newGrblStatusReceived = false ;
-  if (lastMsgChanged == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP) ) { //force a refresh if a message has been filled
+  if (lastMsgChanged == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP || currentPage == _P_TOOL) ) { //force a refresh if a message has been filled
     updatePartPage = true ;
   }
   
   if (  ( updateFullPage ) ) {
     drawFullPage() ; 
 
-  } else if ( updatePartPage ) {   // si l'écran doit être réaffiché, construit l'écran et l'affiche
+  } else if ( updatePartPage ) {   
     drawPartPage() ;                           // si l'écran doit être mis à jour, exécute une fonction plus limitée qui ne redessine pas les boutons        
   }    
   lastMsgChanged = false ; // lastMsgChanged is used in drawPartPage; so, it can not be set on false before

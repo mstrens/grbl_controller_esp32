@@ -51,6 +51,9 @@ extern uint8_t * pNext ; // position of the next char to be written
 extern uint8_t * pFirst ; // position of the first char
 extern uint8_t * pGet ; // position of the last char to be read for display
 
+extern char printString[250] ;
+extern char * pPrintString ;
+extern uint8_t lastStringCmd ;
 
 uint32_t prevAutoMoveMillis ;
 
@@ -120,7 +123,10 @@ void fCancel(uint8_t param) {
     statusPrinting = PRINTING_STOPPED ;
     closeFileToRead() ;    
     Serial2.print( (char) SOFT_RESET) ;
-  }  
+  }  else if ( statusPrinting == PRINTING_STRING ) {
+    statusPrinting = PRINTING_STOPPED ;
+    Serial2.print( (char) SOFT_RESET) ;
+  }
   currentPage = _P_INFO ;  // go to page Info
   updateFullPage = true ;  // force a redraw even if current page does not change
   waitReleased = true ;          // discard "pressed" until a release 
@@ -147,11 +153,11 @@ void fResume(uint8_t param) {
 }
 
 void fDist( uint8_t param ) {
-  uint8_t newDist =  mPages[_P_MOVE].boutons[7] ;       // convertit la position du bouton en type de bouton 
+  uint8_t newDist =  mPages[_P_MOVE].boutons[5] ;       // convertit la position du bouton en type de bouton 
   //Serial.print("newDist=") ; Serial.println(newDist) ;
   if ( ++newDist > _D10 ) newDist = _D_AUTO ; // increase and reset to min value if to big
-  mPages[_P_MOVE].boutons[7] = newDist ;   // update the button to display
-  mButtonDraw( 8 , newDist ) ;  // draw a button at position (from 1 to 12)
+  mPages[_P_MOVE].boutons[5] = newDist ;   // update the button to display
+  mButtonDraw( 6 , newDist ) ;  // draw a button at position (from 1 to 12)
   //updateFullPage = true ;                     // force a redraw of buttons
   waitReleased = true ;          // discard "pressed" until a release 
 }  
@@ -160,10 +166,10 @@ void fMove( uint8_t param ) {
     float distance ;
     uint32_t moveMillis = millis() ;
     static uint32_t prevMoveMillis ;
-    if ( mPages[_P_MOVE].boutons[7] == _D_AUTO ) {
+    if ( mPages[_P_MOVE].boutons[5] == _D_AUTO ) {
       handleAutoMove(param) ; // process in a similar way as Nunchuk
     } else if (justPressedBtn) {                      // just pressed in non auto mode
-      switch ( mPages[_P_MOVE].boutons[7] ) {         //  we suppose that the distance is defined by the 4th button on second line so idx = 7
+      switch ( mPages[_P_MOVE].boutons[5] ) {         //  we suppose that the distance is defined by the 4th button on second line so idx = 7
       case _D0_01 :
         distance = 0.01;
         break ;
@@ -180,11 +186,11 @@ void fMove( uint8_t param ) {
       Serial2.println("") ; Serial2.print("$J=G91 G21 ") ;
       switch ( justPressedBtn ) {  // we convert the position of the button into the type of button
         case 5 :  Serial2.print("X")  ;  break ;
-        case 9 :  Serial2.print("X-") ;  break ;
-        case 6 :  Serial2.print("Y")  ;  break ;
+        case 7 :  Serial2.print("X-") ;  break ;
+        case 2 :  Serial2.print("Y")  ;  break ;
         case 10 :  Serial2.print("Y-") ;  break ;
-        case 7 :  Serial2.print("Z")  ;  break ;
-        case 11 :  Serial2.print("Z-") ;  break ;
+        case 4 :  Serial2.print("Z")  ;  break ;
+        case 12 :  Serial2.print("Z-") ;  break ;
       }
       Serial2.print(distance) ; Serial2.println (" F100") ;
       //Serial.print("move for button") ; Serial.print(justPressedBtn) ;Serial.print(" ") ;  Serial.print(distance) ; Serial.println (" F100") ;
@@ -241,11 +247,11 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
     jogDistZ = 0 ;
     switch ( pressedBtn ) {  // fill one direction of move
       case 5 :  jogDistX = 1  ;  break ;
-      case 9 :  jogDistX = -1 ;  break ;
-      case 6 :  jogDistY = 1  ;  break ;
+      case 7 :  jogDistX = -1 ;  break ;
+      case 2 :  jogDistY = 1  ;  break ;
       case 10 :  jogDistY = -1 ;  break ;
-      case 7 :  jogDistZ = 1 ;  break ;
-      case 11 :  jogDistZ = -1 ;  break ;
+      case 4 :  jogDistZ = 1 ;  break ;
+      case 12 :  jogDistZ = -1 ;  break ;
     }
     jogCmdFlag = true ;                 // the flag will inform the send module that there is a command to be sent based on moveMultiplier and preMove. 
   }
@@ -310,15 +316,36 @@ void fSdMove(uint8_t param) {     // param contient _LEFT ou _RIGTH
   waitReleased = true ;          // discard "pressed" until a release 
 }
 
+
 void fSetXYZ(uint8_t param) {     // param contient le n° de la commande
   switch (param) {
-  case _SETX : Serial2.println("G10 L20 P1 X0") ;  break ;
-  case _SETY : Serial2.println("G10 L20 P1 Y0") ;  break ;
-  case _SETZ : Serial2.println("G10 L20 P1 Z0") ;  break ;
-  case _SETXYZ : Serial2.println("G10 L20 P1 X0 Y0 Z0") ;  break ;
+  case _SETX : memccpy ( printString , _SETX_STRING , '\0' , 249); break ;
+  case _SETY : memccpy ( printString , _SETY_STRING , '\0' , 249); break ;
+  case _SETZ :   memccpy ( printString , _SETZ_STRING , '\0' , 249); break ;
+  case _SETXYZ : memccpy ( printString , _SETXYZ_STRING , '\0' , 249); break ;
+  case _SET_CHANGE : memccpy ( printString , _SET_CHANGE_STRING , '\0' , 249); break ;
+  case _SET_PROBE :  memccpy ( printString , _SET_PROBE_STRING , '\0' , 249);  break ;  
+  case _SET_CAL :    memccpy ( printString , _CAL_STRING , '\0' , 249);    break ;  
+  case _GO_CHANGE :  memccpy ( printString , _GO_CHANGE_STRING , '\0' , 249); break ; 
+  case _GO_PROBE :   memccpy ( printString , _GO_PROBE_STRING , '\0' , 249);  break ; 
+  default : printString[0] ; break ;  // null string for safety; normally can't happen
   }
+  lastStringCmd = param ;           // save the last parameter in order to generate a text when the task is execute
+  sendStringToGrbl() ;
   waitReleased = true ;          // discard "pressed" until a release
                                  // update will be done when we receive a new GRBL status message
+}
+
+void sendStringToGrbl() {
+  //Serial.print("calibration = ") ; Serial.println( pStringToSend ) ;
+  if ( statusPrinting != PRINTING_STOPPED ) {
+    fillErrorMsg(__NOT_IDLE ) ; 
+  } else {
+    //Serial.println("Start sending string") ; // to debug
+    statusPrinting = PRINTING_STRING ;
+    pPrintString = &printString[0] ;
+    waitOk = false ;
+  }
 }
 
 void fCmd(uint8_t param) {     // param contient le n° de la commande (valeur = _CMD1, ...)

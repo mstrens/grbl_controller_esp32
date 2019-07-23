@@ -5,6 +5,7 @@ void tftInit(void) ;
 void testTft(void);
 void  touch_calibrate();
 #include <stdint.h>
+#include "config.h"
 
 //void initLcd() ;
 //void drawStr(uint8_t row , uint8_t col ,  char * pointerText ) ;
@@ -25,18 +26,19 @@ struct M_Button {
 
 // Liste des boutons disponibles
 enum { _NO_BUTTON = 0 , _SETUP , _PRINT , _HOME, _UNLOCK , _RESET , _SD , _USB_GRBL , _TELNET_GRBL, _PAUSE , _CANCEL , _INFO , _CMD ,
-_MOVE , _RESUME , _STOP_PC_GRBL , _XP , _XM , _YP , _YM , _ZP , _ZM, _D_AUTO , _D0_01 , _D0_1 , _D1, _D10 ,
-_SETX , _SETY , _SETZ, _SETXYZ , _BACK , _LEFT, _RIGHT , _UP ,
- _CMD1 ,_CMD2 ,_CMD3 ,_CMD4 ,_CMD5 ,_CMD6 ,_CMD7 , _CMD8 , _CMD9 , _CMD10 , _CMD11 , _MORE_PAUSE , _FILE0 , _FILE1 , _FILE2 , _FILE3 , _MASKED1 , _PG_PREV , _PG_NEXT, _MAX_BTN} ; // keep _MAX_BTN latest
+_MOVE , _RESUME , _STOP_PC_GRBL , _XP , _XM , _YP , _YM , _ZP , _ZM, _D_AUTO , _D0_01 , _D0_1 , _D1, _D10 , _SET_WCS ,
+_SETX , _SETY , _SETZ, _SETXYZ , _SET_CHANGE,  _SET_PROBE, _SET_CAL , _GO_CHANGE, _GO_PROBE , _TOOL , _BACK , _LEFT, _RIGHT , _UP ,
+ _CMD1 ,_CMD2 ,_CMD3 ,_CMD4 ,_CMD5 ,_CMD6 ,_CMD7 , _CMD8 , _CMD9 , _CMD10 , _CMD11 , _MORE_PAUSE , _FILE0 , _FILE1 , _FILE2 , _FILE3 ,
+ _MASKED1 , _PG_PREV , _PG_NEXT, _MAX_BTN} ; // keep _MAX_BTN latest
 
 // Liste des pages définies
-enum { _P_NULL = 0  , _P_INFO , _P_SETUP , _P_PRINT , _P_PAUSE , _P_MOVE , _P_SETXYZ , _P_SD , _P_CMD , _P_LOG , _P_MAX_PAGES} ; // keep _P_MAX_PAGE latest
+enum { _P_NULL = 0  , _P_INFO , _P_SETUP , _P_PRINT , _P_PAUSE , _P_MOVE , _P_SETXYZ , _P_SD , _P_CMD , _P_LOG , _P_TOOL, _P_MAX_PAGES} ; // keep _P_MAX_PAGE latest
 
 // Liste des actions définies
 enum { _NO_ACTION = 0 , _JUST_PRESSED  , _JUST_RELEASED , _JUST_LONG_PRESSED , _LONG_PRESSED , _JUST_LONG_PRESSED_RELEASED } ;
 
 // Liste des statuts d'impression
-enum { PRINTING_STOPPED = 0 , PRINTING_FROM_SD , PRINTING_ERROR , PRINTING_PAUSED , PRINTING_FROM_USB , PRINTING_CMD , PRINTING_FROM_TELNET } ;
+enum { PRINTING_STOPPED = 0 , PRINTING_FROM_SD , PRINTING_ERROR , PRINTING_PAUSED , PRINTING_FROM_USB , PRINTING_CMD , PRINTING_FROM_TELNET , PRINTING_STRING} ;
 
 // fonctions pour un bouton (index du bouton): 
 //          mButtonDraw(position , btnIdx) // dessine le bouton à une place correspondant à l'index 
@@ -84,12 +86,15 @@ void fNoBase(void) ; // Ne fait rien = fonction pour l'affichage d'une page avec
 void fSetupBase(void) ; //fonction pour l'affichage de base de la page setup (= adresse IP)
 void fMoveBase(void) ; // fonction pour l'affichage de l'écran Move
 void fSetXYZBase(void) ; // fonction pour l'affichage de l'écran Set XYZ
-void fSdBase(void) ; // fonction pour l'affichage de l'écran Set XYZ
+void fSdBase(void) ; // fonction pour l'affichage de l'écran de la carte SD
 void fCmdBase(void) ; // fonction pour l'affichage del'écran Cmd
 void fLogBase(void) ; // fonction pour l'affichage de l'écran Log
+void fToolBase(void) ;  // fonction pour l'affichage de l'écran Change tool
 void printOneLogLine(uint8_t col , uint8_t line ) ; // imprime une ligne de log
 
 void updateButtonsInfoPage() ; // met à jour le set up de la page en fonction du statut d'impression
+void drawMachineStatus() ;   // affiche le status GRBL dans le coin supérieur droit
+void drawLastMsg() ;         // affiche le lastMsg 
 void drawDataOnInfoPage()  ; // affiche les données sur la page d'info
 void drawWposOnMovePage() ;
 void drawDataOnSetupPage() ;  // affiche wpos et distance since entry on this screen
@@ -97,8 +102,10 @@ void drawDataOnSetXYZPage() ; // affiche wpos
 void drawWposOnSetXYZPage() ; // affiche Wpos
 void drawWifiOnSetupPage() ; // affiche l'adresse IP sur l'écran set up
 void drawDataOnLogPage() ; // affiche une page de log (sans les boutons)
+void drawDataOnToolPage() ; // affiche le statut GRBL et le lastMsg 
 
-void fillMsg( char * msg) ;
+
+void fillMsg( char * msg , uint16_t msgColor = SCREEN_ALERT_TEXT ) ;
 
 uint8_t getButton( int16_t x, int16_t y ) ; // convert raw position into tft position
 

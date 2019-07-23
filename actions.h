@@ -27,5 +27,7 @@ void fLogNext(uint8_t param) ;
 
 void handleAutoMove( uint8_t param) ;
 
+void sendStringToGrbl(void ) ;
+
 #endif
 

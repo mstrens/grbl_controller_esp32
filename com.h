@@ -3,19 +3,25 @@
 
 #include "Arduino.h"
 
-#define STR_GRBL_BUF_MAX_SIZE 50         // size has been increased from 10 to 50 to support grbl [Msg:] 
+#define STR_GRBL_BUF_MAX_SIZE 60         // size has been increased from 10 to 50 to support grbl [Msg:] Longest is [GC:....] message
 
 void getFromGrblAndForward( void ) ;   //get char from GRBL, forward them is statusprinting = PRINTING_FROM_PC and decode the data (look for "OK", for <xxxxxx> sentence
                                        // fill machineStatus[] and mPosXYZ[]
 
 void parseToLog(uint8_t c , uint8_t lastC) ;   // do not store in log the OK and the status message.
 void handleLastNumericField(void) ;
+void storeGrblState(void) ;
 
 void sendToGrbl( void ) ;
-//int8_t waitForOK() ;
+void sendFromSd(void) ;
+void sendFromCmd() ;
+void sendFromString() ;
+void sendJogCancelAndJog(void) ; 
 boolean sendJogCmd(uint32_t startTime ) ; // parameter is the original time (millis) when we start a ; return true if cmd has been sent
+
 void fillErrorMsg( char * errorMsg ) ; 
 void fillAlarmMsg( char * alarmMsg ) ;
+void fillStringExecuteMsg( uint8_t buttonMessageIdx ) ; 
 
 #endif                                       
 

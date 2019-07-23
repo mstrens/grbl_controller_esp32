@@ -45,9 +45,17 @@ uint8_t getGrblPosState = GET_GRBL_STATUS_CLOSED ;
 float feedSpindle[2] ;  // first is FeedRate, second is Speed
 float bufferAvailable[2] ;  // first is number of blocks available in planner, second is number of chars available in serial buffer
 float wcoXYZ[3] ;
-float wposXYZ[3] ; 
+float wposXYZ[3] ;
+float savedWposXYZ[3] ; 
 float mposXYZ[3] ;
 
+
+char modalAbsRel[4] = {0}; // store the modal G20/G21 in a message received from grbl
+char modalMmInch[4] = {0} ; // store the modal G90/G91 in a message received from grbl
+
+char printString[250] = {0} ;       // contains a command to be send from a string; wait for OK after each 0x13 char
+char * pPrintString = printString ;
+uint8_t lastStringCmd ;
 
 char strGrblBuf[STR_GRBL_BUF_MAX_SIZE] ; // this buffer is used to store a few char received from GRBL before decoding them
 uint8_t strGrblIdx ;
@@ -69,6 +77,7 @@ extern boolean newGrblStatusReceived ;
 extern volatile uint8_t statusPrinting  ;
 extern char machineStatus[9];
 extern char lastMsg[80] ;        // last message to display
+extern uint16_t lastMsgColor ;        // last message color
 
 extern boolean updateFullPage ;
 
@@ -102,10 +111,10 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
       Serial.print( (char) c) ;
       //if  (c == 0x0A || c == 0x0C ) Serial.println(millis()) ;
 #endif      
-    if ( statusPrinting == PRINTING_FROM_USB ) {
-      Serial.print( (char) c) ;                         // forward characters from GRBL to PC when PRINTING_FROM_PC
+    if ( statusPrinting == PRINTING_FROM_USB  ) {
+      Serial.print( (char) c) ;                         // forward characters from GRBL to PC when PRINTING_FROM_USB
     }
-    sendViaTelnet((char) c) ;
+    sendViaTelnet((char) c) ;                   // forward characters from GRBL to telnet when PRINTING_FROM_TELNET
     switch (c) {                                // parse char received from grbl
     case 'k' :
       if ( lastC == 'o' ) {
@@ -228,6 +237,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
         strGrblBuf[strGrblIdx++] = ']' ;
         strGrblBuf[strGrblIdx] = 0 ;
         memccpy( grblLastMessage , strGrblBuf , '\0', STR_GRBL_BUF_MAX_SIZE - 1);
+        storeGrblState() ;                             // to do Store part of message in memory (G20, G21, ...)
         strGrblIdx = 0 ;                                        // reset the buffer
         strGrblBuf[strGrblIdx] = 0 ;
         grblLastMessageChanged = true ;
@@ -325,24 +335,81 @@ void handleLastNumericField(void) { // decode last numeric field
   } 
 }
 
+void storeGrblState(void) { // search for some char in message
+  char * pBuf =  strGrblBuf + 5 ;
+  char * pSearch ;
+  if ( strGrblBuf[1] == 'G' && strGrblBuf[2] == 'C' && strGrblBuf[3] == ':'  ) { // GRBL reply to a $G with [GC:G20 ....]
+    pSearch = strstr( pBuf , "G2" ) ; // can be G20 or G21
+    if (pSearch != NULL ) memcpy( modalAbsRel , pSearch , 3) ;
+    pSearch = strstr( pBuf , "G90" ) ;
+    if (pSearch != NULL ) memcpy( modalMmInch , pSearch , 3) ;
+    pSearch = strstr( pBuf , "G91" ) ;
+    if (pSearch != NULL ) memcpy( modalMmInch , pSearch , 3) ;
+    //Serial.print("AbsRel= " ) ; Serial.println( modalAbsRel) ;
+    //Serial.print("MmInch= " ) ; Serial.println( modalMmInch) ;  
+  }
+}
+
 //-----------------------------  Send ------------------------------------------------------
 void sendToGrbl( void ) {   
-                                    // if statusprinting = PRINTING, then set statusPrinting to PRINTING_STOPPED if eof; exit if we wait an OK from GRBL; 
-                                    // if statusprinting = PRINTING_FROM_PC, then get char from PC and forward it to GRBL.
-                                    // if statusprinting is NOT PRINTING_FROM_PC, then send "?" to grbl to ask for status and position every x millisec
+                                    // set statusPrinting to PRINTING_STOPPED if eof; exit if we wait an OK from GRBL; 
+                                    // if statusPrinting = PRINTING_FROM_USB or PRINTING_FRM_TELNET, then get char from USB or Telnet and forward it to GRBL.
+                                    // if statusPrinting = PRINTING_FROM_SD, PRINTING_CMD or PRINTING_STRING, get the char and send
+                                    // if statusprinting is NOT PRINTING_FROM_USB or TELNET, then send "?" to grbl to ask for status and position every x millisec
   int sdChar ;
   static uint32_t nextSendMillis = 0 ;
   uint32_t currSendMillis  ;
-  static uint32_t exitMillis ;
   #define WAIT_OK_SD_TIMEOUT 120000
-  if ( statusPrinting == PRINTING_FROM_SD) {
-    if ( waitOk ) {
+  if ( waitOk && ( statusPrinting == PRINTING_FROM_SD || statusPrinting == PRINTING_CMD || statusPrinting == PRINTING_STRING ) ) {
       if ( millis() > waitOkWhenSdMillis ) {
         fillMsg(__MISSING_OK_WHEN_SENDING_FROM_SD ) ;   // give an error if we have to wait to much to get an OK from grbl
-        waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // wait for 20 sec before generating the message again
+        waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // wait for 2 min before generating the message again
       }
-    } else {
-      waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // set time out on 20 sec (20000msec)
+  } else {
+      switch ( statusPrinting ) {
+          case PRINTING_FROM_SD :
+            sendFromSd() ;
+            break; 
+          case PRINTING_FROM_USB :
+            while ( Serial.available() && statusPrinting == PRINTING_FROM_USB ) {
+              sdChar = Serial.read() ;
+              Serial2.print( (char) sdChar ) ;
+            } // end while 
+            break ;
+          case PRINTING_FROM_TELNET :
+            while ( telnetClient.available() && statusPrinting == PRINTING_FROM_TELNET ) {
+              sdChar = telnetClient.read() ;
+              Serial2.print( (char) sdChar ) ;
+            } // end while       
+            break ;
+          case PRINTING_CMD :
+            sendFromCmd() ;
+            break ;
+          case PRINTING_STRING :
+            sendFromString() ;
+            break ;
+      } // end switch
+  } // end else if  
+  if ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_PAUSED ) {   // process nunchuk cancel and commands
+     sendJogCancelAndJog() ;
+  }  // end of nunchuk process
+  if ( statusPrinting != PRINTING_FROM_USB && statusPrinting != PRINTING_FROM_TELNET) {     // when PC is master, it is the PC that asks for GRBL status
+    currSendMillis = millis() ;                   // ask GRBL current status every X millis sec. GRBL replies with a message with status and position
+    if ( currSendMillis > nextSendMillis) {
+       nextSendMillis = currSendMillis + 300 ;
+       Serial2.print("?") ; 
+    }
+  }
+  if( statusPrinting != PRINTING_FROM_TELNET ) {               // clear the telnet buffer when not in use
+    while ( telnetClient.available() && statusPrinting != PRINTING_FROM_TELNET ) {
+      sdChar = telnetClient.read() ;
+    } // end while  
+  }
+}  
+
+void sendFromSd() {        // send next char from SD; close file at the end
+      int sdChar ;
+      waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // set time out on 
       while ( aDir[dirLevel+1].available() > 0 && (! waitOk) && statusPrinting == PRINTING_FROM_SD && Serial2.availableForWrite() > 2 ) {
           sdChar = aDir[dirLevel+1].read() ;
           if ( sdChar < 0 ) {
@@ -364,20 +431,11 @@ void sendToGrbl( void ) {
         //Serial2.print( (char) 0x18 ) ; //0x85) ;   // cancel jog (just for testing); must be removed
         Serial2.print( (char) 10 ) ; // sent a new line to be sure that Grbl handle last line.
       }
-    } // end of else waitOk
-  } else if ( statusPrinting == PRINTING_FROM_USB ) {
-    while ( Serial.available() && statusPrinting == PRINTING_FROM_USB ) {
-      sdChar = Serial.read() ;
-      Serial2.print( (char) sdChar ) ;
-    } // end while 
-          
-  } else if ( statusPrinting == PRINTING_FROM_TELNET ) {
-    while ( telnetClient.available() && statusPrinting == PRINTING_FROM_TELNET ) {
-      sdChar = telnetClient.read() ;
-      Serial2.print( (char) sdChar ) ;
-    } // end while       
-  
-  } else if ( statusPrinting == PRINTING_CMD ) {
+} 
+
+void sendFromCmd() {
+    int sdChar ;
+    waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // set time out on 
     while ( spiffsAvailableCmdFile() > 0 && (! waitOk) && statusPrinting == PRINTING_CMD && Serial2.availableForWrite() > 2 ) {
       sdChar = (int) spiffsReadCmdFile() ;
       if( sdChar != 13){
@@ -392,8 +450,54 @@ void sendToGrbl( void ) {
       updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
       Serial2.print( (char) 0x0A ) ; // sent a new line to be sure that Grbl handle last line.
     }      
-  } // end else if  
-  if ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_PAUSED ) {   // process nunchuk cancel and commands
+}
+
+void sendFromString(){
+    char strChar ;    
+    waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // set time out on 
+    while ( *pPrintString != 0 && (! waitOk) && statusPrinting == PRINTING_STRING  ) {
+      strChar = *pPrintString ++;
+      if ( strChar == '%' ) {
+         strChar = *pPrintString ++;
+         switch (strChar) { 
+         case 'z' : // save Z WCO
+            savedWposXYZ[2] = wposXYZ[2] ;
+            break;
+         case 'Z' : // Put some char in the flow
+            char floatToString[20] ;
+            gcvt(wposXYZ[2], 3, floatToString); 
+            Serial2.print(floatToString) ;
+            break;
+         case 'M' : // Restore modal G20/G21/G90/G91
+            Serial2.print( modalAbsRel) ;
+            //Serial.print( modalAbsRel) ; // to debug
+            Serial2.print( modalMmInch) ;
+            //Serial.print( modalMmInch) ; // to debug
+            break;
+         }   
+      } else {
+        if( strChar != 13){                  // add here handling of special character for real time process; we skip \r char
+            Serial2.print( strChar ) ;
+            //Serial.print (strChar) ;  // to debug
+          }
+        if ( strChar == '\n' ) {
+             waitOk = true ;
+          }
+      }    
+    } // end while
+    //Serial.println("End while"); // to debug
+    //Serial.println( *printString , HEX );
+    if ( *pPrintString == 0 ) { // we reached the end of the string 
+      statusPrinting = PRINTING_STOPPED  ; 
+      fillStringExecuteMsg( lastStringCmd );   // fill with a message saying the command has been executed
+      updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
+      Serial2.print( (char) 0x0A ) ; // sent a new line to be sure that Grbl handle last line.
+      //Serial.println("last char has been sent") ;
+    }      
+}
+
+void sendJogCancelAndJog(void) {
+    static uint32_t exitMillis ;
     if ( jogCancelFlag ) {
       if ( jog_status == JOG_NO ) {
         //Serial.println("send a jog cancel");
@@ -444,22 +548,11 @@ void sendToGrbl( void ) {
         }
       } 
     }
-     
-  }  // end of nunchuk process
-  
-  if ( statusPrinting != PRINTING_FROM_USB && statusPrinting != PRINTING_FROM_TELNET) {     // when PC is master, it is the PC that asks for GRBL status
-    currSendMillis = millis() ;                   // ask GRBL current status every X millis sec. GRBL replies with a message with status and position
-    if ( currSendMillis > nextSendMillis) {
-       nextSendMillis = currSendMillis + 300 ;
-       Serial2.print("?") ; 
-    }
-  }
-  if( statusPrinting != PRINTING_FROM_TELNET ) {
-    while ( telnetClient.available() && statusPrinting != PRINTING_FROM_TELNET ) {
-      sdChar = telnetClient.read() ;
-    } // end while  
-  }
-}  
+} // end of function    
+
+
+
+
 
 boolean sendJogCmd(uint32_t startTime) {
 #define MINDIST 0.01    // mm
@@ -585,15 +678,40 @@ char * alarmArrayMsg[] = { __UNKNOWN_ALARM  ,
               __LIMIT_MISSING_HOMING 
 }; 
 
+char * stringExecuteMsg[] = { __SETX_EXECUTED  ,  // messages must be defined here in the same sequence as the buttons used to call the string commands 
+                              __SETY_EXECUTED  ,
+                              __SETZ_EXECUTED  ,
+                              __SETXYZ_EXECUTED ,
+                              __SET_CHANGE_EXECUTED ,
+                              __SET_PROBE_EXECUTED  ,
+                              __SET_CAL_EXECUTED    ,
+                              __GO_CHANGE_EXECUTED  ,
+                              __GO_PROBE_EXECUTED ,
+                              __UNKNOWN_BTN_EXECUTED
+                              
+};
 
 void fillErrorMsg( char * errorMsg ) {   // errorMsg contains "Error:xx"
    int errorNum = atoi( &errorMsg[6]) ;
    if (errorNum < 1 || errorNum > 38 ) errorNum = 0 ;
-   fillMsg( errorArrayMsg[errorNum] ) ;
+   fillMsg( errorArrayMsg[errorNum]  ) ;
 }
 void fillAlarmMsg( char * alarmMsg ) {   //alarmMsg contains "ALARM:xx"
   int alarmNum = atoi( &alarmMsg[6]) ;
    if (alarmNum < 1 || alarmNum > 9 ) alarmNum = 0 ;
    fillMsg( alarmArrayMsg[alarmNum] ) ;
+}
+
+void fillStringExecuteMsg( uint8_t buttonMessageIdx ) {   // buttonMessageIdx contains the number of the button
+   //Serial.print("param= ") ; Serial.println(buttonMessageIdx ) ;  // to debug
+   if ( buttonMessageIdx >= _SETX || buttonMessageIdx <= _GO_PROBE) {
+      buttonMessageIdx -= _SETX ;
+      fillMsg( stringExecuteMsg[buttonMessageIdx] , BUTTON_TEXT ) ;
+   } else {
+      buttonMessageIdx = _GO_PROBE - _SETX + 1 ;
+      fillMsg( stringExecuteMsg[buttonMessageIdx] ) ;
+   }
+   //Serial.print("index of table= ") ; Serial.println(buttonMessageIdx ) ;  // to debug
+   //Serial.print("message= ") ; Serial.println( stringExecuteMsg[buttonMessageIdx] ) ; // to debug
 }
 

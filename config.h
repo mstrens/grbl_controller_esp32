@@ -3,7 +3,7 @@
 
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 
-#define ESP32_VERSION "v1.0.c"
+#define ESP32_VERSION "v1.0.e"
 
 // decide if you will use Wifi or not (and how)
 #define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
@@ -104,6 +104,40 @@
 #define SCREEN_NORMAL_TEXT TFT_GREEN
 #define SCREEN_ALERT_TEXT TFT_RED
 #define SCREEN_HEADER_TEXT TFT_WHITE
+
+
+// ************************************ Commands for change tools
+// This suppose that we can use G28 and G30 and that milling use G54 WCS.
+// The GRBL commands used by those buttons are defined here
+// _SET_CHANGE_STRING : Set the current position as the position where the tool must be changed; 
+//                      This is saved by GRBL so it remains after power off; G28 can be use to move directly to this position (! if homing has been done)
+// _SET_PROBE_STRING : Set the current position as the position where probing must be performed; 
+//                      This is saved by GRBL so it remains after power off; G30 can be use to move directly to this position (! if homing has been done)
+//                      The idea is to put a micro switch at this position (so there is no need to use a clip)
+// _CAL_STRING : = calibration ; to be execute only once for a given work piece (WCS); Set XYZ has to be set before running this command
+//               Program will perform a Z probe in order to know the Z offset for current WCS; This offset is then saved. 
+//               In next version, this offset will be saved in flash memory; so it will still be known after a reset.
+// _GO_CHANGE_STRING : Go to the change tool position in order to change tool.
+// _GO_PROBE_STRING : Perform a probe with new tool and then change offset based on the offset saved during calibration;
+//
+// To perform those task we define set of GRBL commands with some extensions:
+// $G asks GRBL for the modal parameters (G21 = metric,G90 = absolute,...); ESP32 program save them in order to restore them later on
+//        Values are displayed on Log screen
+// $# ask GRBL for all offsets (G54,...G28, G92, ...); Values are displayed on Log screen
+// %M restore 2 modal parameters (G20/G21 and G90/G91)
+// %z ask the firmware to save the current Z Mpos;
+// %Z replace %Z by the saved value %z; this occurs when the string is sent to GRBL.
+#define _CAL_STRING "G4P0.0\n$G\nM5\nG20G90\nG53G00Z-2\nG30\nG38.2Z-100F100\nG91\nG0Z2\nG38.2Z-3F10\nG4P0.5\n%zG53G0Z-2\nG28\n%M\n"
+#define _GO_CHANGE_STRING "G4P0.0\n$G$#M5\nG53G0Z-2\nG28\n"
+#define _GO_PROBE_STRING "G4P0.0\n$G\nM5\nG20G90\nG53G0Z-2\nG30\nG38.2Z-100F100\nG91\nG0Z2\nG38.2Z-3F10\nG10 L20 P1 Z%Z\G53G0Z-2\n%M\n"
+#define _SET_CHANGE_STRING "G28.1\nG4P0.0\n$#\n$G\n" 
+#define _SET_PROBE_STRING "G30.1\nG4P0.0\n$#\n$G\n" 
+
+// here a few other GCODE being used; it set offset for W54 (=P1)
+#define _SETX_STRING "G10 L20 P1 X0\n"
+#define _SETY_STRING "G10 L20 P1 Y0\n"
+#define _SETZ_STRING "G10 L20 P1 Z0\n"
+#define _SETXYZ_STRING "G10 L20 P1 X0 Y0 Z0\n"
 
 // *************************************     normally do not change here below ****************************
 //       debugging

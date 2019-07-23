@@ -260,7 +260,7 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
             ( ( fileName[3] >= '1' && fileName[3] <= '9' ) || fileName[3] == 'A' || fileName[3] == 'B' ) &&  
             fileName[4] == '_' && isalpha(fileName[5]) ) ){
   //  if ( strlen(fileName) < 6 || fileName[0] != 'C' || fileName[1] != 'm' || fileName[2] != 'd' || fileName[3] < '1' || fileName[3] > '7' || fileName[4] != '_' || (!isalpha(fileName[5]) )  ){
-    fillMsg( fileName );
+    fillMsg( fileName , BUTTON_TEXT );
     return false ;
   }
   // here we assume that the file name identifies a command; so we can store it on SPIFFS
@@ -271,7 +271,7 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
   }
   deleteFileLike( fileName ) ;    // then look in SPIFFS for files beginning by Cmdx_ and if found, delete them
   if ( strlen(fileName) == 11 && fileName[5] == 'd' && fileName[6] == 'e' && fileName[7] == 'l' && fileName[8] == 'e' && fileName[9] == 't' && fileName[10] == 'e' ){
-      fillMsg( __CMD_DELETED ) ;
+      fillMsg( __CMD_DELETED , BUTTON_TEXT ) ;
       aDir[dirLevel+1].close() ; // close the file from SD card
       return true ;
   }  
@@ -280,7 +280,7 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
        aDir[dirLevel+1].close() ; // close the file from SD card
        return true ;
   }
-  fillMsg(__CMD_CREATED ) ;
+  fillMsg(__CMD_CREATED , BUTTON_TEXT ) ;
   while ( aDir[dirLevel+1].available() > 0 ) {
       sdChar = aDir[dirLevel+1].read() ;
       if ( sdChar < 0 ) {
