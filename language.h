@@ -54,6 +54,16 @@
 #define __MORE_PAUSE "Plus" 
 #define __PREV "Pr\x80" "c"
 #define __NEXT "Suiv"
+//#define __OVERWRITE // it is a hidden button , so no need for a text
+#define __OVER_SWITCH_TO_FEEDRATE "Switch to*Feedrate"
+#define __OVER_SWITCH_TO_SPINDLE "Switch to*Spindle"
+#define __OVER_100 "Set to*100%"
+#define __OVER_10P "+10%"
+#define __OVER_10M "-10%"
+#define __OVER_1P  "+1%"
+#define __OVER_1M  "-1%"
+
+
 
 #define __WPOS "Wpos"
 #define __MPOS "Mpos"
@@ -96,6 +106,9 @@
 #define __NO_NUNCHUK "Pas de Nunchuk" 
 #define __MISSING_OK_WHEN_SENDING_FROM_SD "Envoi de Gcode suspendu pendant plus de 2 min" 
 #define __NOT_IDLE "Status not Idle"
+#define __CHANGING_FEEDRATE "Overwriting Feedrate"
+#define __CHANGING_SPINDLE "Overwriting Spindle"
+
 
 #define __UNKNOWN_ERROR "Erreur inconnue"  
 #define __EXPECTED_CMD_LETTER "1.Lettre Cmd attendue"
@@ -193,6 +206,15 @@
 #define __MORE_PAUSE "Mehr" 
 #define __PREV "Prev"
 #define __NEXT "Next"
+//#define __OVERWRITE // it is a hidden button , so no need for a text
+#define __OVER_SWITCH_TO_FEEDRATE "Switch to*Feedrate"
+#define __OVER_SWITCH_TO_SPINDLE "Switch to*Spindle"
+#define __OVER_100 "Set to*100%"
+#define __OVER_10P "+10%"
+#define __OVER_10M "-10%"
+#define __OVER_1P  "+1%"
+#define __OVER_1M  "-1%"
+
 
 
 #define __WPOS "Wpos"
@@ -236,6 +258,9 @@
 #define __NO_NUNCHUK "Kein Nunchuk" 
 #define __MISSING_OK_WHEN_SENDING_FROM_SD "Sending Gcode suspendend more than 2 min"
 #define __NOT_IDLE "Status not Idle"
+#define __CHANGING_FEEDRATE "Overwriting Feedrate"
+#define __CHANGING_SPINDLE "Overwriting Spindle"
+
 
 #define __UNKNOWN_ERROR "Unbekannter Fehler"  
 #define __EXPECTED_CMD_LETTER "1.Erwarteter cmd Buchstabe"
@@ -336,6 +361,15 @@
 #define __MORE_PAUSE "More" 
 #define __PREV "Prev"
 #define __NEXT "Next"
+//#define __OVERWRITE // it is a hidden button , so no need for a text
+#define __OVER_SWITCH_TO_FEEDRATE "Change*Feedrate"
+#define __OVER_SWITCH_TO_SPINDLE "Change*Spindle"
+#define __OVER_100 "Set to*100%"
+#define __OVER_10P "+10%"
+#define __OVER_10M "-10%"
+#define __OVER_1P  "+1%"
+#define __OVER_1M  "-1%"
+
 
 
 #define __WPOS "Wpos"
@@ -379,6 +413,8 @@
 #define __NO_NUNCHUK "No nunchuk" 
 #define __MISSING_OK_WHEN_SENDING_FROM_SD "Sending Gcode suspendend more than 2 min"
 #define __NOT_IDLE "Status not Idle"
+#define __CHANGING_FEEDRATE "Overwriting Feedrate"
+#define __CHANGING_SPINDLE "Overwriting Spindle"
 
 #define __UNKNOWN_ERROR "Unknown error"  
 #define __EXPECTED_CMD_LETTER "1.Expected cmd letter"

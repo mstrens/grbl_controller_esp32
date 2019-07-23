@@ -13,7 +13,7 @@
 // GRBL status are : Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep
 // a message should look like (note : GRBL sent or WPOS or MPos depending on grbl parameter : to get WPos, we have to set "$10=0"
 //  <Jog|WPos:1329.142,0.000,0.000|Bf:32,254|FS:2000,0|Ov:100,100,100|A:FM>
-//  <Idle|WPos:0.000,0.000,0.000|FS:0.0,0> or e.g. <Idle|MPos:0.000,0.000,0.000|FS:0.0,0|WCO:0.000,0.000,0.000>
+//  <Idle|WPos:0.000,0.000,0.000|FS:0.0,0> or e.g. <Idle|MPos:0.000,0.000,0.000|FS:0.0,0|WCO:0.000,0.000,0.000|OV:100,100,100>
 //CLOSED
 //   START
 //        WPOS_HEADER
@@ -36,14 +36,18 @@
 #define GET_GRBL_STATUS_ALARM 7
 #define GET_GRBL_STATUS_BF_DATA 8
 #define GET_GRBL_STATUS_MESSAGE 9
+#define GET_GRBL_STATUS_OV_DATA 10
+  
 
 uint8_t wposIdx = 0 ;
 uint8_t wcoIdx = 0 ;
 uint8_t fsIdx = 0 ;
 uint8_t bfIdx = 0 ;
+uint8_t ovIdx = 0 ;
 uint8_t getGrblPosState = GET_GRBL_STATUS_CLOSED ;
 float feedSpindle[2] ;  // first is FeedRate, second is Speed
 float bufferAvailable[2] ;  // first is number of blocks available in planner, second is number of chars available in serial buffer
+float overwritePercent[3] ; // first is for feedrate, second for rapid (G0...), third is for RPM
 float wcoXYZ[3] ;
 float wposXYZ[3] ;
 float savedWposXYZ[3] ; 
@@ -205,7 +209,11 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
           getGrblPosState = GET_GRBL_STATUS_BF_DATA ; 
           strGrblIdx = 0 ;
           bfIdx = 0 ;
-        }  
+        } else if ( strGrblBuf[0] == 'O' ) {     // start OV data
+          getGrblPosState = GET_GRBL_STATUS_OV_DATA ; 
+          strGrblIdx = 0 ;
+          ovIdx = 0 ;
+        }   
       }
       break ;
     case ',' :                                              // séparateur entre 2 chiffres
@@ -248,7 +256,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
         if ( ( c =='-' || (c>='0' && c<='9' ) || c == '.' ) ) { 
           if ( getGrblPosState == GET_GRBL_STATUS_WPOS_DATA || getGrblPosState == GET_GRBL_STATUS_F_DATA || getGrblPosState == GET_GRBL_STATUS_BF_DATA || 
                   getGrblPosState == GET_GRBL_STATUS_WCO_DATA || getGrblPosState == GET_GRBL_STATUS_START || getGrblPosState == GET_GRBL_STATUS_CLOSED ||
-                  getGrblPosState == GET_GRBL_STATUS_MESSAGE){
+                  getGrblPosState == GET_GRBL_STATUS_MESSAGE || getGrblPosState == GET_GRBL_STATUS_OV_DATA ){
             strGrblBuf[strGrblIdx++] = c ;
             strGrblBuf[strGrblIdx] = 0 ;
           }
@@ -332,6 +340,9 @@ void handleLastNumericField(void) { // decode last numeric field
           
           wcoIdx++ ;
           strGrblIdx = 0 ;
+  } else if (  getGrblPosState == GET_GRBL_STATUS_OV_DATA && ovIdx < 3) {   // save number of available block or char in GRBL buffer
+          overwritePercent[ovIdx++] = temp ;
+          strGrblIdx = 0 ; 
   } 
 }
 
@@ -470,15 +481,15 @@ void sendFromString(){
             break;
          case 'M' : // Restore modal G20/G21/G90/G91
             Serial2.print( modalAbsRel) ;
-            //Serial.print( modalAbsRel) ; // to debug
+            Serial.print( modalAbsRel) ; // to debug
             Serial2.print( modalMmInch) ;
-            //Serial.print( modalMmInch) ; // to debug
+            Serial.print( modalMmInch) ; // to debug
             break;
          }   
       } else {
         if( strChar != 13){                  // add here handling of special character for real time process; we skip \r char
             Serial2.print( strChar ) ;
-            //Serial.print (strChar) ;  // to debug
+            Serial.print (strChar) ;  // to debug
           }
         if ( strChar == '\n' ) {
              waitOk = true ;
@@ -492,7 +503,7 @@ void sendFromString(){
       fillStringExecuteMsg( lastStringCmd );   // fill with a message saying the command has been executed
       updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
       Serial2.print( (char) 0x0A ) ; // sent a new line to be sure that Grbl handle last line.
-      //Serial.println("last char has been sent") ;
+      Serial.println("last char has been sent") ;
     }      
 }
 

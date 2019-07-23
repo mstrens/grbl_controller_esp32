@@ -185,8 +185,8 @@ void fMove( uint8_t param ) {
       }
       Serial2.println("") ; Serial2.print("$J=G91 G21 ") ;
       switch ( justPressedBtn ) {  // we convert the position of the button into the type of button
-        case 5 :  Serial2.print("X")  ;  break ;
-        case 7 :  Serial2.print("X-") ;  break ;
+        case 7 :  Serial2.print("X")  ;  break ;
+        case 5 :  Serial2.print("X-") ;  break ;
         case 2 :  Serial2.print("Y")  ;  break ;
         case 10 :  Serial2.print("Y-") ;  break ;
         case 4 :  Serial2.print("Z")  ;  break ;
@@ -246,8 +246,8 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
     jogDistY = 0 ;
     jogDistZ = 0 ;
     switch ( pressedBtn ) {  // fill one direction of move
-      case 5 :  jogDistX = 1  ;  break ;
-      case 7 :  jogDistX = -1 ;  break ;
+      case 7 :  jogDistX = 1  ;  break ;
+      case 5 :  jogDistX = -1 ;  break ;
       case 2 :  jogDistY = 1  ;  break ;
       case 10 :  jogDistY = -1 ;  break ;
       case 4 :  jogDistZ = 1 ;  break ;
@@ -451,5 +451,33 @@ void fLogNext(uint8_t param) {
   //drawDataOnLogPage() ;
   updateFullPage = true ; 
   waitReleased = true ;          // discard "pressed" until a release 
+}
+
+void fOverSwitch (uint8_t BtnParam) {
+  if ( BtnParam == _OVER_SWITCH_TO_SPINDLE ) { // here we have to switch button and title in order to let modify RPM 
+    fillMPage (_P_OVERWRITE , 3 , _OVER_SWITCH_TO_FEEDRATE , _JUST_PRESSED , fOverSwitch , _OVER_SWITCH_TO_FEEDRATE ) ;
+  //  mButtonDraw( 4 , _OVER_SWITCH_TO_FEEDRATE ) ;  // draw a button at position (from 1 to 12)
+  } else {                                     // here we have to switch button and title in order to let modify RPM 
+    fillMPage (_P_OVERWRITE , 3 , _OVER_SWITCH_TO_SPINDLE , _JUST_PRESSED , fOverSwitch , _OVER_SWITCH_TO_SPINDLE ) ;
+  //  mButtonDraw( 4 , _OVER_SWITCH_TO_SPINDLE ) ;  // draw a button at position (from 1 to 12)
+  }
+  //mButtonDraw( 4 , _OVER_SWITCH_TO_SPINDLE ) ;  // draw a button at position (from 1 to 12)
+  
+  updateFullPage = true ; // force a redraw because Btn has change
+  waitReleased = true ;          // discard "pressed" until a release
+}
+
+void fOverModify (uint8_t BtnParam) {
+  char grblOverwriteCode = BtnParam - _OVER_100 ;   // _OVER_100 is the first of the 5 codes; code have to be put in the right sequence in the enum 
+  if ( mPages[_P_OVERWRITE].boutons[3] == _OVER_SWITCH_TO_SPINDLE ) {  // We change Feedrate
+    grblOverwriteCode += 0x90 ;    // 0x90 is the GRBL code for 100% feedrate
+    Serial.print("We change Feedrate= ");  Serial.println( (uint8_t) grblOverwriteCode, HEX);  // to debug
+  } else {                                                             // We change RPM
+    grblOverwriteCode += 0x99 ;    // 0x99 is the GRBL code for 100% RPM
+    Serial.println("We change RPM");   Serial.println(  (uint8_t) grblOverwriteCode, HEX);  // to debug
+  }
+  Serial2.print( (char) grblOverwriteCode ) ;  
+  updatePartPage = true ;                     // force a redraw of data
+  waitReleased = true ;          // discard "pressed" until a release
 }
 

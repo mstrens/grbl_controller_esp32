@@ -4,6 +4,8 @@
 // pour cela, on peut employer une fonction prévue Serial2.setRxBufferSize(size_t)
 
 // to do
+// ajouter un titre à la page overwrite pour préciser ce que l'on peut changer
+// extraire les paramètres d'overwrite du message de GRBL et les afficher.
 // sauver la valeur de calibration en flash (using preferences lib) 
 // prévoir de pouvoir faire un "continue" quand on a une pause alors que l'on est en train d'envoyer des CMD ou des STRING vers GRBL 
 // prévoir des icones pour les boutons; on peut créer des charactères en format RLE
@@ -215,7 +217,8 @@ void loop() {
   sendToGrbl() ;           // s'il y de la place libre dans le Tx buffer, le rempli avec le fichier de SD, une CMD ou le flux du PC; envoie périodiquement "?" pour demander le statut
 //  if (newGrblStatusReceived) Serial.println( "newStatus");
 
-  if (newGrblStatusReceived == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP || currentPage == _P_TOOL) ) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
+  if (newGrblStatusReceived == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP || 
+      currentPage == _P_TOOL || currentPage == _P_OVERWRITE ) ) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
     updatePartPage = true ;
   }
   newGrblStatusReceived = false ;

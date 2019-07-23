@@ -52,6 +52,9 @@ extern float wposXYZ[3] ;
 extern float mposXYZ[3] ;
 extern char machineStatus[9];
 extern float feedSpindle[2] ;  
+extern float overwritePercent[3] ; // first is for feedrate, second for rapid (G0...), third is for RPM
+
+
 
 extern char lastMsg[80] ;        // last message to display
 extern uint16_t lastMsgColor ;            // color of last Msg
@@ -211,13 +214,22 @@ mButton[_FILE0].pLabel = fileNames[0] ;  // labels are defined during execution 
 mButton[_FILE1].pLabel = fileNames[1] ;
 mButton[_FILE2].pLabel = fileNames[2] ;
 mButton[_FILE3].pLabel = fileNames[3] ;
-mButton[_MASKED1].pLabel = " " ;
+mButton[_MASKED1].pLabel = "" ; // this is a hidden button; so must be empty
 mButton[_PG_PREV].pLabel = __PREV ;
 mButton[_PG_NEXT].pLabel = __NEXT ;
+mButton[_OVERWRITE].pLabel = "" ; // this is a hidden button; so must be empty
+mButton[_OVER_SWITCH_TO_FEEDRATE].pLabel = __OVER_SWITCH_TO_FEEDRATE ;
+mButton[_OVER_SWITCH_TO_SPINDLE].pLabel = __OVER_SWITCH_TO_SPINDLE ;
+mButton[_OVER_10P].pLabel = __OVER_10P ;
+mButton[_OVER_10M].pLabel = __OVER_10M ;
+mButton[_OVER_1P].pLabel = __OVER_1P ;
+mButton[_OVER_1M].pLabel = __OVER_1M ;
+mButton[_OVER_100].pLabel = __OVER_100 ;
 
 mPages[_P_INFO].titel = "Info" ;
 mPages[_P_INFO].pfBase = fInfoBase ;
 fillMPage (_P_INFO , 0 , _MASKED1 , _JUST_PRESSED , fGoToPage , _P_LOG ) ; // this button is masked but clicking on the zone call another screen
+fillMPage (_P_INFO , 3 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; // this button is masked but clicking on the zone call another screen
 fillMPage (_P_INFO , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;   // those buttons are changed dynamically based on status (no print, ...)
 fillMPage (_P_INFO , 11 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;   // those buttons are changed dynamically based on status (no print, ...)
 
@@ -308,6 +320,15 @@ fillMPage (_P_TOOL , 9 , _SET_PROBE , _JUST_PRESSED , fSetXYZ , _SET_PROBE) ;
 fillMPage (_P_TOOL , 10 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP ) ;
 fillMPage (_P_TOOL , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
+mPages[_P_OVERWRITE].titel = "Change tool" ;
+mPages[_P_OVERWRITE].pfBase = fOverBase ;
+fillMPage (_P_OVERWRITE , 3 , _OVER_SWITCH_TO_SPINDLE , _JUST_PRESSED , fOverSwitch , _OVER_SWITCH_TO_SPINDLE ) ;
+fillMPage (_P_OVERWRITE , 4 , _OVER_10M , _JUST_PRESSED , fOverModify , _OVER_10M) ;
+fillMPage (_P_OVERWRITE , 5 , _OVER_1M , _JUST_PRESSED , fOverModify , _OVER_1M) ;
+fillMPage (_P_OVERWRITE , 6 , _OVER_1P , _JUST_PRESSED , fOverModify , _OVER_1P) ;
+fillMPage (_P_OVERWRITE , 7 , _OVER_10P , _JUST_PRESSED , fOverModify , _OVER_10P) ;
+fillMPage (_P_OVERWRITE , 10 , _OVER_100 , _JUST_PRESSED , fOverModify , _OVER_100) ;
+fillMPage (_P_OVERWRITE , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
 }  // end of init
 
@@ -347,7 +368,8 @@ void drawAllButtons(){
     uint8_t btnIdx;
     while ( i < 12 ) {           // pour chacun des 12 boutons possibles
       btnIdx = mPages[currentPage].boutons[i] ;
-      if ( btnIdx && btnIdx != _MASKED1 ) {  // si un n° de bouton est précisé, l'affiche sauf si c'est un bouton masqué (ex: _MASKED1)
+      //if ( btnIdx && btnIdx != _MASKED1 ) {  // si un n° de bouton est précisé, l'affiche sauf si c'est un bouton masqué (ex: _MASKED1)
+      if ( btnIdx && mButton[btnIdx].pLabel[0] != 0 ) {  // si un n° de bouton est précisé, l'affiche sauf si c'est un bouton masqué (dont le label est vide)
         //Serial.print("va afficher le bouton ") ; Serial.println( i) ;
         //Serial.print("bouton code= " ) ; Serial.println( mPages[currentPage].boutons[i] ) ;
         mButtonDraw( i + 1 , btnIdx ) ; // affiche le bouton
@@ -563,10 +585,11 @@ void updateBtnState( void) {
 }
 
 void drawUpdatedBtn( ) {   // update the color of the buttons on a page (based on currentPage, justPressedBtn , justReleasedBtn, longPressedBtn)
-  if ( justReleasedBtn && mPages[currentPage].boutons[justReleasedBtn - 1] && ( mPages[currentPage].boutons[justReleasedBtn - 1] != _MASKED1) ) {  // si justReleased contient un bouton et que ce bouton est affiché sur la page
+  if ( justReleasedBtn && mPages[currentPage].boutons[justReleasedBtn - 1] && 
+                      (  mButton[mPages[currentPage].boutons[justReleasedBtn - 1]].pLabel[0] != 0 ) ) {  // si justReleased contient un bouton et que ce bouton est affiché sur la page
     mButtonBorder( justReleasedBtn , BUTTON_BORDER_NOT_PRESSED ) ; // affiche le bord du bouton dans sa couleur normale
   }
-  if ( justPressedBtn && mPages[currentPage].boutons[justPressedBtn - 1] && ( mPages[currentPage].boutons[justPressedBtn - 1] != _MASKED1) ) {  // si justPressed contient un bouton et que ce bouton est affiché sur la page
+  if ( justPressedBtn && mPages[currentPage].boutons[justPressedBtn - 1] && ( mButton[mPages[currentPage].boutons[justPressedBtn - 1]].pLabel[0] != 0 ) ) {  // si justPressed contient un bouton et que ce bouton est affiché sur la page
     mButtonBorder( justPressedBtn , BUTTON_BORDER_PRESSED ) ; // affiche le bord du bouton dans la couleur de sélection
   }
 }
@@ -641,7 +664,9 @@ void drawPartPage() {          // update only the data on screen (not the button
     drawDataOnSetXYZPage() ;
   } else if (currentPage == _P_TOOL ){
     drawDataOnToolPage() ;
-  }  
+  } else if (currentPage == _P_OVERWRITE ){
+    drawDataOnOverwritePage() ;
+  }   
 }
 
 //********************************  Fonctions appelées quand on entre dans un écran (appelée via drawFullPage)
@@ -977,6 +1002,10 @@ void fToolBase(void) {                 //  En principe il n'y a rien à faire;
   //drawWposOnSetXYZPage() ;
 }
 
+void fOverBase(void) {                 //  En principe il n'y a rien à faire;
+  //fillMPage (_P_OVERWRITE , 3 , _OVER_SWITCH_TO_SPINDLE , _JUST_PRESSED , fOverSwitch , _OVER_SWITCH_TO_SPINDLE ) ; // by default allow to modify Feedrate
+  drawDataOnOverwritePage() ;
+}
 
 void drawWposOnMovePage() {
   tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
@@ -1044,6 +1073,42 @@ void drawDataOnToolPage() {
   drawMachineStatus() ;       // draw machine status in the upper right corner
   drawLastMsg() ;  
 }
+
+void drawDataOnOverwritePage() {                                // to do : text has still to be coded here
+  tft.setFreeFont (LABELS12_FONT) ;
+  tft.setTextSize(1) ;           // char is 2 X magnified => 
+  tft.setTextColor( SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND ) ; // when only 1 parameter, background = fond);
+  tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
+  tft.setTextPadding (230) ;      // expect to clear 230 pixel when drawing text or 
+  uint8_t line = 30 ;
+  uint8_t col = 2 ;
+  if ( mPages[_P_OVERWRITE].boutons[3] == _OVER_SWITCH_TO_SPINDLE ) {
+    tft.drawString( __CHANGING_FEEDRATE , col  , line );  
+  } else {
+    tft.drawString( __CHANGING_SPINDLE , col  , line );
+  }
+
+  tft.setTextFont( 2 );
+  tft.setTextSize(1) ;
+  tft.setTextPadding (0) ;
+  tft.setTextDatum( TL_DATUM ) ;
+  tft.setTextColor(SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND) ; 
+  line = 180 ;
+  tft.drawString(__FEED , 5 , line )  ;
+  tft.drawString(__RPM , 5 , line + 20 ) ;
+  tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND) ;
+  tft.setTextPadding (70) ;
+  tft.setTextDatum( TR_DATUM ) ;
+  tft.drawNumber( (long) feedSpindle[0] , 110 , line) ; 
+  tft.drawNumber( (long) feedSpindle[1] , 110 , line + 20) ; 
+  tft.setTextPadding (30) ;
+  tft.drawNumber( (long) overwritePercent[0] , 140 , line) ;
+  tft.drawNumber( (long) overwritePercent[2] , 140 , line + 20) ;
+  tft.setTextPadding (0) ;
+  tft.drawString(  "%" , 155 , line )  ;
+  tft.drawString(  "%" , 155 , line + 20 )  ;
+}
+
 
 // ******************************** touch calibrate ********************************************
 void touch_calibrate() {
