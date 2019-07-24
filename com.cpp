@@ -481,15 +481,15 @@ void sendFromString(){
             break;
          case 'M' : // Restore modal G20/G21/G90/G91
             Serial2.print( modalAbsRel) ;
-            Serial.print( modalAbsRel) ; // to debug
+            //Serial.print( modalAbsRel) ; // to debug
             Serial2.print( modalMmInch) ;
-            Serial.print( modalMmInch) ; // to debug
+            //Serial.print( modalMmInch) ; // to debug
             break;
          }   
       } else {
         if( strChar != 13){                  // add here handling of special character for real time process; we skip \r char
             Serial2.print( strChar ) ;
-            Serial.print (strChar) ;  // to debug
+            //Serial.print (strChar) ;  // to debug
           }
         if ( strChar == '\n' ) {
              waitOk = true ;
@@ -503,7 +503,7 @@ void sendFromString(){
       fillStringExecuteMsg( lastStringCmd );   // fill with a message saying the command has been executed
       updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
       Serial2.print( (char) 0x0A ) ; // sent a new line to be sure that Grbl handle last line.
-      Serial.println("last char has been sent") ;
+      //Serial.println("last char has been sent") ;
     }      
 }
 

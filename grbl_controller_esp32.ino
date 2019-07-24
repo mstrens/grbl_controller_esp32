@@ -4,8 +4,7 @@
 // pour cela, on peut employer une fonction prévue Serial2.setRxBufferSize(size_t)
 
 // to do
-// ajouter un titre à la page overwrite pour préciser ce que l'on peut changer
-// extraire les paramètres d'overwrite du message de GRBL et les afficher.
+// retirer les serial.print qui ont servi au debug
 // sauver la valeur de calibration en flash (using preferences lib) 
 // prévoir de pouvoir faire un "continue" quand on a une pause alors que l'on est en train d'envoyer des CMD ou des STRING vers GRBL 
 // prévoir des icones pour les boutons; on peut créer des charactères en format RLE

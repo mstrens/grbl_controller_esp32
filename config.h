@@ -3,7 +3,7 @@
 
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 
-#define ESP32_VERSION "v1.0.f"
+#define ESP32_VERSION "v1.0.g"
 
 // decide if you will use Wifi or not (and how)
 #define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
@@ -130,14 +130,14 @@
 //                  wait that all commands are execute (G4P0.0\n), then ask for modal parameters that are automatically saved( $G\n ),
 //                   then stop spindle ( M5\n ), then move Z up for safety ( G53G21G90G00Z-2\n ) ,
 //                  then go to Probe position ( G30\n ), then probe at high speed ( G38.2Z-100F50\n ),
-//                  then change modal to relative and mm ( G20G91\n ), then move Z up 2mm ( G0Z2\n ) ,
+//                  then change modal to relative and mm ( G21G91\n ), then move Z up 2mm ( G0Z2\n ) ,
 //                  then probe again at low speed ( G38.2Z-3F10\n ) , then wait that command is executed ( G4P0.5\n ) ,
 //                  then save the Z WCS position ( %z )in ESP32, then rise Z up ( G53G21G90G0Z-2\n ) ,
 //                  then goto predefined change tool position ( G28\n ) and restore 2 modal parameters ( M\n )
-#define _CAL_STRING "G4P0.0\n$G\nM5\nG53G21G90G00Z-2\nG30\nG38.2Z-100F50\nG20G91\nG0Z2\nG38.2Z-3F10\nG4P0.5\n%zG53G21G90G0Z-2\nG28\n%M\n"
+#define _CAL_STRING "G4P0.0\n$G\nM5\nG53G21G90G00Z-2\nG30\nG38.2Z-70F100\nG21G91\nG0Z2\nG38.2Z-3F10\nG4P0.5\n%zG53G21G90G0Z-2\nG28\n%M\n"
   
-#define _GO_CHANGE_STRING "G4P0.0\n$G$#M5\nG53G0Z-2\nG28\n"
-#define _GO_PROBE_STRING "G4P0.0\n$G\nM5\nG21G90\nG53G21G90G0Z-2\nG30\nG38.2Z-100F100\nG91\nG0Z2\nG38.2Z-3F10\nG10 L20 P1 Z%Z\G53G21G90G0Z-2\n%M\n"
+#define _GO_CHANGE_STRING "G4P0.0\n$G$#\nM5\nG53G21G90G0Z-2\nG28\n"
+#define _GO_PROBE_STRING "G4P0.0\n$G\nM5\nG53G21G90G0Z-2\nG30\nG38.2Z-70F100\nG21G91\nG0Z2\nG38.2Z-3F10\nG10 L20 P1 Z%Z\nG53G21G90G0Z-2\n%M\n"
 #define _SET_CHANGE_STRING "G28.1\nG4P0.0\n$#\n$G\n" 
 #define _SET_PROBE_STRING "G30.1\nG4P0.0\n$#\n$G\n" 
 
