@@ -29,7 +29,7 @@ enum { _NO_BUTTON = 0 , _SETUP , _PRINT , _HOME, _UNLOCK , _RESET , _SD , _USB_G
 _MOVE , _RESUME , _STOP_PC_GRBL , _XP , _XM , _YP , _YM , _ZP , _ZM, _D_AUTO , _D0_01 , _D0_1 , _D1, _D10 , _SET_WCS ,
 _SETX , _SETY , _SETZ, _SETXYZ , _SET_CHANGE,  _SET_PROBE, _SET_CAL , _GO_CHANGE, _GO_PROBE , _TOOL , _BACK , _LEFT, _RIGHT , _UP ,
  _CMD1 ,_CMD2 ,_CMD3 ,_CMD4 ,_CMD5 ,_CMD6 ,_CMD7 , _CMD8 , _CMD9 , _CMD10 , _CMD11 , _MORE_PAUSE , _FILE0 , _FILE1 , _FILE2 , _FILE3 ,
- _MASKED1 , _PG_PREV , _PG_NEXT, _OVERWRITE, _OVER_SWITCH_TO_FEEDRATE , _OVER_SWITCH_TO_SPINDLE, _OVER_100 , _OVER_10P, _OVER_10M,_OVER_1P, _OVER_1M, _MAX_BTN} ; // keep _MAX_BTN latest
+ _MASKED1 , _PG_PREV , _PG_NEXT, _OVERWRITE, _OVER_SWITCH_TO_FEEDRATE , _OVER_SWITCH_TO_SPINDLE, _OVER_100 , _OVER_10P, _OVER_10M,_OVER_1P, _OVER_1M, _TOOGLE_SPINDLE, _MAX_BTN} ; // keep _MAX_BTN latest
 
 // Liste des pages définies
 enum { _P_NULL = 0  , _P_INFO , _P_SETUP , _P_PRINT , _P_PAUSE , _P_MOVE , _P_SETXYZ , _P_SD , _P_CMD , _P_LOG , _P_TOOL, _P_OVERWRITE, _P_MAX_PAGES} ; // keep _P_MAX_PAGE latest
@@ -39,6 +39,11 @@ enum { _NO_ACTION = 0 , _JUST_PRESSED  , _JUST_RELEASED , _JUST_LONG_PRESSED , _
 
 // Liste des statuts d'impression
 enum { PRINTING_STOPPED = 0 , PRINTING_FROM_SD , PRINTING_ERROR , PRINTING_PAUSED , PRINTING_FROM_USB , PRINTING_CMD , PRINTING_FROM_TELNET , PRINTING_STRING} ;
+
+#define POS_OF_MOVE_D_AUTO 5  // sequence number of definition D_AUTO on MOVE (in range 0...11)
+#define POS_OF_LOG_PG_NEXT 7
+#define POS_OF_LOG_PG_PREV 3
+#define POS_OF_OVERWRITE_OVERWRITE 3
 
 // fonctions pour un bouton (index du bouton): 
 //          mButtonDraw(position , btnIdx) // dessine le bouton à une place correspondant à l'index 
@@ -68,6 +73,7 @@ void blankTft(char * titel , uint16_t x , uint16_t y ) ; // clear tft screen
 void printTft(char * text) ;
 
 boolean convertPosToXY( uint8_t pos , int32_t *_x, int32_t *_y , uint16_t btnDef[12][4]) ;
+uint8_t convertBtnPosToBtnIdx( uint8_t page , uint8_t btn ) ;
 
 // à chaque loop,
 void updateBtnState( ) ;       // tester le touchscreen et mettre à jour les valeurs de just pressed, long pressed, just released

@@ -256,7 +256,7 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
     fillMsg( __FILE_NAME_NOT_FOUND  ); 
     return false ;
   }
-   if ( ! ( strlen(fileName) >= 6 && fileName[0] == 'C' && fileName[1] == 'm' && fileName[2] == 'd' &&  
+  if ( ! ( strlen(fileName) >= 6 && fileName[0] == 'C' && fileName[1] == 'm' && fileName[2] == 'd' &&  
             ( ( fileName[3] >= '1' && fileName[3] <= '9' ) || fileName[3] == 'A' || fileName[3] == 'B' ) &&  
             fileName[4] == '_' && isalpha(fileName[5]) ) ){
   //  if ( strlen(fileName) < 6 || fileName[0] != 'C' || fileName[1] != 'm' || fileName[2] != 'd' || fileName[3] < '1' || fileName[3] > '7' || fileName[4] != '_' || (!isalpha(fileName[5]) )  ){

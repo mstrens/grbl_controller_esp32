@@ -106,8 +106,10 @@
 #define __NO_NUNCHUK "Pas de Nunchuk" 
 #define __MISSING_OK_WHEN_SENDING_FROM_SD "Envoi de Gcode suspendu pendant plus de 2 min" 
 #define __NOT_IDLE "Status not Idle"
-#define __CHANGING_FEEDRATE "Overwriting Feedrate"
-#define __CHANGING_SPINDLE "Overwriting Spindle"
+#define __CHANGING_FEEDRATE1 "Overwriting"
+#define __CHANGING_FEEDRATE2 "Feedrate"
+#define __CHANGING_SPINDLE1 "Overwriting"
+#define __CHANGING_SPINDLE2 "Spindle"
 
 
 #define __UNKNOWN_ERROR "Erreur inconnue"  
@@ -258,9 +260,10 @@
 #define __NO_NUNCHUK "Kein Nunchuk" 
 #define __MISSING_OK_WHEN_SENDING_FROM_SD "Sending Gcode suspendend more than 2 min"
 #define __NOT_IDLE "Status not Idle"
-#define __CHANGING_FEEDRATE "Overwriting Feedrate"
-#define __CHANGING_SPINDLE "Overwriting Spindle"
-
+#define __CHANGING_FEEDRATE1 "Overwriting"
+#define __CHANGING_FEEDRATE2 "Feedrate"
+#define __CHANGING_SPINDLE1 "Overwriting"
+#define __CHANGING_SPINDLE2 "Spindle"
 
 #define __UNKNOWN_ERROR "Unbekannter Fehler"  
 #define __EXPECTED_CMD_LETTER "1.Erwarteter cmd Buchstabe"
@@ -413,8 +416,10 @@
 #define __NO_NUNCHUK "No nunchuk" 
 #define __MISSING_OK_WHEN_SENDING_FROM_SD "Sending Gcode suspendend more than 2 min"
 #define __NOT_IDLE "Status not Idle"
-#define __CHANGING_FEEDRATE "Overwriting Feedrate"
-#define __CHANGING_SPINDLE "Overwriting Spindle"
+#define __CHANGING_FEEDRATE1 "Overwriting Feedrate"
+#define __CHANGING_FEEDRATE2 "Feedrate"
+#define __CHANGING_SPINDLE1 "Overwriting Spindle"
+#define __CHANGING_SPINDLE2 "Spindle"
 
 #define __UNKNOWN_ERROR "Unknown error"  
 #define __EXPECTED_CMD_LETTER "1.Expected cmd letter"

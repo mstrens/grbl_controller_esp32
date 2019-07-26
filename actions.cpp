@@ -153,11 +153,11 @@ void fResume(uint8_t param) {
 }
 
 void fDist( uint8_t param ) {
-  uint8_t newDist =  mPages[_P_MOVE].boutons[5] ;       // convertit la position du bouton en type de bouton 
+  uint8_t newDist =  mPages[_P_MOVE].boutons[POS_OF_MOVE_D_AUTO ] ;       // convertit la position du bouton en type de bouton 
   //Serial.print("newDist=") ; Serial.println(newDist) ;
   if ( ++newDist > _D10 ) newDist = _D_AUTO ; // increase and reset to min value if to big
-  mPages[_P_MOVE].boutons[5] = newDist ;   // update the button to display
-  mButtonDraw( 6 , newDist ) ;  // draw a button at position (from 1 to 12)
+  mPages[_P_MOVE].boutons[POS_OF_MOVE_D_AUTO ] = newDist ;   // update the button to display
+  mButtonDraw( POS_OF_MOVE_D_AUTO + 1 , newDist ) ;  // draw  at position (from 1 to 12) a button (newDist)
   //updateFullPage = true ;                     // force a redraw of buttons
   waitReleased = true ;          // discard "pressed" until a release 
 }  
@@ -166,10 +166,10 @@ void fMove( uint8_t param ) {
     float distance ;
     uint32_t moveMillis = millis() ;
     static uint32_t prevMoveMillis ;
-    if ( mPages[_P_MOVE].boutons[5] == _D_AUTO ) {
+    if ( mPages[_P_MOVE].boutons[POS_OF_MOVE_D_AUTO] == _D_AUTO ) {
       handleAutoMove(param) ; // process in a similar way as Nunchuk
     } else if (justPressedBtn) {                      // just pressed in non auto mode
-      switch ( mPages[_P_MOVE].boutons[5] ) {         //  we suppose that the distance is defined by the 4th button on second line so idx = 7
+      switch ( mPages[_P_MOVE].boutons[POS_OF_MOVE_D_AUTO] ) {        
       case _D0_01 :
         distance = 0.01;
         break ;
@@ -184,13 +184,24 @@ void fMove( uint8_t param ) {
         break ;
       }
       Serial2.println("") ; Serial2.print("$J=G91 G21 ") ;
-      switch ( justPressedBtn ) {  // we convert the position of the button into the type of button
-        case 7 :  Serial2.print("X")  ;  break ;
-        case 5 :  Serial2.print("X-") ;  break ;
-        case 2 :  Serial2.print("Y")  ;  break ;
-        case 10 :  Serial2.print("Y-") ;  break ;
-        case 4 :  Serial2.print("Z")  ;  break ;
-        case 12 :  Serial2.print("Z-") ;  break ;
+       
+      //switch ( justPressedBtn ) {  // we convert the position of the button into the type of button
+      //  case 7 :  Serial2.print("X")  ;  break ;
+      //  case 5 :  Serial2.print("X-") ;  break ;
+      //  case 2 :  Serial2.print("Y")  ;  break ;
+      //  case 10 :  Serial2.print("Y-") ;  break ;
+      //  case 4 :  Serial2.print("Z")  ;  break ;
+      //  case 12 :  Serial2.print("Z-") ;  break ;
+      // }
+      uint8_t typeOfMove ;
+      typeOfMove = convertBtnPosToBtnIdx( currentPage , justPressedBtn ) ;
+      switch ( typeOfMove ) {  // we convert the position of the button into the type of button
+        case _XP :  Serial2.print("X")  ;  break ;
+        case _XM :  Serial2.print("X-") ;  break ;
+        case _YP :  Serial2.print("Y")  ;  break ;
+        case _YM :  Serial2.print("Y-") ;  break ;
+        case _ZP :  Serial2.print("Z")  ;  break ;
+        case _ZM :  Serial2.print("Z-") ;  break ;
       }
       Serial2.print(distance) ; Serial2.println (" F100") ;
       //Serial.print("move for button") ; Serial.print(justPressedBtn) ;Serial.print(" ") ;  Serial.print(distance) ; Serial.println (" F100") ;
@@ -230,31 +241,30 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
     //  moveMultiplier = 0.01 ; 
       startMoveMillis = millis();
     } 
-    //else if (cntSameAutoMove < 5 ) {   // avoid to send to fast a new move
-    //  moveMultiplier = 0.0 ;
-    //} else if (cntSameAutoMove < 10 ) {
-    //  moveMultiplier = 0.01 ;
-    //} else if (cntSameAutoMove < 15 ) {
-    //  moveMultiplier = 0.1 ;
-    //} else if (cntSameAutoMove < 20 ) {
-    //  moveMultiplier = 1 ;
-    //} else {
-    //  moveMultiplier = 2 ;
-    //} 
     cntSameAutoMove++ ;
     jogDistX = 0 ;           // reset all deplacements
     jogDistY = 0 ;
     jogDistZ = 0 ;
-    switch ( pressedBtn ) {  // fill one direction of move
-      case 7 :  jogDistX = 1  ;  break ;
-      case 5 :  jogDistX = -1 ;  break ;
-      case 2 :  jogDistY = 1  ;  break ;
-      case 10 :  jogDistY = -1 ;  break ;
-      case 4 :  jogDistZ = 1 ;  break ;
-      case 12 :  jogDistZ = -1 ;  break ;
+    //switch ( pressedBtn ) {  // fill one direction of move
+    //  case 7 :  jogDistX = 1  ;  break ;
+    //  case 5 :  jogDistX = -1 ;  break ;
+    //  case 2 :  jogDistY = 1  ;  break ;
+    //  case 10 :  jogDistY = -1 ;  break ;
+    //  case 4 :  jogDistZ = 1 ;  break ;
+    //  case 12 :  jogDistZ = -1 ;  break ;
+    //}
+    uint8_t typeOfMove;
+    typeOfMove = convertBtnPosToBtnIdx( currentPage , pressedBtn ) ; // we convert the position of the button into the type of button
+    switch ( typeOfMove ) {                                          // fill one direction of move
+        case _XP :  jogDistX = 1  ;  break ;                  
+        case _XM :  jogDistX = -1 ;  break ;
+        case _YP :  jogDistY = 1  ;  break ;
+        case _YM :  jogDistY = -1 ;  break ;
+        case _ZP :  jogDistZ = 1  ;  break ;
+        case _ZM :  jogDistZ = -1  ;  break ;
     }
     jogCmdFlag = true ;                 // the flag will inform the send module that there is a command to be sent based on moveMultiplier and preMove. 
-  }
+  }  
 }
 
 void fSdFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param contains l'index (0 à 3) du fichier à ouvrir
@@ -410,15 +420,15 @@ void fStopPc(uint8_t param){
 }
 
 void fLogPrev(uint8_t param) {
-  fillMPage (_P_LOG , 7 , _PG_NEXT , _JUST_PRESSED , fLogNext , 0) ; //active the next button
+  fillMPage (_P_LOG , POS_OF_LOG_PG_NEXT , _PG_NEXT , _JUST_PRESSED , fLogNext , 0) ; //active the next button
   uint8_t count = 0 ;
-  fillMPage (_P_LOG , 3 , _PG_PREV , _JUST_PRESSED , fLogPrev , 0) ; // activate PREV btn
+  fillMPage (_P_LOG , POS_OF_LOG_PG_PREV , _PG_PREV , _JUST_PRESSED , fLogPrev , 0) ; // activate PREV btn
   while  (count < ( N_LOG_LINE_MAX * 2 ) ) {
     if ( getPrevLogLine()>=0 )  { 
       count++ ; // move back max 6 line before
     } else {
       count = N_LOG_LINE_MAX * 2 ; // force exit of while
-      fillMPage (_P_LOG , 3 , _NO_BUTTON , _NO_ACTION , fLogPrev , 0) ;  // deactivate PREV btn
+      fillMPage (_P_LOG , POS_OF_LOG_PG_PREV , _NO_BUTTON , _NO_ACTION , fLogPrev , 0) ;  // deactivate PREV btn
     }
   }
   updateFullPage = true ; 
@@ -428,14 +438,14 @@ void fLogPrev(uint8_t param) {
 
 void fLogNext(uint8_t param) {
   uint8_t count = 0 ;
-  fillMPage (_P_LOG , 3 , _PG_PREV , _JUST_PRESSED , fLogPrev , 0) ; // activate PREV btn (even if not needed)
-  fillMPage (_P_LOG , 7 , _PG_NEXT , _JUST_PRESSED , fLogNext , 0) ; //active the next button
+  fillMPage (_P_LOG , POS_OF_LOG_PG_PREV , _PG_PREV , _JUST_PRESSED , fLogPrev , 0) ; // activate PREV btn (even if not needed)
+  fillMPage (_P_LOG , POS_OF_LOG_PG_NEXT , _PG_NEXT , _JUST_PRESSED , fLogNext , 0) ; //active the next button
   while ( count < N_LOG_LINE_MAX) { // move max line ahead (to be sure that we can display many lines when we are close to the end
     if ( getNextLogLine()>=0 ){
       count++ ; 
     } else {                       // When move is not possible, Pget point the last valid line; to display it we have to move back 1 line less 
       count = N_LOG_LINE_MAX ;
-      fillMPage(_P_LOG , 7 , _NO_BUTTON , _NO_ACTION , fLogNext , 0) ; // deactivate the NEXT button
+      fillMPage(_P_LOG , POS_OF_LOG_PG_NEXT , _NO_BUTTON , _NO_ACTION , fLogNext , 0) ; // deactivate the NEXT button
     }
   }
   count = 0 ;
@@ -444,7 +454,7 @@ void fLogNext(uint8_t param) {
       count++ ; // move back max 6 line before
     } else {
       count = N_LOG_LINE_MAX; // force exit of while
-      fillMPage(_P_LOG , 3 , _NO_BUTTON , _NO_ACTION , fLogPrev , 0) ;  // deactivate PREV btn
+      fillMPage(_P_LOG , POS_OF_LOG_PG_PREV , _NO_BUTTON , _NO_ACTION , fLogPrev , 0) ;  // deactivate PREV btn
     }
   }
   clearScreen() ;
@@ -455,21 +465,17 @@ void fLogNext(uint8_t param) {
 
 void fOverSwitch (uint8_t BtnParam) {
   if ( BtnParam == _OVER_SWITCH_TO_SPINDLE ) { // here we have to switch button and title in order to let modify RPM 
-    fillMPage (_P_OVERWRITE , 3 , _OVER_SWITCH_TO_FEEDRATE , _JUST_PRESSED , fOverSwitch , _OVER_SWITCH_TO_FEEDRATE ) ;
-  //  mButtonDraw( 4 , _OVER_SWITCH_TO_FEEDRATE ) ;  // draw a button at position (from 1 to 12)
+    fillMPage (_P_OVERWRITE , POS_OF_OVERWRITE_OVERWRITE , _OVER_SWITCH_TO_FEEDRATE , _JUST_PRESSED , fOverSwitch , _OVER_SWITCH_TO_FEEDRATE ) ;
   } else {                                     // here we have to switch button and title in order to let modify RPM 
-    fillMPage (_P_OVERWRITE , 3 , _OVER_SWITCH_TO_SPINDLE , _JUST_PRESSED , fOverSwitch , _OVER_SWITCH_TO_SPINDLE ) ;
-  //  mButtonDraw( 4 , _OVER_SWITCH_TO_SPINDLE ) ;  // draw a button at position (from 1 to 12)
-  }
-  //mButtonDraw( 4 , _OVER_SWITCH_TO_SPINDLE ) ;  // draw a button at position (from 1 to 12)
-  
+    fillMPage (_P_OVERWRITE , POS_OF_OVERWRITE_OVERWRITE , _OVER_SWITCH_TO_SPINDLE , _JUST_PRESSED , fOverSwitch , _OVER_SWITCH_TO_SPINDLE ) ;
+  } 
   updateFullPage = true ; // force a redraw because Btn has change
   waitReleased = true ;          // discard "pressed" until a release
 }
 
 void fOverModify (uint8_t BtnParam) {
   char grblOverwriteCode = BtnParam - _OVER_100 ;   // _OVER_100 is the first of the 5 codes; code have to be put in the right sequence in the enum 
-  if ( mPages[_P_OVERWRITE].boutons[3] == _OVER_SWITCH_TO_SPINDLE ) {  // We change Feedrate
+  if ( mPages[_P_OVERWRITE].boutons[POS_OF_OVERWRITE_OVERWRITE] == _OVER_SWITCH_TO_SPINDLE ) {  // when button allows to change to spindle,it means we are currently changing Feedrate
     grblOverwriteCode += 0x90 ;    // 0x90 is the GRBL code for 100% feedrate
     Serial.print("We change Feedrate= ");  Serial.println( (uint8_t) grblOverwriteCode, HEX);  // to debug
   } else {                                                             // We change RPM

@@ -5,7 +5,8 @@
 
 // to do
 // retirer les serial.print qui ont servi au debug
-// sauver la valeur de calibration en flash (using preferences lib) 
+// sauver la valeur de calibration en flash (using preferences lib)
+// ajouter une visualisation d'un fichier (deux couleurs différents suivant que c'est déjà exécuté ou non)
 // prévoir de pouvoir faire un "continue" quand on a une pause alors que l'on est en train d'envoyer des CMD ou des STRING vers GRBL 
 // prévoir des icones pour les boutons; on peut créer des charactères en format RLE
 // sans doute autoriser des déplacements en jog (avec la nunchuk notamment) si le statut est en HOLD ou en DOOR? (actuellement seul les statuts Jog et Idle sont autorisés pour la nunchuk 
@@ -65,7 +66,8 @@ Sur l'écran de base, prévoir l'affichage des infos
 #include "log.h"
 #include <Preferences.h>
 
-Preferences prefs;
+
+Preferences preferences ; // object from ESP32 lib used to save/get data in flash 
 
 extern TFT_eSPI tft ;       // Invoke custom library
 
@@ -173,8 +175,7 @@ void setup() {
   Serial2.print(0X18) ; // send a soft reset
   Serial2.println(" ") ;Serial2.print("$10=3");Serial2.println(" ") ;   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
   Serial2.flush();                                                      // this is used to avoid sending to many jogging movements when using the nunchuk  
-  prefs.begin("data") ;
-  //prefs.putFloat("WCS_Z", 12.345);
+  preferences.begin("savedData") ;
 }
 
 //******************************** Main loop ***************************************

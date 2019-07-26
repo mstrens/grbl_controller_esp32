@@ -134,12 +134,12 @@
 //                  then probe again at low speed ( G38.2Z-3F10\n ) , then wait that command is executed ( G4P0.5\n ) ,
 //                  then save the Z WCS position ( %z )in ESP32, then rise Z up ( G53G21G90G0Z-2\n ) ,
 //                  then goto predefined change tool position ( G28\n ) and restore 2 modal parameters ( M\n )
-#define _CAL_STRING "G4P0.0\n$G\nM5\nG53G21G90G00Z-2\nG30\nG38.2Z-70F100\nG21G91\nG0Z2\nG38.2Z-3F10\nG4P0.5\n%zG53G21G90G0Z-2\nG28\n%M\n"
+#define _CAL_STRING "G4P0.0\n $G\n M5\n G53 G21 G90 G00 Z-2\n G30\n G38.2 Z-70 F100\n G21 G91\n G00 Z2\n G38.2 Z-3 F10\n G4P0.5\n %z G53 G21 G90 G00 Z-2\n G28\n %M\n"
   
-#define _GO_CHANGE_STRING "G4P0.0\n$G$#\nM5\nG53G21G90G0Z-2\nG28\n"
-#define _GO_PROBE_STRING "G4P0.0\n$G\nM5\nG53G21G90G0Z-2\nG30\nG38.2Z-70F100\nG21G91\nG0Z2\nG38.2Z-3F10\nG10 L20 P1 Z%Z\nG53G21G90G0Z-2\n%M\n"
-#define _SET_CHANGE_STRING "G28.1\nG4P0.0\n$#\n$G\n" 
-#define _SET_PROBE_STRING "G30.1\nG4P0.0\n$#\n$G\n" 
+#define _GO_CHANGE_STRING "G4P0.0\n $G\n $#\n M5\n G53 G21 G90 G00 Z-2\n G28\n"
+#define _GO_PROBE_STRING "G4P0.0\n $G\n M5\n G53 G21 G90 G00 Z-2\n G30\n G38.2 Z-70 F100\n G21 G91\n G00 Z2\n G38.2 Z-3 F10\n G10 L20 P1 Z%Z\n G53 G21 G90 G00 Z-2\n %M\n"
+#define _SET_CHANGE_STRING "G28.1\n G4P0.0\n $#\n $G\n" 
+#define _SET_PROBE_STRING "G30.1\n G4P0.0\n $#\n $G\n" 
 
 // here a few other GCODE being used; it set offset for W54 (=P1)
 #define _SETX_STRING "G10 L20 P1 X0\n"

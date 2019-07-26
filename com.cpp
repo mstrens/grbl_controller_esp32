@@ -9,6 +9,7 @@
 #include "telnet.h"
 #include "cmd.h"
 #include "log.h"
+#include <Preferences.h>
 
 // GRBL status are : Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep
 // a message should look like (note : GRBL sent or WPOS or MPos depending on grbl parameter : to get WPos, we have to set "$10=0"
@@ -50,9 +51,9 @@ float bufferAvailable[2] ;  // first is number of blocks available in planner, s
 float overwritePercent[3] ; // first is for feedrate, second for rapid (G0...), third is for RPM
 float wcoXYZ[3] ;
 float wposXYZ[3] ;
-float savedWposXYZ[3] ; 
 float mposXYZ[3] ;
-
+float savedWposXYZ[3] ;
+extern Preferences preferences ; // object from ESP32 lib used to save/get data in flash 
 
 char modalAbsRel[4] = {0}; // store the modal G20/G21 in a message received from grbl
 char modalMmInch[4] = {0} ; // store the modal G90/G91 in a message received from grbl
@@ -472,12 +473,16 @@ void sendFromString(){
          strChar = *pPrintString ++;
          switch (strChar) { 
          case 'z' : // save Z WCO
-            savedWposXYZ[2] = wposXYZ[2] ;
+            //savedWposXYZ[2] = wposXYZ[2] ;
+            preferences.putFloat("wposZ" , wposXYZ[2] ) ;
+            Serial.print( "wpos Z is saved with value = ") ; Serial.println( wposXYZ[2] ) ; // to debug
             break;
          case 'Z' : // Put some char in the flow
+            savedWposXYZ[2] = preferences.getFloat("wposZ" , 0 ) ; // if wposZ does not exist in preferences, the function returns 0
             char floatToString[20] ;
-            gcvt(wposXYZ[2], 3, floatToString); 
+            gcvt(savedWposXYZ[2], 3, floatToString); 
             Serial2.print(floatToString) ;
+            Serial.print( "wpos Z is retrieved with value = ") ; Serial.println( floatToString ) ; // to debug
             break;
          case 'M' : // Restore modal G20/G21/G90/G91
             Serial2.print( modalAbsRel) ;
