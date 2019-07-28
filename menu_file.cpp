@@ -26,7 +26,6 @@ extern SdFat sd;
 extern SdBaseFile aDir[DIR_LEVEL_MAX] ;
 //extern SdBaseFile fileToRead ;
 
-
 extern M_Button mButton[_MAX_BTN] ;
 extern uint8_t statusPrinting ;
 extern uint8_t prevPage , currentPage ;
@@ -48,6 +47,15 @@ extern int8_t dirLevel ;
 //SD sd1; // use SPI 1 hardware (stm32f103 has 2 spi)
 
 extern uint16_t firstFileToDisplay ;   // 0 = first file in the directory
+
+// data used to show sd file content
+File fileToShow ;   // this contains the file being sent from SD
+extern char sdShowBuffer[1000] ; // buffer containing the data to display
+extern int16_t sdShowFirst  ;     // index in buffer of first char to display in the buffer
+extern int16_t sdShowMax ;      // index in buffer of the first char that has not been written in the buffer = Number of char written in sdShowBuffer
+uint32_t sdShowBeginPos  ;      // position in the SD file of the first char stored in the sdShowBuffer array   
+uint32_t sdMillPos  ;           // position in the SD file of the next char to be sent to GRBL   
+extern uint32_t sdShowNextPos ; // position in the SD file of the next char to be displayed if we press on Next btn
 
 // sdInit()  // close all files, end of sd, set dirFiles to Null, set dirLevel et firstFileToDisplay = 0, execute sd begin; try to read sd, in case of error fill last message
 // when entering SD menu
@@ -204,6 +212,7 @@ void closeFileToRead() {
 boolean setFileToRead ( uint8_t fileIdx ) { // fileIdx is a number from 0...3 related to the button being pressed; return false when error after filling a message,
                                             // firstFileToDisplay starts from 1 (or is 0 when there is no file)
                                             // if OK, return is true and aDir[dirLevel+1] point to the file and sdFileSize = size of file
+  char fileToShowName[50] ;             // save the name of the file being opened
   uint16_t cntIdx =  fileIdx + firstFileToDisplay ; 
   uint16_t cnt = 0;
   aDir[dirLevel].rewind();
@@ -236,6 +245,12 @@ boolean setFileToRead ( uint8_t fileIdx ) { // fileIdx is a number from 0...3 re
   // here fileToread is filled
   sdFileSize = aDir[dirLevel+1].fileSize() ;
   sdNumberOfCharSent = 0 ;
+  aDir[dirLevel+1].getName ( fileToShowName , 49 ) ; // get the name of current file 
+  fileToShow.close() ;
+  fileToShow.open( &aDir[dirLevel] , fileToShowName, O_READ ) ; // open the current file for browsing
+  char fileToShowLine[100] ;
+  fileToShow.fgets( fileToShowLine , 99 ) ; // get the first line
+  //Serial.print("first line is ") ; Serial.println( fileToShowLine ); // to debug
   return true ;
 }
 
@@ -347,4 +362,73 @@ void closeAllFiles() {
   dirLevel = -1 ;
   firstFileToDisplay = 0 ; 
 }
+
+void setShowBuffer() { // this is call when we enter call sd show
+  sdMillPos = aDir[dirLevel+1].curPosition() ;     // get the current position in the file being sent
+  sdShowBeginPos = sdMillPos ; 
+  fileToShow.seek( sdMillPos ) ; // set the same position for the file used for display
+  //char delim[2] = {0xFF , 0x00}  ;         // use a dummy delimiter in order to read up to the end
+  //sdShowMax = fileToShow.fgets( sdShowBuffer , 999 , delim ) ; // -1 means an error, 0= EOF immediately
+  sdShowMax = fileToShow.read( sdShowBuffer , 999 ) ; // -1 means an error, 0= EOF immediately
+  //Serial.print("sdMillPos=") ; Serial.println(sdMillPos ) ; // to debug
+  //Serial.print("sdShowMax=") ; Serial.println(sdShowMax ) ; // to debug
+  sdShowFirst = 0 ;     // first char to display in the buffer
+}
+
+void setSdShowFirstForPrev(int16_t sdShowSearch) {
+  uint8_t lines = 0 ;  // cumulative number of lines to displayed
+  int16_t sdShowCurrent  = sdShowSearch ;   // first char to display (during the loop)
+  int16_t nChar ; // number of char in buffer for the current line
+  int16_t nCharInFile ; //number of char on one line in the SD file
+  //Serial.print("begin to search from =") ; Serial.println(sdShowSearch ) ; // to debug
+  if ( sdShowCurrent == 0) {   // if we search already from the begining then we will display starting from begining of buffer
+    sdShowFirst = 0 ;
+    return; 
+  }
+  do{ 
+    nChar = prevBufferLineLength( sdShowCurrent , nCharInFile ) ; // Recherche le début de la ligne précédente et détermine le nbr de char de la ligne à afficher (sans le \n)
+    if ( nChar < 0 ) {           // it means that we reached the begining of buffer
+      sdShowFirst = 0 ; 
+      return ;
+    }
+    //Serial.print("prev line found; searched from sdShowCurrent=") ; Serial.println(sdShowCurrent) ; // to debug
+    //Serial.print("nChar of prev line =") ; Serial.println(nChar ) ; // to debug
+    //Serial.print("nChar in file  =") ; Serial.println(nCharInFile ) ; // to debug
+    sdShowCurrent -= nCharInFile ;              // move the cursor back
+    //Serial.print("new sdShowCurrent =") ; Serial.println(sdShowCurrent ) ; // to debug
+    lines += convertNCharToNLines ( nChar ) ;   // cumule le nbr de lignes du TFT
+    //Serial.print("lines =") ; Serial.println( lines ) ; // to debug
+  }  while ( lines <= 11) ;    // end do
+  sdShowFirst = sdShowCurrent ;             // we can display from the current position 
+}
+
+void setPrevShowBuffer() { // this is call when we press the prev btn on sd show
+  uint32_t actualFirstCharPos = sdShowBeginPos + sdShowFirst ;
+  int16_t sdShowSearch ;
+  if ( actualFirstCharPos > 999 ) {
+    sdShowBeginPos = actualFirstCharPos - 999 ; // first char in new buffer has to be 999 before the pos of first having been displayed
+  } else { 
+    sdShowBeginPos = 0 ; // first char in new buffer has to be the first in the file
+  }
+  //Serial.print("new sdShowBeginPos=") ; Serial.println(sdShowBeginPos ) ; // to debug
+  fileToShow.seek( sdShowBeginPos ) ; // set this position for the file used for display
+  sdShowMax = fileToShow.read( sdShowBuffer , 999 ) ; // -1 means an error, 0= EOF immediately
+  sdShowSearch = actualFirstCharPos - sdShowBeginPos ;    // we will search backward from this counter in 
+  setSdShowFirstForPrev(sdShowSearch) ;      // set the new value of the idx of first char to display in the buffer starting looking from sdShowSearch
+  //Serial.print("sdShowMax=") ; Serial.println(sdShowMax ) ; // to debug
+  //Serial.print("SdShowFirst =") ; Serial.println(sdShowFirst ) ; // to debug
+}
+
+void setNextShowBuffer() { // this is call when we press the next btn on sd show
+  //sdMillPos = aDir[dirLevel+1].curPosition() ;     // get the current position in the file being sent
+  sdShowBeginPos = sdShowNextPos ; // first char in new buffer has to be the last char displayed  
+  fileToShow.seek( sdShowBeginPos ) ; // set this position for the file used for display
+  //char delim[2] = {0xFF , 0x00} ;         // use a dummy delimiter in order to read up to the end
+  //sdShowMax = fileToShow.fgets( sdShowBuffer , 999  , delim ) ; // -1 means an error, 0= EOF immediately
+  sdShowMax = fileToShow.read( sdShowBuffer , 999 ) ; // -1 means an error, 0= EOF immediately
+  //Serial.print("sdMillPos=") ; Serial.println(sdMillPos ) ; // to debug
+  //Serial.print("sdShowMax=") ; Serial.println(sdShowMax ) ; // to debug
+  sdShowFirst = 0 ;     // the first char in display is the first to display in the buffer
+}
+
 

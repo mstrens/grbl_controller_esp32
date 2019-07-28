@@ -7,14 +7,6 @@ void  touch_calibrate();
 #include <stdint.h>
 #include "config.h"
 
-//void initLcd() ;
-//void drawStr(uint8_t row , uint8_t col ,  char * pointerText ) ;
-//void draw() ;
-//void buildAndDraw() ;
-//void lcdMenu_clearScreen();
-//void lcdMenu_printNormal(const char* message);
-//void lcdMenu_printSpecial(const char* message);
-//void lcdMenu_goNextLine();
 
 // créer une stucture pour chaque sorte de bouton 
 //  *texte, textsize , *iconName
@@ -29,10 +21,12 @@ enum { _NO_BUTTON = 0 , _SETUP , _PRINT , _HOME, _UNLOCK , _RESET , _SD , _USB_G
 _MOVE , _RESUME , _STOP_PC_GRBL , _XP , _XM , _YP , _YM , _ZP , _ZM, _D_AUTO , _D0_01 , _D0_1 , _D1, _D10 , _SET_WCS ,
 _SETX , _SETY , _SETZ, _SETXYZ , _SET_CHANGE,  _SET_PROBE, _SET_CAL , _GO_CHANGE, _GO_PROBE , _TOOL , _BACK , _LEFT, _RIGHT , _UP ,
  _CMD1 ,_CMD2 ,_CMD3 ,_CMD4 ,_CMD5 ,_CMD6 ,_CMD7 , _CMD8 , _CMD9 , _CMD10 , _CMD11 , _MORE_PAUSE , _FILE0 , _FILE1 , _FILE2 , _FILE3 ,
- _MASKED1 , _PG_PREV , _PG_NEXT, _OVERWRITE, _OVER_SWITCH_TO_FEEDRATE , _OVER_SWITCH_TO_SPINDLE, _OVER_100 , _OVER_10P, _OVER_10M,_OVER_1P, _OVER_1M, _TOOGLE_SPINDLE, _MAX_BTN} ; // keep _MAX_BTN latest
+ _MASKED1 , _PG_PREV , _PG_NEXT, _SD_SHOW , 
+ _OVERWRITE, _OVER_SWITCH_TO_FEEDRATE , _OVER_SWITCH_TO_SPINDLE, _OVER_100 , _OVER_10P, _OVER_10M,_OVER_1P, _OVER_1M, _TOOGLE_SPINDLE, _MAX_BTN} ; // keep _MAX_BTN latest
 
 // Liste des pages définies
-enum { _P_NULL = 0  , _P_INFO , _P_SETUP , _P_PRINT , _P_PAUSE , _P_MOVE , _P_SETXYZ , _P_SD , _P_CMD , _P_LOG , _P_TOOL, _P_OVERWRITE, _P_MAX_PAGES} ; // keep _P_MAX_PAGE latest
+enum { _P_NULL = 0  , _P_INFO , _P_SETUP , _P_PRINT , _P_PAUSE , _P_MOVE , _P_SETXYZ , _P_SD , _P_CMD , _P_LOG , _P_TOOL, 
+      _P_SD_SHOW , _P_OVERWRITE, _P_MAX_PAGES} ; // keep _P_MAX_PAGE latest
 
 // Liste des actions définies
 enum { _NO_ACTION = 0 , _JUST_PRESSED  , _JUST_RELEASED , _JUST_LONG_PRESSED , _LONG_PRESSED , _JUST_LONG_PRESSED_RELEASED } ;
@@ -41,6 +35,8 @@ enum { _NO_ACTION = 0 , _JUST_PRESSED  , _JUST_RELEASED , _JUST_LONG_PRESSED , _
 enum { PRINTING_STOPPED = 0 , PRINTING_FROM_SD , PRINTING_ERROR , PRINTING_PAUSED , PRINTING_FROM_USB , PRINTING_CMD , PRINTING_FROM_TELNET , PRINTING_STRING} ;
 
 #define POS_OF_MOVE_D_AUTO 5  // sequence number of definition D_AUTO on MOVE (in range 0...11)
+#define POS_OF_SD_SHOW_PG_NEXT 7
+#define POS_OF_SD_SHOW_PG_PREV 3
 #define POS_OF_LOG_PG_NEXT 7
 #define POS_OF_LOG_PG_PREV 3
 #define POS_OF_OVERWRITE_OVERWRITE 3
@@ -96,6 +92,7 @@ void fSdBase(void) ; // fonction pour l'affichage de l'écran de la carte SD
 void fCmdBase(void) ; // fonction pour l'affichage del'écran Cmd
 void fLogBase(void) ; // fonction pour l'affichage de l'écran Log
 void fToolBase(void) ;  // fonction pour l'affichage de l'écran Change tool
+void fSdShowBase(void) ;  // fonction pour l'affichage de l'écran SdShow
 void fOverBase(void) ;  // fonction pour l'affichage de l'écran Overwrite
 void printOneLogLine(uint8_t col , uint8_t line ) ; // imprime une ligne de log
 
@@ -110,9 +107,13 @@ void drawWposOnSetXYZPage() ; // affiche Wpos
 void drawWifiOnSetupPage() ; // affiche l'adresse IP sur l'écran set up
 void drawDataOnLogPage() ; // affiche une page de log (sans les boutons)
 void drawDataOnToolPage() ; // affiche le statut GRBL et le lastMsg
+void drawDataOnSdShowPage() ; // affiche une page de données de SD (sans les boutons)
 void drawDataOnOverwritePage() ; // affiche les données Feedrate et RPM (en absolu et en % d'overwrite) et précise si les boutons concernent la modification de feedrate ou de RPM 
 
-
+int16_t bufferLineLength(int16_t firstCharIdx , int16_t &nCharInFile ) ;   //return the number of char to be displayed on TFT       
+int16_t prevBufferLineLength( int16_t beginSearchAt ,  int16_t &nCharInFile ) ;   //return the number of char to be displayed on TFT in the previous line      
+uint8_t convertNCharToNLines ( int16_t nChar ) ; // return the number of lines needed on Tft to display one line in the show buffer
+  
 void fillMsg( char * msg , uint16_t msgColor = SCREEN_ALERT_TEXT ) ;
 
 uint8_t getButton( int16_t x, int16_t y ) ; // convert raw position into tft position

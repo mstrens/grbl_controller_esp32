@@ -457,10 +457,22 @@ void fLogNext(uint8_t param) {
       fillMPage(_P_LOG , POS_OF_LOG_PG_PREV , _NO_BUTTON , _NO_ACTION , fLogPrev , 0) ;  // deactivate PREV btn
     }
   }
-  clearScreen() ;
+  //clearScreen() ;  // not needed because done when we execute the drawFullPage()
   //drawDataOnLogPage() ;
   updateFullPage = true ; 
   waitReleased = true ;          // discard "pressed" until a release 
+}
+
+void fSdShowPrev(uint8_t param) {  // to do
+  setPrevShowBuffer() ;
+  updateFullPage = true ; 
+  waitReleased = true ;          // discard "pressed" until a release
+}
+
+void fSdShowNext(uint8_t param) {  // to do 
+  setNextShowBuffer() ;
+  updateFullPage = true ; 
+  waitReleased = true ;          // discard "pressed" until a release
 }
 
 void fOverSwitch (uint8_t BtnParam) {
@@ -477,10 +489,10 @@ void fOverModify (uint8_t BtnParam) {
   char grblOverwriteCode = BtnParam - _OVER_100 ;   // _OVER_100 is the first of the 5 codes; code have to be put in the right sequence in the enum 
   if ( mPages[_P_OVERWRITE].boutons[POS_OF_OVERWRITE_OVERWRITE] == _OVER_SWITCH_TO_SPINDLE ) {  // when button allows to change to spindle,it means we are currently changing Feedrate
     grblOverwriteCode += 0x90 ;    // 0x90 is the GRBL code for 100% feedrate
-    Serial.print("We change Feedrate= ");  Serial.println( (uint8_t) grblOverwriteCode, HEX);  // to debug
+  //  Serial.print("We change Feedrate= ");  Serial.println( (uint8_t) grblOverwriteCode, HEX);  // to debug
   } else {                                                             // We change RPM
     grblOverwriteCode += 0x99 ;    // 0x99 is the GRBL code for 100% RPM
-    Serial.println("We change RPM");   Serial.println(  (uint8_t) grblOverwriteCode, HEX);  // to debug
+  //  Serial.println("We change RPM");   Serial.println(  (uint8_t) grblOverwriteCode, HEX);  // to debug
   }
   Serial2.print( (char) grblOverwriteCode ) ;  
   updatePartPage = true ;                     // force a redraw of data

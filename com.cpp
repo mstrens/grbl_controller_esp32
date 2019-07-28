@@ -429,7 +429,8 @@ void sendFromSd() {        // send next char from SD; close file at the end
             updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
           } else {
             sdNumberOfCharSent++ ;
-            if( sdChar != 13){             // 13 = carriage return
+            if( sdChar != 13 && sdChar != ' ' ){             // 13 = carriage return; do not send the space.
+                                                             // to do : skip the comments
               Serial2.print( (char) sdChar ) ;
             }
             if ( sdChar == '\n' ) {        // n= new line = line feed = 10 decimal
@@ -475,14 +476,14 @@ void sendFromString(){
          case 'z' : // save Z WCO
             //savedWposXYZ[2] = wposXYZ[2] ;
             preferences.putFloat("wposZ" , wposXYZ[2] ) ;
-            Serial.print( "wpos Z is saved with value = ") ; Serial.println( wposXYZ[2] ) ; // to debug
+            //Serial.print( "wpos Z is saved with value = ") ; Serial.println( wposXYZ[2] ) ; // to debug
             break;
          case 'Z' : // Put some char in the flow
             savedWposXYZ[2] = preferences.getFloat("wposZ" , 0 ) ; // if wposZ does not exist in preferences, the function returns 0
             char floatToString[20] ;
             gcvt(savedWposXYZ[2], 3, floatToString); 
             Serial2.print(floatToString) ;
-            Serial.print( "wpos Z is retrieved with value = ") ; Serial.println( floatToString ) ; // to debug
+            ///Serial.print( "wpos Z is retrieved with value = ") ; Serial.println( floatToString ) ; // to debug
             break;
          case 'M' : // Restore modal G20/G21/G90/G91
             Serial2.print( modalAbsRel) ;

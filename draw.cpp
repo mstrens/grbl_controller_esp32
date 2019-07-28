@@ -217,6 +217,7 @@ mButton[_FILE3].pLabel = fileNames[3] ;
 mButton[_MASKED1].pLabel = "" ; // this is a hidden button; so must be empty
 mButton[_PG_PREV].pLabel = __PREV ;
 mButton[_PG_NEXT].pLabel = __NEXT ;
+mButton[_SD_SHOW].pLabel = "" ; // this is a hidden button; so must be empty
 mButton[_OVERWRITE].pLabel = "" ; // this is a hidden button; so must be empty
 mButton[_OVER_SWITCH_TO_FEEDRATE].pLabel = __OVER_SWITCH_TO_FEEDRATE ;
 mButton[_OVER_SWITCH_TO_SPINDLE].pLabel = __OVER_SWITCH_TO_SPINDLE ;
@@ -229,6 +230,7 @@ mButton[_OVER_100].pLabel = __OVER_100 ;
 mPages[_P_INFO].titel = "Info" ;
 mPages[_P_INFO].pfBase = fInfoBase ;
 fillMPage (_P_INFO , 0 , _MASKED1 , _JUST_PRESSED , fGoToPage , _P_LOG ) ; // this button is masked but clicking on the zone call another screen
+fillMPage (_P_INFO , 2 , _NO_BUTTON , _NO_ACTION , fGoToPage , _P_SD_SHOW ) ; // disable the _SD_SHOW button
 fillMPage (_P_INFO , 3 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; // this button is masked but clicking on the zone call another screen
 fillMPage (_P_INFO , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;   // those buttons are changed dynamically based on status (no print, ...)
 fillMPage (_P_INFO , 11 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;   // those buttons are changed dynamically based on status (no print, ...)
@@ -318,6 +320,13 @@ fillMPage (_P_TOOL , 8 , _SET_CHANGE , _JUST_PRESSED , fSetXYZ , _SET_CHANGE ) ;
 fillMPage (_P_TOOL , 9 , _SET_PROBE , _JUST_PRESSED , fSetXYZ , _SET_PROBE) ;
 fillMPage (_P_TOOL , 10 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP ) ;
 fillMPage (_P_TOOL , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
+
+mPages[_P_SD_SHOW].titel = "Show Sd" ;
+mPages[_P_SD_SHOW].pfBase = fSdShowBase ;
+fillMPage (_P_SD_SHOW , POS_OF_SD_SHOW_PG_PREV , _PG_PREV , _JUST_PRESSED , fSdShowPrev , 0) ;
+fillMPage (_P_SD_SHOW , POS_OF_SD_SHOW_PG_NEXT , _PG_NEXT , _JUST_PRESSED , fSdShowNext , 0) ;
+fillMPage (_P_SD_SHOW , 11 , _BACK , _JUST_PRESSED , fGoBack , 0) ;
+
 
 mPages[_P_OVERWRITE].titel = "Change tool" ;
 mPages[_P_OVERWRITE].pfBase = fOverBase ;
@@ -689,18 +698,22 @@ void fInfoBase(void) {
 void updateButtonsInfoPage (void) { // met à jour le set up de la page en fonction du statut d'impression
   switch ( statusPrinting ) {
     case PRINTING_STOPPED :
+      fillMPage (_P_INFO , 2 , _NO_BUTTON , _NO_ACTION , fGoToPage , _P_SD_SHOW ) ; // disable the _SD_SHOW button
       fillMPage (_P_INFO , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
       fillMPage (_P_INFO , 11 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;
       break ;
     case PRINTING_FROM_SD :
+      fillMPage (_P_INFO , 2 , _NO_BUTTON , _NO_ACTION , fGoToPage , _P_SD_SHOW ) ; // disable the _SD_SHOW button
       fillMPage (_P_INFO , 7 , _PAUSE , _JUST_PRESSED , fPause , 0 ) ;
       fillMPage (_P_INFO , 11 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
       break ;
     case PRINTING_ERROR :                                              // to do; not clear what we should do
+      fillMPage (_P_INFO , 2 , _NO_BUTTON , _NO_ACTION , fGoToPage , _P_SD_SHOW ) ; // disable the _SD_SHOW button
       fillMPage (_P_INFO , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
       fillMPage (_P_INFO , 11 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;
       break ;
     case PRINTING_PAUSED :
+      fillMPage (_P_INFO , 2 , _SD_SHOW , _JUST_PRESSED , fGoToPage , _P_SD_SHOW ) ; // this button is masked but clicking on the zone call another screen
       fillMPage (_P_INFO , 7 , _RESUME , _JUST_PRESSED , fResume , 0 ) ;
       fillMPage (_P_INFO , 11 , _MORE_PAUSE , _JUST_PRESSED , fGoToPage , _P_PAUSE) ;
       break ;
@@ -971,10 +984,11 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
 void fCmdBase(void) {            //  En principe il n'y a rien à faire; 
 }
 
-void fLogBase(void) { // fonction pour l'affichage de l'écran Log // todo  : à remplir avec autre chose que les boutons
+void fLogBase(void) { // fonction pour l'affichage de l'écran Log 
   //Serial.print("justPressedBtn= ") ; Serial.println( justPressedBtn ) ; // to debug
   if (justPressedBtn == 1 ) { // when we go on this function directly from a previous screen using the MASKED button (btn 1 of 12)
                               // then we have to set up pGet in order to view the last lines
+                              // this test is needed because the function can be called also when we have the flag updateFullPage = true
     uint8_t count = 0;
     pGet = pNext ;
     if (pGet != pFirst) {
@@ -1004,6 +1018,18 @@ void fLogBase(void) { // fonction pour l'affichage de l'écran Log // todo  : à
 void fToolBase(void) {                 //  En principe il n'y a rien à faire;
   //drawWposOnSetXYZPage() ;
 }
+
+void fSdShowBase(void) { // fonction pour l'affichage de l'écran Sd show 
+  //Serial.print("justPressedBtn= ") ; Serial.println( justPressedBtn ) ; // to debug
+  if (justPressedBtn == 3 ) { // when we go on this function directly from a previous screen using a (masked) button (btn 1 of 12)
+                              // then we have to set up some data in order to view the file lines
+                              // Otherwise this set up is done in the function fSdShowPrev and fSdShowNext
+            setShowBuffer() ;
+  }
+  drawDataOnSdShowPage() ; // display from current position  
+}
+
+
 
 void fOverBase(void) {                 //  En principe il n'y a rien à faire;
   drawDataOnOverwritePage() ;
@@ -1041,7 +1067,6 @@ void drawDataOnLogPage() {
   //Serial.print("pget at begin ") ; Serial.println( pGet - logBuffer) ; // to debug
   //Serial.print("pNext at begin ") ; Serial.println( pNext - logBuffer) ; // to debug
   tft.setFreeFont (LABELS9_FONT) ;
-    //    tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when only 1 parameter, background = fond);
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
@@ -1057,12 +1082,6 @@ void drawDataOnLogPage() {
     line += 20 ; // goes to next line on screen
     if (getNextLogLine() < 0 ) count = 0 ; // stop if next line is not complete
   }
-  //Serial.println("End drawing a page");
-  //Serial.print("pFirst at End ") ; Serial.println( pFirst - logBuffer) ; // to debug
-  //Serial.print("pGet at End ") ; Serial.println( pGet - logBuffer) ; // to debug
-  //Serial.print("pNext at End ") ; Serial.println( pNext - logBuffer) ; // to debug
-  //tft.setTextPadding (0) ;
-  //  if ( pGet == pLastLogLine || pGet == pNext)  tft.drawString( "End" , 200 , line - 20) ;
 }
 
 void printOneLogLine(uint8_t col , uint8_t line ) {
@@ -1074,6 +1093,134 @@ void printOneLogLine(uint8_t col , uint8_t line ) {
 void drawDataOnToolPage() {
   drawMachineStatus() ;       // draw machine status in the upper right corner
   drawLastMsg() ;  
+}
+
+char sdShowBuffer[1000] = "1234567890\nA1234567890\nB1234567890\nC1234567890\nD1234567890\nE1234567890\nF12345\nG1234567890\nH1234567890\nI1234567890\n"  ; // buffer containing the data to display
+int16_t sdShowFirst = 11 ;     // index in buffer of first char to display in the buffer
+int16_t sdShowMax = 11;       // index in buffer of the first char that has not been written in the buffer = Number of char written in sdShowBuffer
+
+extern uint32_t sdShowBeginPos ;      // position in the SD file of the first char stored in the sdShowBuffer array   
+extern uint32_t sdMillPos  ;      // position in the SD file of the next char to be sent to GRBL   
+uint32_t sdShowNextPos ;         // End of the the data having been displayed ( in fact first char that is not displayed); used by Next
+boolean sdShowPrevVisible ;      // true when the prev button must be displayed
+boolean sdShowNextVisible ;      // true when the next button must be displayed
+
+int16_t bufferLineLength(int16_t firstCharIdx , int16_t &nCharInFile ) {   //return the number of char to be displayed on TFT       
+                                                                //-1=end of buffer, 0=only \n , >1 means there are some char; \n is not counted
+                                                                // update nCharInFile with the number of char found in the buffer
+  int16_t i = firstCharIdx ;
+  int16_t nCharOnTft = 0;
+  char c ; 
+  nCharInFile = 0 ;
+  if ( firstCharIdx >= sdShowMax ) return -1 ; // we are alredy at the end of the buffer 
+  while ( i < sdShowMax ) {
+    c = sdShowBuffer[i++] ;
+    if (  c == '\n' ) { 
+      break ;
+    } else if ( c!= '\r') nCharOnTft++ ; // 
+  }
+  nCharInFile = i - firstCharIdx ;
+  //Serial.print("For line beginning at ") ; Serial.println(firstCharIdx ); // to debug
+  //Serial.print("nChar= ") ; Serial.println(i - firstCharIdx ); // to debug
+  return  nCharOnTft ;
+}
+
+int16_t prevBufferLineLength( int16_t beginSearchAt ,  int16_t &nCharInFile ) {   //return the number of char to be displayed on TFT in the previous line      
+                                                                //-1=No previous line, 0=only \n , >1 means there are some char; \n is not counted
+                                                                // update nCharInFile with the number of char found in the buffer
+    int16_t i = beginSearchAt ;
+    int16_t nCharOnTft = 0;
+    char c ;
+    nCharInFile = 0 ;
+    if (beginSearchAt == 0 ) return -1 ; // we are already at the beginning
+    do {
+      c = sdShowBuffer[--i] ;
+      if ( c == '\n' ) break ; // exit first do on first \n
+    } while (  i >= 0 ) ;
+    if ( i == 0 ) return -1 ; // we are already at the beginning
+    do {
+      c = sdShowBuffer[--i] ;
+      if ( c == '\n' ) {
+        i++ ;             // go one char ahead to point on the first char
+        break ; // exit because we found a \n
+      }
+      if ( c != '\r' ) nCharOnTft++ ; // count the number of char on Tft (skip \r)
+      } while (  i > 0 ) ;
+    nCharInFile = beginSearchAt - i ;
+    return nCharOnTft ;
+}
+    
+#define NCHAR_PER_LINE 23  
+uint8_t convertNCharToNLines ( int16_t nChar ) { // return the number of lines needed on Tft to display one line in the show buffer
+  if ( nChar < 0) return 0 ;
+  return (nChar / NCHAR_PER_LINE ) + 1 ;
+}
+
+void drawDataOnSdShowPage() { // this function assume that sdShowBuffer contains the data to be displayed
+                              // and that sdShowFirst, sdShowMax, sdShowBeginPos , sdMillPos have been filled
+                              // after drawing, it fill the tabel to make PREV and NEXT visible or not
+                              // it also save the position in file of the first char not being displayed (so for a Next we can save from there in the buffer)
+  tft.setFreeFont (LABELS9_FONT) ;
+  tft.setTextSize(1) ;           // char is 2 X magnified => 
+  tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when only 1 parameter, background = fond);
+  tft.setTextDatum( TL_DATUM ) ; 
+  tft.setTextPadding (0) ;
+  
+  uint16_t line = 20 ;
+  uint8_t col = 0 ;
+  int16_t sdShowCurrent  = sdShowFirst ;   // next char to display (during the loop)
+  int16_t nChar ; // number of char in buffer for the current line
+  uint8_t nLines ; // number of lines on TFT needed to display the current line from buffer
+  int16_t nCharInFile ; //number of char on one line in the SD file
+  if ( sdShowFirst >= sdShowMax ) return ; //we are at the end of file, so nothing to display 
+  do {
+    //if ( sdShowCurrent >= (sdShowFirst + sdShowMax) ) break ;   // exit if we reach the end of the buffer
+    //Serial.print(">> do : sdShowCurrent = ") ; Serial.println(sdShowCurrent); // to debug
+    nChar = bufferLineLength( sdShowCurrent , nCharInFile ) ; // détermine le nbr de char de la ligne à afficher (sans le \n)
+    if (nChar < 0 ) break;                      // exit if we reach the end of the buffer
+    nLines = convertNCharToNLines ( nChar ) ;   // calcule le nbr de lignes du TFT pour afficher une ligne du buffer
+    if ( ( line + (nLines * 20)) > 240 ) break ; // exit if we reach the end of the tft or if there are no enough free tft lines for next SD line
+    // when it is possible to print the full line on TFT, do it (even on several tft lines
+    tft.setCursor( 0 , line ) ;
+    if ( (sdShowBeginPos  + sdShowCurrent) >= sdMillPos) tft.setTextColor(SCREEN_TO_SEND_TEXT ,  SCREEN_BACKGROUND ) ;
+    tft.print(">") ; // display > on each new line
+    //Serial.println( "put >" ); // to debug
+    tft.setCursor( 15 , line ) ;
+    uint16_t i = 0 ;
+    uint8_t nCharOnTftLine = 0 ;
+    while ( i <= nChar ) {                     // display each tft line
+       if ( nCharOnTftLine < NCHAR_PER_LINE  ) {
+        tft.print(sdShowBuffer[sdShowCurrent + i]) ;
+        //Serial.print( sdShowBuffer[sdShowCurrent + i] ); // to debug
+        nCharOnTftLine++ ;
+        i++;                                  // move to next char
+       } else {
+        tft.setCursor( 230 , line ) ;
+        tft.print( "+" ) ; // put a + at the end of the line on tft when sd line continue
+        line += 20 ;                          // move to next line
+        nCharOnTftLine = 0 ;                       // reset counter of char per line
+        tft.setCursor( 15 , line ) ;
+       }
+    } // end while
+    sdShowCurrent += nCharInFile   ;            
+    line += 20 ;
+    //Serial.print("line = ") ; Serial.println(line); // to debug
+       
+  } while (true ) ;  // end do
+  if ( (sdShowBeginPos + sdShowFirst) > 0 ) { // adjust the setup for Prev btn
+    fillMPage (_P_SD_SHOW , POS_OF_SD_SHOW_PG_PREV , _PG_PREV , _JUST_PRESSED , fSdShowPrev , 0) ;
+  } else {
+    fillMPage (_P_SD_SHOW , POS_OF_SD_SHOW_PG_PREV , _NO_BUTTON , _NO_ACTION , fSdShowPrev , 0) ;
+  }
+  if ( (sdShowBeginPos + sdShowCurrent ) < sdFileSize ) { // adjust the setup for Next btn
+    fillMPage (_P_SD_SHOW , POS_OF_SD_SHOW_PG_NEXT , _PG_NEXT , _JUST_PRESSED , fSdShowNext , 0) ;
+  } else {
+    fillMPage (_P_SD_SHOW , POS_OF_SD_SHOW_PG_NEXT , _NO_BUTTON , _NO_ACTION  , fSdShowNext , 0) ;
+  }
+  //Serial.print("sdShowBeginPos + sdShowCurrent=") ; Serial.println(sdShowBeginPos + sdShowCurrent); // to debug
+  //Serial.print("sdFileSize=") ; Serial.println(sdFileSize); // to debug
+  sdShowNextPos = sdShowBeginPos + sdShowCurrent ;              // adjust position in SD file of next char to be displayed if we press Next
+  //Serial.print("sdShowNextPos = ") ; Serial.println(sdShowNextPos); // to debug
 }
 
 void drawDataOnOverwritePage() {                                // to do : text has still to be coded here

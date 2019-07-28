@@ -104,7 +104,7 @@
 #define SCREEN_NORMAL_TEXT TFT_GREEN
 #define SCREEN_ALERT_TEXT TFT_RED
 #define SCREEN_HEADER_TEXT TFT_WHITE
-
+#define SCREEN_TO_SEND_TEXT TFT_WHITE   // used when looking at Sd file content for lines still to be sent to GRBL
 
 // ************************************ Commands for change tools
 // This suppose that we can use G28 and G30 and that milling use G54 WCS.
@@ -134,7 +134,7 @@
 //                  then probe again at low speed ( G38.2Z-3F10\n ) , then wait that command is executed ( G4P0.5\n ) ,
 //                  then save the Z WCS position ( %z )in ESP32, then rise Z up ( G53G21G90G0Z-2\n ) ,
 //                  then goto predefined change tool position ( G28\n ) and restore 2 modal parameters ( M\n )
-#define _CAL_STRING "G4P0.0\n $G\n M5\n G53 G21 G90 G00 Z-2\n G30\n G38.2 Z-70 F100\n G21 G91\n G00 Z2\n G38.2 Z-3 F10\n G4P0.5\n %z G53 G21 G90 G00 Z-2\n G28\n %M\n"
+#define _CAL_STRING "G4P0.0\n $G\n M5\n G53 G21 G90 G00 Z-2\n G30\n G21 G91\n G38.2 Z-70 F100\n G00 Z2\n G38.2 Z-3 F10\n G4P0.5\n %z G53 G21 G90 G00 Z-2\n G28\n %M\n"
   
 #define _GO_CHANGE_STRING "G4P0.0\n $G\n $#\n M5\n G53 G21 G90 G00 Z-2\n G28\n"
 #define _GO_PROBE_STRING "G4P0.0\n $G\n M5\n G53 G21 G90 G00 Z-2\n G30\n G38.2 Z-70 F100\n G21 G91\n G00 Z2\n G38.2 Z-3 F10\n G10 L20 P1 Z%Z\n G53 G21 G90 G00 Z-2\n %M\n"

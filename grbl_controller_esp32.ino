@@ -5,8 +5,8 @@
 
 // to do
 // retirer les serial.print qui ont servi au debug
-// sauver la valeur de calibration en flash (using preferences lib)
-// ajouter une visualisation d'un fichier (deux couleurs différents suivant que c'est déjà exécuté ou non)
+// permettre l'accès au contenu du fichier SD seulement si le statut est print from SD en pause. 
+
 // prévoir de pouvoir faire un "continue" quand on a une pause alors que l'on est en train d'envoyer des CMD ou des STRING vers GRBL 
 // prévoir des icones pour les boutons; on peut créer des charactères en format RLE
 // sans doute autoriser des déplacements en jog (avec la nunchuk notamment) si le statut est en HOLD ou en DOOR? (actuellement seul les statuts Jog et Idle sont autorisés pour la nunchuk 
@@ -81,7 +81,7 @@ uint32_t beginChangeBtnMillis ;
 char lastMsg[80] = { 0} ;        // last message to display
 uint16_t lastMsgColor ;          // color of last message
 boolean lastMsgChanged = false ;
-char grblLastMessage[STR_GRBL_BUF_MAX_SIZE] ;
+char grblLastMessage[STR_GRBL_BUF_MAX_SIZE] ; //= "1234567890123456789012345678901234567890"         ;
 boolean grblLastMessageChanged;
 
 
@@ -176,6 +176,12 @@ void setup() {
   Serial2.println(" ") ;Serial2.print("$10=3");Serial2.println(" ") ;   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
   Serial2.flush();                                                      // this is used to avoid sending to many jogging movements when using the nunchuk  
   preferences.begin("savedData") ;
+// to debug
+//  grblLastMessage[0]= 0x80 ;
+//  grblLastMessage[1]= 0x81 ;
+//  grblLastMessage[2]= 0x82 ;
+//  grblLastMessage[3]= 0x83 ;
+
 }
 
 //******************************** Main loop ***************************************
@@ -235,7 +241,11 @@ void loop() {
   lastMsgChanged = false ; // lastMsgChanged is used in drawPartPage; so, it can not be set on false before
   updateFullPage = false ;
   updatePartPage = false ;
-  
+  //static char prevMachine ;
+  //if ( prevMachine != machineStatus[0] ) {
+  //  prevMachine = machineStatus[0] ;
+  //  Serial.println( machineStatus ) ;
+  //}
 }
 
 

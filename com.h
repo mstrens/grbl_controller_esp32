@@ -3,7 +3,7 @@
 
 #include "Arduino.h"
 
-#define STR_GRBL_BUF_MAX_SIZE 60         // size has been increased from 10 to 50 to support grbl [Msg:] Longest is [GC:....] message
+#define STR_GRBL_BUF_MAX_SIZE 60         // size has been increased from 10 to 60 to support grbl [Msg:] Longest is [GC:....] message
 
 void getFromGrblAndForward( void ) ;   //get char from GRBL, forward them is statusprinting = PRINTING_FROM_PC and decode the data (look for "OK", for <xxxxxx> sentence
                                        // fill machineStatus[] and mPosXYZ[]

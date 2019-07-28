@@ -23,6 +23,8 @@ void fStartTelnet(uint8_t param) ;
 void fStopPc(uint8_t param) ;
 void fLogPrev(uint8_t param) ;
 void fLogNext(uint8_t param) ;
+void fSdShowPrev(uint8_t param) ;
+void fSdShowNext(uint8_t param) ;
 void fOverSwitch (uint8_t BtnParam) ;
 void fOverModify (uint8_t BtnParam) ;
 
