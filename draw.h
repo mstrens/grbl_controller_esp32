@@ -34,7 +34,7 @@ enum { _NO_ACTION = 0 , _JUST_PRESSED  , _JUST_RELEASED , _JUST_LONG_PRESSED , _
 // Liste des statuts d'impression
 enum { PRINTING_STOPPED = 0 , PRINTING_FROM_SD , PRINTING_ERROR , PRINTING_PAUSED , PRINTING_FROM_USB , PRINTING_CMD , PRINTING_FROM_TELNET , PRINTING_STRING} ;
 
-#define POS_OF_MOVE_D_AUTO 5  // sequence number of definition D_AUTO on MOVE (in range 0...11)
+#define POS_OF_MOVE_D_AUTO 9  // sequence number of definition D_AUTO on MOVE (in range 0...11)
 #define POS_OF_SD_SHOW_PG_NEXT 7
 #define POS_OF_SD_SHOW_PG_PREV 3
 #define POS_OF_LOG_PG_NEXT 7

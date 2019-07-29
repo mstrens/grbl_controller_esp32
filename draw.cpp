@@ -266,11 +266,11 @@ mPages[_P_MOVE].titel = "Move" ;
 mPages[_P_MOVE].pfBase = fMoveBase ;
 fillMPage (_P_MOVE , 1 , _YP , _JUST_LONG_PRESSED_RELEASED , fMove , _YP) ;
 fillMPage (_P_MOVE , 3 , _ZP , _JUST_LONG_PRESSED_RELEASED , fMove , _ZP) ;
-fillMPage (_P_MOVE , 4 , _XM , _JUST_LONG_PRESSED_RELEASED , fMove , _XM) ;
+fillMPage (_P_MOVE , 8 , _XM , _JUST_LONG_PRESSED_RELEASED , fMove , _XM) ;
 fillMPage (_P_MOVE , POS_OF_MOVE_D_AUTO , _D_AUTO , _JUST_PRESSED , fDist, _D_AUTO) ;  // -1 because range here is 0...11 
-fillMPage (_P_MOVE , 6 , _XP , _JUST_LONG_PRESSED_RELEASED , fMove , _XP) ;
+fillMPage (_P_MOVE , 10 , _XP , _JUST_LONG_PRESSED_RELEASED , fMove , _XP) ;
 fillMPage (_P_MOVE , 7 , _ZM , _JUST_LONG_PRESSED_RELEASED , fMove , _ZM) ;
-fillMPage (_P_MOVE , 9 , _YM , _JUST_LONG_PRESSED_RELEASED , fMove , _YM) ;
+fillMPage (_P_MOVE , 5 , _YM , _JUST_LONG_PRESSED_RELEASED , fMove , _YM) ;
 fillMPage (_P_MOVE , 11 , _BACK , _JUST_PRESSED , fGoBack , 0) ;
 
 mPages[_P_SETXYZ].titel = "Set X, Y, Z to 0" ;  
@@ -1043,13 +1043,13 @@ void drawWposOnMovePage() {
   tft.drawString( __WPOS , col  , line + 20);
   tft.drawString( __MOVE , col  , line + 40 );
   
-  tft.drawString( "  X  " , col  , line + 160 );
-  tft.drawFloat( wposXYZ[0] , 2 , col , line + 180 ); // affiche la valeur avec 2 décimales 
-  tft.drawFloat( wposXYZ[0] - wposMoveInitXYZ[0] , 2 , col , line + 200 ); // affiche la valeur avec 2 décimales 
+  tft.drawString( "  X  " , col  , line + 80 );
+  tft.drawFloat( wposXYZ[0] , 2 , col , line + 100 ); // affiche la valeur avec 2 décimales 
+  tft.drawFloat( wposXYZ[0] - wposMoveInitXYZ[0] , 2 , col , line + 120 ); // affiche la valeur avec 2 décimales 
 
-  tft.drawString( "  Y  " , col + 160  , line + 160  );
-  tft.drawFloat( wposXYZ[1] , 2 , col + 160 , line +180 );
-  tft.drawFloat( wposXYZ[1] - wposMoveInitXYZ[1] , 2 , col + 160 , line + 200 );
+  tft.drawString( "  Y  " , col + 160  , line + 80  );
+  tft.drawFloat( wposXYZ[1] , 2 , col + 160 , line +100 );
+  tft.drawFloat( wposXYZ[1] - wposMoveInitXYZ[1] , 2 , col + 160 , line + 120 );
 
   tft.drawString( "  Z  " , col + 160  , line   );
   tft.drawFloat( wposXYZ[2] , 2 , col + 160 , line + 20 );
