@@ -217,7 +217,7 @@ mButton[_FILE3].pLabel = fileNames[3] ;
 mButton[_MASKED1].pLabel = "" ; // this is a hidden button; so must be empty
 mButton[_PG_PREV].pLabel = __PREV ;
 mButton[_PG_NEXT].pLabel = __NEXT ;
-mButton[_SD_SHOW].pLabel = "" ; // this is a hidden button; so must be empty
+mButton[_SD_SHOW].pLabel = __SD_SHOW ; 
 mButton[_OVERWRITE].pLabel = "" ; // this is a hidden button; so must be empty
 mButton[_OVER_SWITCH_TO_FEEDRATE].pLabel = __OVER_SWITCH_TO_FEEDRATE ;
 mButton[_OVER_SWITCH_TO_SPINDLE].pLabel = __OVER_SWITCH_TO_SPINDLE ;
@@ -230,7 +230,6 @@ mButton[_OVER_100].pLabel = __OVER_100 ;
 mPages[_P_INFO].titel = "Info" ;
 mPages[_P_INFO].pfBase = fInfoBase ;
 fillMPage (_P_INFO , 0 , _MASKED1 , _JUST_PRESSED , fGoToPage , _P_LOG ) ; // this button is masked but clicking on the zone call another screen
-fillMPage (_P_INFO , 2 , _NO_BUTTON , _NO_ACTION , fGoToPage , _P_SD_SHOW ) ; // disable the _SD_SHOW button
 fillMPage (_P_INFO , 3 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; // this button is masked but clicking on the zone call another screen
 fillMPage (_P_INFO , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;   // those buttons are changed dynamically based on status (no print, ...)
 fillMPage (_P_INFO , 11 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;   // those buttons are changed dynamically based on status (no print, ...)
@@ -259,7 +258,8 @@ mPages[_P_PAUSE].titel = "Paused" ;
 mPages[_P_PAUSE].pfBase = fNoBase ;
 fillMPage (_P_PAUSE , 4 , _CANCEL , _JUST_PRESSED , fCancel , 0) ;
 fillMPage (_P_PAUSE , 5 , _RESUME , _JUST_PRESSED , fResume , 0) ;
-fillMPage (_P_PAUSE , 6 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE) ;
+fillMPage (_P_PAUSE , 6 , _SD_SHOW , _JUST_PRESSED , fGoToPage , _P_SD_SHOW ) ;
+fillMPage (_P_PAUSE , 7 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE) ;
 fillMPage (_P_PAUSE , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
 
 mPages[_P_MOVE].titel = "Move" ;
@@ -325,7 +325,7 @@ mPages[_P_SD_SHOW].titel = "Show Sd" ;
 mPages[_P_SD_SHOW].pfBase = fSdShowBase ;
 fillMPage (_P_SD_SHOW , POS_OF_SD_SHOW_PG_PREV , _PG_PREV , _JUST_PRESSED , fSdShowPrev , 0) ;
 fillMPage (_P_SD_SHOW , POS_OF_SD_SHOW_PG_NEXT , _PG_NEXT , _JUST_PRESSED , fSdShowNext , 0) ;
-fillMPage (_P_SD_SHOW , 11 , _BACK , _JUST_PRESSED , fGoBack , 0) ;
+fillMPage (_P_SD_SHOW , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
 
 mPages[_P_OVERWRITE].titel = "Change tool" ;
@@ -698,22 +698,18 @@ void fInfoBase(void) {
 void updateButtonsInfoPage (void) { // met à jour le set up de la page en fonction du statut d'impression
   switch ( statusPrinting ) {
     case PRINTING_STOPPED :
-      fillMPage (_P_INFO , 2 , _NO_BUTTON , _NO_ACTION , fGoToPage , _P_SD_SHOW ) ; // disable the _SD_SHOW button
       fillMPage (_P_INFO , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
       fillMPage (_P_INFO , 11 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;
       break ;
     case PRINTING_FROM_SD :
-      fillMPage (_P_INFO , 2 , _NO_BUTTON , _NO_ACTION , fGoToPage , _P_SD_SHOW ) ; // disable the _SD_SHOW button
       fillMPage (_P_INFO , 7 , _PAUSE , _JUST_PRESSED , fPause , 0 ) ;
       fillMPage (_P_INFO , 11 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
       break ;
     case PRINTING_ERROR :                                              // to do; not clear what we should do
-      fillMPage (_P_INFO , 2 , _NO_BUTTON , _NO_ACTION , fGoToPage , _P_SD_SHOW ) ; // disable the _SD_SHOW button
       fillMPage (_P_INFO , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
       fillMPage (_P_INFO , 11 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;
       break ;
     case PRINTING_PAUSED :
-      fillMPage (_P_INFO , 2 , _SD_SHOW , _JUST_PRESSED , fGoToPage , _P_SD_SHOW ) ; // this button is masked but clicking on the zone call another screen
       fillMPage (_P_INFO , 7 , _RESUME , _JUST_PRESSED , fResume , 0 ) ;
       fillMPage (_P_INFO , 11 , _MORE_PAUSE , _JUST_PRESSED , fGoToPage , _P_PAUSE) ;
       break ;
@@ -1021,7 +1017,7 @@ void fToolBase(void) {                 //  En principe il n'y a rien à faire;
 
 void fSdShowBase(void) { // fonction pour l'affichage de l'écran Sd show 
   //Serial.print("justPressedBtn= ") ; Serial.println( justPressedBtn ) ; // to debug
-  if (justPressedBtn == 3 ) { // when we go on this function directly from a previous screen using a (masked) button (btn 1 of 12)
+  if (justPressedBtn == 7 ) { // when we go on this function directly from a previous screen using a (masked) button (btn 1 of 12)
                               // then we have to set up some data in order to view the file lines
                               // Otherwise this set up is done in the function fSdShowPrev and fSdShowNext
             setShowBuffer() ;

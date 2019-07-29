@@ -54,9 +54,10 @@
 #define __MORE_PAUSE "Plus" 
 #define __PREV "Pr\x80" "c"
 #define __NEXT "Suiv"
+#define __SD_SHOW "Voir*GCode"
 //#define __OVERWRITE // it is a hidden button , so no need for a text
-#define __OVER_SWITCH_TO_FEEDRATE "Switch to*Feedrate"
-#define __OVER_SWITCH_TO_SPINDLE "Switch to*Spindle"
+#define __OVER_SWITCH_TO_FEEDRATE "Changer*Feedrate"
+#define __OVER_SWITCH_TO_SPINDLE "Changer*Rpm"
 #define __OVER_100 "Set to*100%"
 #define __OVER_10P "+10%"
 #define __OVER_10M "-10%"
@@ -106,9 +107,9 @@
 #define __NO_NUNCHUK "Pas de Nunchuk" 
 #define __MISSING_OK_WHEN_SENDING_FROM_SD "Envoi de Gcode suspendu pendant plus de 2 min" 
 #define __NOT_IDLE "Status not Idle"
-#define __CHANGING_FEEDRATE1 "Overwriting Feedrate"
+#define __CHANGING_FEEDRATE1 "Changement du Feedrate"
 #define __CHANGING_FEEDRATE2 "Feedrate"
-#define __CHANGING_SPINDLE1 "Overwriting Spindle"
+#define __CHANGING_SPINDLE1 "Changement du Rpm"
 #define __CHANGING_SPINDLE2 "Spindle"
 
 
@@ -208,6 +209,7 @@
 #define __MORE_PAUSE "Mehr" 
 #define __PREV "Prev"
 #define __NEXT "Next"
+#define __SD_SHOW "See*GCode"
 //#define __OVERWRITE // it is a hidden button , so no need for a text
 #define __OVER_SWITCH_TO_FEEDRATE "Switch to*Feedrate"
 #define __OVER_SWITCH_TO_SPINDLE "Switch to*Spindle"
@@ -364,6 +366,7 @@
 #define __MORE_PAUSE "More" 
 #define __PREV "Prev"
 #define __NEXT "Next"
+#define __SD_SHOW "See*GCode"
 //#define __OVERWRITE // it is a hidden button , so no need for a text
 #define __OVER_SWITCH_TO_FEEDRATE "Change*Feedrate"
 #define __OVER_SWITCH_TO_SPINDLE "Change*Spindle"
