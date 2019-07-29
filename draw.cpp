@@ -1223,16 +1223,18 @@ void drawDataOnOverwritePage() {                                // to do : text 
   tft.setFreeFont (LABELS12_FONT) ;
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor( SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND ) ; // when only 1 parameter, background = fond);
-  tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
+  tft.setTextDatum( TL_DATUM ) ; // align left 
   tft.setTextPadding (239) ;      // expect to clear 230 pixel when drawing text or 
-  uint8_t line = 20 ;
+  uint8_t line = 15 ;
   uint8_t col = 2 ;
   if ( mPages[_P_OVERWRITE].boutons[POS_OF_OVERWRITE_OVERWRITE] == _OVER_SWITCH_TO_SPINDLE ) {
     tft.drawString( __CHANGING_FEEDRATE1 , col  , line );
-    //tft.drawString( __CHANGING_FEEDRATE2 , col  , line + 30 );  
+    tft.setTextDatum( TR_DATUM ) ; // align rigth 
+    tft.drawString( __CHANGING_FEEDRATE2 , col  + 230 , line + 30 );  
   } else {
     tft.drawString( __CHANGING_SPINDLE1 , col  , line );
-    //tft.drawString( __CHANGING_SPINDLE2 , col  , line );
+    tft.setTextDatum( TR_DATUM ) ; // align rigth 
+    tft.drawString( __CHANGING_SPINDLE2 , col + 230 , line + 30 );
   }
 
   tft.setTextFont( 2 );
