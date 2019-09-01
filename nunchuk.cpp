@@ -63,6 +63,7 @@ void nunchuk_init() {
     Wire.setClock(400000);
     delay(500);    // delay ajouté pour donner le temps à la nunchuk de s'initialiser
 
+    
     Wire.beginTransmission(NUNCHUK_ADDRESS);
     if ( Wire.endTransmission()  ) {    // return 0 if the I2C device replies without error
       nunchukOK = false ;

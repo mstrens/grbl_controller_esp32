@@ -3,16 +3,17 @@
 
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 
-#define ESP32_VERSION "v1.0.j"
+#define ESP32_VERSION "v1.0.k"
 
 // decide if you will use Wifi or not (and how)
+//#define NO_WIFI
 #define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
 
 // If wifi is used, set the parameter to identify the access point (= the router when ESP32_ACT_AS_STATION or the ESP32 when ESP32_ACT_AS_AP)
 #define MY_SSID "bbox2-58c4"       // replace by the name of your access point (when act as station) or the name you assign to your device (when act as acces point)
 
 // Only for ESP32_ACT_AS_STATION , set the password to get access to your access point (router)
-#define MY_PASSWORD "alineloriejulien" // replace by the password of your access point (when act as station) or the password you want to use to protect your ESP32 (when act as acces point)
+#define MY_PASSWORD "password" // replace by the password of your access point (when act as station) or the password you want to use to protect your ESP32 (when act as acces point)
                                       // in this last case, password can remains empty 
 // select your language between EN, FR, DE
 #define LANGUAGE EN

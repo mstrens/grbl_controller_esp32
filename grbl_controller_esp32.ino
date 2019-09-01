@@ -65,11 +65,23 @@ Sur l'écran de base, prévoir l'affichage des infos
 #include "cmd.h"
 #include "log.h"
 #include <Preferences.h>
+#include "soc/uart_reg.h"
+#include "soc/uart_struct.h"
+
+uart_dev_t * dev = (volatile uart_dev_t *)(DR_REG_UART_BASE) ;
+//
+//  uart_t _uart_bus_array[3] = {
+//    {(volatile uart_dev_t *)(DR_REG_UART_BASE), 0, NULL, NULL},
+//    {(volatile uart_dev_t *)(DR_REG_UART1_BASE), 1, NULL, NULL},
+//    {(volatile uart_dev_t *)(DR_REG_UART2_BASE), 2, NULL, NULL}
+//  };
 
 
 Preferences preferences ; // object from ESP32 lib used to save/get data in flash 
 
 extern TFT_eSPI tft ;       // Invoke custom library
+
+
 
 //       tft and touchscreen variables 
 uint8_t prevPage , currentPage = 0 ;
@@ -140,6 +152,11 @@ void setup() {
   logBufferInit() ; // initialise the log buffer
   Serial.begin(115200); // init UART for debug and for Gcode passthrough via USB PC
   
+  uart_dev_t * dev = (volatile uart_dev_t *)(DR_REG_UART_BASE) ;
+  dev->conf1.rxfifo_full_thrhd = 1 ;  // set the number of char received on Serial to 1 before generating an interrupt (original value is 112 and is set by esp32-hal-uart.c)
+                                      // this increase the number of interrupts but it allows to forward the char to Serial2 faster
+  Serial.print(" setup: rxfifo size before interrupt="); Serial.println(dev->conf1.rxfifo_full_thrhd) ;
+  
     // initialise le port série vers grbl
   Serial2.begin(115200, SERIAL_8N1, SERIAL2_RXPIN, SERIAL2_TXPIN); // initialise le port série vers grbl
   Serial2.setRxBufferSize(1024);
@@ -174,7 +191,8 @@ void setup() {
   while ( Serial2.available() )  Serial2.read() ; // clear input buffer which can contains messages sent by GRBL in reply to noise captured before Serial port was initialised.
   Serial2.print(0X18) ; // send a soft reset
   Serial2.println(" ") ;Serial2.print("$10=3");Serial2.println(" ") ;   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
-  Serial2.flush();                                                      // this is used to avoid sending to many jogging movements when using the nunchuk  
+  while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
+  //Serial2.flush();                                                      // this is used to avoid sending to many jogging movements when using the nunchuk  
   preferences.begin("savedData") ;
 // to debug
 //  grblLastMessage[0]= 0x80 ;

@@ -519,7 +519,9 @@ void sendJogCancelAndJog(void) {
       if ( jog_status == JOG_NO ) {
         //Serial.println("send a jog cancel");
         Serial2.print( (char) 0x85) ; Serial2.print("G4P0") ; Serial2.print( (char) 0x0A) ;    // to be execute after a cancel jog in order to get an OK that says that grbl is Idle.
-        Serial2.flush() ;             // wait that all outgoing char are really sent.
+        while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
+        //Serial2.flush() ;             // wait that all outgoing char are really sent.!!! in ESP32 it also clear the RX buffer what is not expected in arduino logic
+        
         waitOk = true ;
         jog_status = JOG_WAIT_END_CANCEL ;
         exitMillis = millis() + 500 ; //expect a OK before 500 msec
@@ -635,7 +637,8 @@ boolean sendJogCmd(uint32_t startTime) {
         }
         //Serial2.print(" F2000");  Serial2.print( (char) 0x0A) ;
         Serial2.print(" F"); Serial2.print(speedMove); Serial2.print( (char) 0x0A) ;
-        Serial2.flush() ;       // wait that all char are really sent
+        while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
+        //Serial2.flush() ;       // wait that all char are really sent
         
         //Serial.print("Send cmd jog " ); Serial.print(distanceMove) ; Serial.print(" " ); Serial.print(speedMove) ;Serial.print(" " ); Serial.println(millis() - startTime );
         //Serial.print(prevMoveX) ; Serial.print(" " ); Serial.print(prevMoveY) ; Serial.print(" " ); Serial.print(prevMoveZ) ;Serial.print(" ") ; Serial.println(millis()) ;
