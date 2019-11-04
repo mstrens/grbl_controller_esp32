@@ -57,6 +57,8 @@ extern Preferences preferences ; // object from ESP32 lib used to save/get data 
 
 char modalAbsRel[4] = {0}; // store the modal G20/G21 in a message received from grbl
 char modalMmInch[4] = {0} ; // store the modal G90/G91 in a message received from grbl
+char G30SavedX[12] = "0.0" ; // store the value of G30 X offset in a message received from grbl;
+char G30SavedY[12] = "0.0" ; // store the value of G30 Y offset in a message received from grbl;
 
 char printString[250] = {0} ;       // contains a command to be send from a string; wait for OK after each 0x13 char
 char * pPrintString = printString ;
@@ -350,6 +352,8 @@ void handleLastNumericField(void) { // decode last numeric field
 void storeGrblState(void) { // search for some char in message
   char * pBuf =  strGrblBuf + 5 ;
   char * pSearch ;
+  char * pEndNumber1 ; // point to the first ','
+  char * pEndNumber2 ; // point to the second ','
   if ( strGrblBuf[1] == 'G' && strGrblBuf[2] == 'C' && strGrblBuf[3] == ':'  ) { // GRBL reply to a $G with [GC:G20 ....]
     pSearch = strstr( pBuf , "G2" ) ; // can be G20 or G21
     if (pSearch != NULL ) memcpy( modalAbsRel , pSearch , 3) ;
@@ -359,6 +363,18 @@ void storeGrblState(void) { // search for some char in message
     if (pSearch != NULL ) memcpy( modalMmInch , pSearch , 3) ;
     //Serial.print("AbsRel= " ) ; Serial.println( modalAbsRel) ;
     //Serial.print("MmInch= " ) ; Serial.println( modalMmInch) ;  
+  } else if (strGrblBuf[1] == 'G' && strGrblBuf[2] == '3' && strGrblBuf[3] == '0'  ) {  // GRBL reply to $# with e.g. [G28:1.000,2.000,0.000] or [G30:4.000,6.000,0.000]
+    pEndNumber1 = strstr(pBuf , ",") ; // find the position of the first ','
+    if (pEndNumber1 != NULL ) { 
+      memcpy( G30SavedX , pBuf , pEndNumber1 - pBuf) ;
+      G30SavedX[pEndNumber1 - pBuf] = 0 ;
+      pEndNumber1++ ; // point to the first char of second number
+      pEndNumber2 = strstr(pEndNumber1 , ",") ; // find the position of the second ','
+      if (pEndNumber2 != NULL ) {
+        memcpy( G30SavedY , pEndNumber1 , pEndNumber2 - pEndNumber1) ;
+        G30SavedY[pEndNumber2 - pEndNumber1] = 0 ;
+      }
+    }  
   }
 }
 
@@ -478,10 +494,16 @@ void sendFromString(){
             preferences.putFloat("wposZ" , wposXYZ[2] ) ;
             //Serial.print( "wpos Z is saved with value = ") ; Serial.println( wposXYZ[2] ) ; // to debug
             break;
+         case 'X' : // Put the G30 X offset
+            Serial2.print(G30SavedX) ;
+            break;
+         case 'Y' : // Put the G30 Y offset
+            Serial2.print(G30SavedY) ;
+            break;
          case 'Z' : // Put some char in the flow
             savedWposXYZ[2] = preferences.getFloat("wposZ" , 0 ) ; // if wposZ does not exist in preferences, the function returns 0
             char floatToString[20] ;
-            gcvt(savedWposXYZ[2], 3, floatToString); 
+            gcvt(savedWposXYZ[2], 3, floatToString); // convert float to string
             Serial2.print(floatToString) ;
             ///Serial.print( "wpos Z is retrieved with value = ") ; Serial.println( floatToString ) ; // to debug
             break;

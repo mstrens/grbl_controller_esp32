@@ -9,7 +9,8 @@
 
 // prévoir de pouvoir faire un "continue" quand on a une pause alors que l'on est en train d'envoyer des CMD ou des STRING vers GRBL 
 // prévoir des icones pour les boutons; on peut créer des charactères en format RLE
-// sans doute autoriser des déplacements en jog (avec la nunchuk notamment) si le statut est en HOLD ou en DOOR? (actuellement seul les statuts Jog et Idle sont autorisés pour la nunchuk 
+// sans doute autoriser des déplacements en jog (avec la nunchuk notamment) si le statut est en HOLD ou en DOOR? (actuellement seul les statuts Jog et Idle sont autorisés pour la nunchuk
+
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.
 

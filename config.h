@@ -3,7 +3,7 @@
 
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 
-#define ESP32_VERSION "v1.0.k"
+#define ESP32_VERSION "v1.0.m"
 
 // decide if you will use Wifi or not (and how)
 //#define NO_WIFI
@@ -117,7 +117,7 @@
 //                      The idea is to put a micro switch at this position (so there is no need to use a clip)
 // _CAL_STRING : = calibration ; to be execute only once for a given work piece (WCS); Set XYZ has to be set before running this command
 //               Program will perform a Z probe in order to know the Z offset for current WCS; This offset is then saved. 
-//               In next version, this offset will be saved in flash memory; so it will still be known after a reset.
+//               This offset will be saved in flash memory; so it will still be known after a reset.
 // _GO_CHANGE_STRING : Go to the change tool position in order to change tool.
 // _GO_PROBE_STRING : Perform a probe with new tool and then change offset based on the offset saved during calibration;
 //
@@ -128,9 +128,11 @@
 // %M restore 2 modal parameters (G20/G21 and G90/G91)
 // %z ask the firmware to save the current Z Mpos;
 // %Z replace %Z by the saved value %z; this occurs when the string is sent to GRBL.
-//                  wait that all commands are execute (G4P0.0\n), then ask for modal parameters that are automatically saved( $G\n ),
-//                   then stop spindle ( M5\n ), then move Z up for safety ( G53G21G90G00Z-2\n ) ,
-//                  then go to Probe position ( G30\n ), then probe at high speed ( G38.2Z-100F50\n ),
+// %X replace %X by the saved value of G30 X offset
+// %Y replace %Y by the saved value of G30 Y offset
+//                  wait that all commands are execute (G4P0.0\n), then ask for offset and modal parameters that are automatically saved( $#$G\n ),
+//                  then stop spindle ( M5\n ), then move Z up for safety ( G53G21G90G00Z-2\n ) ,
+//                  then go to Probe position ( G30 keeping Z-2\n ), then probe at high speed ( G38.2Z-100F50\n ),
 //                  then change modal to relative and mm ( G21G91\n ), then move Z up 2mm ( G0Z2\n ) ,
 //                  then probe again at low speed ( G38.2Z-3F10\n ) , then wait that command is executed ( G4P0.5\n ) ,
 //                  then save the Z WCS position ( %z )in ESP32, then rise Z up ( G53G21G90G0Z-2\n ) ,
@@ -138,7 +140,7 @@
 #define _CAL_STRING "G4P0.0\n $G\n M5\n G53 G21 G90 G00 Z-2\n G30\n G21 G91\n G38.2 Z-70 F100\n G00 Z2\n G38.2 Z-3 F10\n G4P0.5\n %z G53 G21 G90 G00 Z-2\n G28\n %M\n"
   
 #define _GO_CHANGE_STRING "G4P0.0\n $G\n $#\n M5\n G53 G21 G90 G00 Z-2\n G28\n"
-#define _GO_PROBE_STRING "G4P0.0\n $G\n M5\n G53 G21 G90 G00 Z-2\n G30\n G21 G91\n G38.2 Z-70 F100\n G00 Z2\n G38.2 Z-3 F10\n G10 L20 P1 Z%Z\n G53 G21 G90 G00 Z-2\n %M\n"
+#define _GO_PROBE_STRING "G4P0.0\n $#$G\n M5\n G53 G21 G90 G00 Z-2\n G30X%X Y%Y Z-2\n G21 G91\n G38.2 Z-70 F100\n G00 Z2\n G38.2 Z-3 F10\n G10 L20 P1 Z%Z\n G53 G21 G90 G00 Z-2\n %M\n"
 #define _SET_CHANGE_STRING "G28.1\n G4P0.0\n $#\n $G\n" 
 #define _SET_PROBE_STRING "G30.1\n G4P0.0\n $#\n $G\n" 
 
