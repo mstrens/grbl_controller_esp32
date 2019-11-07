@@ -49,7 +49,7 @@ uint8_t getGrblPosState = GET_GRBL_STATUS_CLOSED ;
 float feedSpindle[2] ;  // first is FeedRate, second is Speed
 float bufferAvailable[2] ;  // first is number of blocks available in planner, second is number of chars available in serial buffer
 float overwritePercent[3] ; // first is for feedrate, second for rapid (G0...), third is for RPM
-float wcoXYZ[3] ;
+float wcoXYZ[3] ;           // 4 because we can support 4 axis
 float wposXYZ[3] ;
 float mposXYZ[3] ;
 float savedWposXYZ[3] ;
@@ -441,7 +441,7 @@ void sendFromSd() {        // send next char from SD; close file at the end
       while ( aDir[dirLevel+1].available() > 0 && (! waitOk) && statusPrinting == PRINTING_FROM_SD && Serial2.availableForWrite() > 2 ) {
           sdChar = aDir[dirLevel+1].read() ;
           if ( sdChar < 0 ) {
-            statusPrinting = PRINTING_STOPPED  ;
+            statusPrinting = PRINTING_ERROR  ;
             updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
           } else {
             sdNumberOfCharSent++ ;

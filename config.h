@@ -18,6 +18,8 @@
 // select your language between EN, FR, DE
 #define LANGUAGE EN
 
+//#define AA_AXIS    // uncomment if you want that the firmware handles 4 axes instead of 3 ;(This option has to be implemented in GRBL too)
+                     // NOT YET SUPPORTED in this version
 
 // Here some pins (GPIO) being used
 //************************************
