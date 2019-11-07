@@ -45,6 +45,9 @@ extern uint32_t startMoveMillis ;
 extern int8_t jogDistX ;
 extern int8_t jogDistY ;
 extern int8_t jogDistZ ;
+extern int8_t jogDistA ;
+
+
 extern float moveMultiplier ;
 
 extern uint8_t * pNext ; // position of the next char to be written
@@ -202,6 +205,8 @@ void fMove( uint8_t param ) {
         case _YM :  Serial2.print("Y-") ;  break ;
         case _ZP :  Serial2.print("Z")  ;  break ;
         case _ZM :  Serial2.print("Z-") ;  break ;
+        case _AP :  Serial2.print("A")  ;  break ;
+        case _AM :  Serial2.print("A-") ;  break ;
       }
       Serial2.print(distance) ; Serial2.println (" F100") ;
       //Serial.print("move for button") ; Serial.print(justPressedBtn) ;Serial.print(" ") ;  Serial.print(distance) ; Serial.println (" F100") ;
@@ -245,6 +250,7 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
     jogDistX = 0 ;           // reset all deplacements
     jogDistY = 0 ;
     jogDistZ = 0 ;
+    jogDistA = 0 ;
     //switch ( pressedBtn ) {  // fill one direction of move
     //  case 7 :  jogDistX = 1  ;  break ;
     //  case 5 :  jogDistX = -1 ;  break ;
@@ -262,6 +268,9 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
         case _YM :  jogDistY = -1 ;  break ;
         case _ZP :  jogDistZ = 1  ;  break ;
         case _ZM :  jogDistZ = -1  ;  break ;
+        case _AP :  jogDistA = 1  ;  break ;
+        case _AM :  jogDistA = -1  ;  break ;
+        
     }
     jogCmdFlag = true ;                 // the flag will inform the send module that there is a command to be sent based on moveMultiplier and preMove. 
   }  
@@ -328,11 +337,14 @@ void fSdMove(uint8_t param) {     // param contient _LEFT ou _RIGTH
 
 
 void fSetXYZ(uint8_t param) {     // param contient le n° de la commande
+  Serial.print("SetXYZ :") ; Serial.println(param) ;
   switch (param) {
   case _SETX : memccpy ( printString , _SETX_STRING , '\0' , 249); break ;
   case _SETY : memccpy ( printString , _SETY_STRING , '\0' , 249); break ;
   case _SETZ :   memccpy ( printString , _SETZ_STRING , '\0' , 249); break ;
+  case _SETA :   memccpy ( printString , _SETA_STRING , '\0' , 249); break ;
   case _SETXYZ : memccpy ( printString , _SETXYZ_STRING , '\0' , 249); break ;
+  case _SETXYZA : memccpy ( printString , _SETXYZA_STRING , '\0' , 249); break ;
   case _SET_CHANGE : memccpy ( printString , _SET_CHANGE_STRING , '\0' , 249); break ;
   case _SET_PROBE :  memccpy ( printString , _SET_PROBE_STRING , '\0' , 249);  break ;  
   case _SET_CAL :    memccpy ( printString , _CAL_STRING , '\0' , 249);    break ;  

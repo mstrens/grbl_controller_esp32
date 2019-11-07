@@ -49,10 +49,10 @@ uint8_t getGrblPosState = GET_GRBL_STATUS_CLOSED ;
 float feedSpindle[2] ;  // first is FeedRate, second is Speed
 float bufferAvailable[2] ;  // first is number of blocks available in planner, second is number of chars available in serial buffer
 float overwritePercent[3] ; // first is for feedrate, second for rapid (G0...), third is for RPM
-float wcoXYZ[3] ;           // 4 because we can support 4 axis
-float wposXYZ[3] ;
-float mposXYZ[3] ;
-float savedWposXYZ[3] ;
+float wcoXYZA[4] ;           // 4 because we can support 4 axis
+float wposXYZA[4] ;
+float mposXYZA[4] ;
+
 extern Preferences preferences ; // object from ESP32 lib used to save/get data in flash 
 
 char modalAbsRel[4] = {0}; // store the modal G20/G21 in a message received from grbl
@@ -72,6 +72,8 @@ extern boolean grblLastMessageChanged;
 extern int8_t jogDistX ;
 extern int8_t jogDistY ;
 extern int8_t jogDistZ ;
+extern int8_t jogDistA ;
+
 extern float moveMultiplier ;
 // used by nunchuck
 extern uint8_t jog_status  ;
@@ -102,7 +104,7 @@ uint32_t waitOkWhenSdMillis ;  // timeout when waiting for OK while sending form
 
 // ----------------- fonctions pour lire de GRBL -----------------------------
 void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if statusprinting = PRINTING_FROM_PC and decode the data (look for "OK", for <xxxxxx> sentence
-                                       // fill machineStatus[] and wposXYZ[]
+                                       // fill machineStatus[] and wposXYZA[]
   static uint8_t c;
   static uint8_t lastC = 0 ;
   static uint32_t millisLastGetGBL = 0 ;
@@ -159,13 +161,13 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
       break ;
       
     case '>' :                     // end of grbl status 
-      handleLastNumericField() ;  //wposXYZ[wposIdx] = atof (&strGrblBuf[0]) ;
+      handleLastNumericField() ;  //wposXYZA[wposIdx] = atof (&strGrblBuf[0]) ;
       getGrblPosState = GET_GRBL_STATUS_CLOSED ;
       strGrblIdx = 0 ;
       strGrblBuf[strGrblIdx] = 0 ;
       newGrblStatusReceived = true;
 #ifdef DEBUG_TO_PC
-      //Serial.print("X=") ; Serial.print(wposXYZ[0]) ; Serial.print(" Y=") ; Serial.print(wposXYZ[1]) ;Serial.print(" Z=") ; Serial.println(wposXYZ[2]) ; 
+      //Serial.print("X=") ; Serial.print(wposXYZA[0]) ; Serial.print(" Y=") ; Serial.print(wposXYZA[1]) ;Serial.print(" Z=") ; Serial.println(wposXYZA[2]) ; 
       //Serial.println(">");
 #endif      
       break ;
@@ -317,13 +319,13 @@ void parseToLog(uint8_t c , uint8_t lastC) {   // do not store in log the OK and
 
 void handleLastNumericField(void) { // decode last numeric field
   float temp = atof (&strGrblBuf[0]) ;
-  if (  getGrblPosState == GET_GRBL_STATUS_WPOS_DATA && wposIdx < 3) {
+  if (  getGrblPosState == GET_GRBL_STATUS_WPOS_DATA && wposIdx < 4) {
           if ( wposOrMpos == 'W') {                  // we got a WPos
-            wposXYZ[wposIdx] = temp ;
-            mposXYZ[wposIdx] = wposXYZ[wposIdx] + wcoXYZ[wposIdx] ;
+            wposXYZA[wposIdx] = temp ;
+            mposXYZA[wposIdx] = wposXYZA[wposIdx] + wcoXYZA[wposIdx] ;
           } else {                                   // we got a MPos
-            mposXYZ[wposIdx] = temp ;
-            wposXYZ[wposIdx] = mposXYZ[wposIdx] - wcoXYZ[wposIdx] ;
+            mposXYZA[wposIdx] = temp ;
+            wposXYZA[wposIdx] = mposXYZA[wposIdx] - wcoXYZA[wposIdx] ;
           }
           wposIdx++ ;
           strGrblIdx = 0 ; 
@@ -333,12 +335,12 @@ void handleLastNumericField(void) { // decode last numeric field
   } else if (  getGrblPosState == GET_GRBL_STATUS_BF_DATA && bfIdx < 2) {   // save number of available block or char in GRBL buffer
           bufferAvailable[bfIdx++] = temp ;
           strGrblIdx = 0 ; 
-  } else if (  getGrblPosState == GET_GRBL_STATUS_WCO_DATA && wcoIdx < 3) {
-          wcoXYZ[wcoIdx] = temp ;
+  } else if (  getGrblPosState == GET_GRBL_STATUS_WCO_DATA && wcoIdx < 4) {
+          wcoXYZA[wcoIdx] = temp ;
           if ( wposOrMpos == 'W') {                  // we previously had a WPos so we update MPos
-            mposXYZ[wcoIdx] = wposXYZ[wcoIdx] + wcoXYZ[wcoIdx] ;  
+            mposXYZA[wcoIdx] = wposXYZA[wcoIdx] + wcoXYZA[wcoIdx] ;  
           } else {                                   // we previously had a MPos so we update WPos
-            wposXYZ[wcoIdx] = mposXYZ[wcoIdx] - wcoXYZ[wcoIdx] ;
+            wposXYZA[wcoIdx] = mposXYZA[wcoIdx] - wcoXYZA[wcoIdx] ;
           }
           
           wcoIdx++ ;
@@ -482,7 +484,8 @@ void sendFromCmd() {
 }
 
 void sendFromString(){
-    char strChar ;    
+    char strChar ;   
+    float savedWposXYZA[4] ; 
     waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // set time out on 
     while ( *pPrintString != 0 && (! waitOk) && statusPrinting == PRINTING_STRING  ) {
       strChar = *pPrintString ++;
@@ -490,9 +493,9 @@ void sendFromString(){
          strChar = *pPrintString ++;
          switch (strChar) { 
          case 'z' : // save Z WCO
-            //savedWposXYZ[2] = wposXYZ[2] ;
-            preferences.putFloat("wposZ" , wposXYZ[2] ) ;
-            //Serial.print( "wpos Z is saved with value = ") ; Serial.println( wposXYZ[2] ) ; // to debug
+            //savedWposXYZA[2] = wposXYZA[2] ;
+            preferences.putFloat("wposZ" , wposXYZA[2] ) ;
+            //Serial.print( "wpos Z is saved with value = ") ; Serial.println( wposXYZA[2] ) ; // to debug
             break;
          case 'X' : // Put the G30 X offset
             Serial2.print(G30SavedX) ;
@@ -501,9 +504,9 @@ void sendFromString(){
             Serial2.print(G30SavedY) ;
             break;
          case 'Z' : // Put some char in the flow
-            savedWposXYZ[2] = preferences.getFloat("wposZ" , 0 ) ; // if wposZ does not exist in preferences, the function returns 0
+            savedWposXYZA[2] = preferences.getFloat("wposZ" , 0 ) ; // if wposZ does not exist in preferences, the function returns 0
             char floatToString[20] ;
-            gcvt(savedWposXYZ[2], 3, floatToString); // convert float to string
+            gcvt(savedWposXYZA[2], 3, floatToString); // convert float to string
             Serial2.print(floatToString) ;
             ///Serial.print( "wpos Z is retrieved with value = ") ; Serial.println( floatToString ) ; // to debug
             break;
@@ -657,6 +660,14 @@ boolean sendJogCmd(uint32_t startTime) {
         if (jogDistZ ) {
           Serial2.print(distanceMove) ;
         }
+        if (jogDistA > 0) {
+          Serial2.print(" A") ;
+        } else if (jogDistA ) {
+          Serial2.print(" A-") ;
+        }
+        if (jogDistA ) {
+          Serial2.print(distanceMove) ;
+        }
         //Serial2.print(" F2000");  Serial2.print( (char) 0x0A) ;
         Serial2.print(" F"); Serial2.print(speedMove); Serial2.print( (char) 0x0A) ;
         while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
@@ -723,7 +734,9 @@ char * alarmArrayMsg[] = { __UNKNOWN_ALARM  ,
 char * stringExecuteMsg[] = { __SETX_EXECUTED  ,  // messages must be defined here in the same sequence as the buttons used to call the string commands 
                               __SETY_EXECUTED  ,
                               __SETZ_EXECUTED  ,
+                              __SETA_EXECUTED  ,
                               __SETXYZ_EXECUTED ,
+                              __SETXYZA_EXECUTED ,
                               __SET_CHANGE_EXECUTED ,
                               __SET_PROBE_EXECUTED  ,
                               __SET_CAL_EXECUTED    ,

@@ -3,7 +3,7 @@
 
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 
-#define ESP32_VERSION "v1.0.m"
+#define ESP32_VERSION "v1.0.n"
 
 // decide if you will use Wifi or not (and how)
 //#define NO_WIFI
@@ -18,7 +18,7 @@
 // select your language between EN, FR, DE
 #define LANGUAGE EN
 
-//#define AA_AXIS    // uncomment if you want that the firmware handles 4 axes instead of 3 ;(This option has to be implemented in GRBL too)
+#define AA_AXIS    // uncomment if you want that the firmware handles 4 axes instead of 3 ;(This option has to be implemented in GRBL too)
                      // NOT YET SUPPORTED in this version
 
 // Here some pins (GPIO) being used
@@ -150,8 +150,9 @@
 #define _SETX_STRING "G10 L20 P1 X0\n"
 #define _SETY_STRING "G10 L20 P1 Y0\n"
 #define _SETZ_STRING "G10 L20 P1 Z0\n"
+#define _SETA_STRING "G10 L20 P1 Z0\n"
 #define _SETXYZ_STRING "G10 L20 P1 X0 Y0 Z0\n"
-
+#define _SETXYZA_STRING "G10 L20 P1 X0 Y0 Z0 A0\n"
 // *************************************     normally do not change here below ****************************
 //       debugging
 //#define DEBUG_TO_PC
