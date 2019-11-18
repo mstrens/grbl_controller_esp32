@@ -3,7 +3,7 @@
 
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 
-#define ESP32_VERSION "v1.0.n"
+#define ESP32_VERSION "v1.0.p"
 
 // decide if you will use Wifi or not (and how)
 #define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
@@ -17,7 +17,7 @@
 // select your language between EN, FR, DE
 #define LANGUAGE EN
 
-#define AA_AXIS    // uncomment if you want that the firmware handles 4 axes instead of 3 ;(This option has to be implemented in GRBL too)
+//#define AA_AXIS    // uncomment if you want that the firmware handles 4 axes instead of 3 ;(This option has to be implemented in GRBL too)
                     
 
 // Here some pins (GPIO) being used
