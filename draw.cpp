@@ -1344,13 +1344,16 @@ void drawDataOnOverwritePage() {                                // to do : text 
 
 
 // ******************************** touch calibrate ********************************************
+//#define DEBUG_CALIBRATION
 void touch_calibrate() {
   uint16_t calData[5];
   uint8_t calDataOK = 0;
 
   // check file system exists
   if (!SPIFFS.begin()) {
-    //Serial.println("Formating file system");
+    #ifdef DEBUG_CALIBRATION
+    Serial.println("Formating file system");
+    #endif
     SPIFFS.format();
     SPIFFS.begin();
   }
@@ -1360,13 +1363,22 @@ void touch_calibrate() {
     if (REPEAT_CAL)
     {
       // Delete if we want to re-calibrate
+      #ifdef DEBUG_CALIBRATION
+      Serial.println("Remove file system");
+      #endif
       SPIFFS.remove(CALIBRATION_FILE);
     }
     else
     { 
       fs::File f = SPIFFS.open(CALIBRATION_FILE, "r");
       if (f) {
+        #ifdef DEBUG_CALIBRATION
+        Serial.println("File system opened for reading");
+        #endif
         if (f.readBytes((char *)calData, 14) == 14)
+          #ifdef DEBUG_CALIBRATION
+          Serial.println("Cal Data has 14 bytes");
+          #endif
           calDataOK = 1;
         f.close();
       }
@@ -1375,17 +1387,21 @@ void touch_calibrate() {
 
   if (calDataOK && !REPEAT_CAL) {
     // calibration data valid
+    #ifdef DEBUG_CALIBRATION
+    Serial.println("Use calData");
+    #endif
     tft.setTouch(calData);
   } else {
     // data not valid so recalibrate
+    #ifdef DEBUG_CALIBRATION
+    Serial.println("Perform calibration");
+    #endif
     clearScreen();
     tft.setCursor(20, 0);
     tft.setTextFont(2);
     tft.setTextSize(1);
     tft.setTextColor(SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND);
-
     tft.println(__TOUCH_CORNER );
-
     tft.setTextFont(1);
     tft.println();
 
@@ -1403,6 +1419,9 @@ void touch_calibrate() {
     // store data
     fs::File f = SPIFFS.open(CALIBRATION_FILE, "w");
     if (f) {
+      #ifdef DEBUG_CALIBRATION
+      Serial.println("Write calibration in file system");
+      #endif
       f.write((const unsigned char *)calData, 14);
       f.close();
     }

@@ -337,7 +337,6 @@ void fSdMove(uint8_t param) {     // param contient _LEFT ou _RIGTH
 
 
 void fSetXYZ(uint8_t param) {     // param contient le n° de la commande
-  Serial.print("SetXYZ :") ; Serial.println(param) ;
   switch (param) {
   case _SETX : memccpy ( printString , _SETX_STRING , '\0' , 249); break ;
   case _SETY : memccpy ( printString , _SETY_STRING , '\0' , 249); break ;

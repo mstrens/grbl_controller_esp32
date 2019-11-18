@@ -152,6 +152,7 @@ void setup() {
 // initialiser les status (notamment affichage de l'écran)
   logBufferInit() ; // initialise the log buffer
   Serial.begin(115200); // init UART for debug and for Gcode passthrough via USB PC
+  Serial.setRxBufferSize(1024);
   
   uart_dev_t * dev = (volatile uart_dev_t *)(DR_REG_UART_BASE) ;
   dev->conf1.rxfifo_full_thrhd = 1 ;  // set the number of char received on Serial to 1 before generating an interrupt (original value is 112 and is set by esp32-hal-uart.c)
@@ -161,6 +162,7 @@ void setup() {
     // initialise le port série vers grbl
   Serial2.begin(115200, SERIAL_8N1, SERIAL2_RXPIN, SERIAL2_TXPIN); // initialise le port série vers grbl
   Serial2.setRxBufferSize(1024);
+
   pinMode(TFT_LED_PIN , OUTPUT) ;
   digitalWrite(TFT_LED_PIN , HIGH) ;
   tftInit() ; // init screen and touchscreen, set rotation and calibrate

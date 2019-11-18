@@ -6,7 +6,6 @@
 #define ESP32_VERSION "v1.0.n"
 
 // decide if you will use Wifi or not (and how)
-//#define NO_WIFI
 #define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
 
 // If wifi is used, set the parameter to identify the access point (= the router when ESP32_ACT_AS_STATION or the ESP32 when ESP32_ACT_AS_AP)
@@ -19,7 +18,7 @@
 #define LANGUAGE EN
 
 #define AA_AXIS    // uncomment if you want that the firmware handles 4 axes instead of 3 ;(This option has to be implemented in GRBL too)
-                     // NOT YET SUPPORTED in this version
+                    
 
 // Here some pins (GPIO) being used
 //************************************
