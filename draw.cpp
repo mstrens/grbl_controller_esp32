@@ -48,8 +48,8 @@ extern SdBaseFile aDir[DIR_LEVEL_MAX] ;
 extern char cmdName[11][17] ;          // contains the names of the commands
 
 extern uint8_t statusPrinting ;
-extern float wposXYZ[3] ;
-extern float mposXYZ[3] ;
+extern float wposXYZA[4] ;
+extern float mposXYZA[3] ;
 extern char machineStatus[9];
 extern float feedSpindle[2] ;  
 extern float overwritePercent[3] ; // first is for feedrate, second for rapid (G0...), third is for RPM
@@ -69,9 +69,10 @@ extern uint8_t * pGet ; // position of the last char to be read for display
 //char sdStatusText[][20]  = { "No Sd card" , "Sd card to check" , "Sd card OK" , "Sd card error"} ;  // pour affichage en clair sur le lcd;
 char printingStatusText[][20] = { " " , "SD-->Grbl" , "Error SD-->Grbl" , "Pause SD-->Grbl" , "Usb-->Grbl" ,  "CMD" , "Telnet-->Grbl" , "Set cmd"} ; 
 
-extern int8_t prevMoveX ;
-extern int8_t prevMoveY ;
-extern int8_t prevMoveZ ;
+//extern int8_t prevMoveX ;
+//extern int8_t prevMoveY ;
+//extern int8_t prevMoveZ ;
+//extern int8_t prevMoveA ;
 extern float moveMultiplier ;
 // used by nunchuck
 extern uint8_t jog_status  ;
@@ -86,7 +87,7 @@ extern uint8_t logBuffer[MAX_BUFFER_SIZE] ;                              // log 
 extern uint8_t * pGet ; // position of the last char to be read for display
 uint8_t * pLastLogLine ; // pointer to the last Log line
 boolean endOfLog = true ;
-float wposMoveInitXYZ[3] ;
+float wposMoveInitXYZA[4] ;
 
 // previous values used to optimise redraw of INFO screen
 uint8_t statusPrintingPrev;
@@ -178,6 +179,8 @@ mButton[_YP].pLabel = "Y+" ;
 mButton[_YM].pLabel = "Y-" ;
 mButton[_ZP].pLabel = "Z+" ;
 mButton[_ZM].pLabel = "Z-" ;
+mButton[_AP].pLabel = "A+" ;
+mButton[_AM].pLabel = "A-" ;
 mButton[_D_AUTO].pLabel = __D_AUTO  ;
 mButton[_D0_01].pLabel = "0.01" ;
 mButton[_D0_1].pLabel = "0.1" ;
@@ -187,7 +190,9 @@ mButton[_SET_WCS].pLabel = __SET_WCS  ;
 mButton[_SETX].pLabel = __SETX  ;
 mButton[_SETY].pLabel = __SETY  ;
 mButton[_SETZ].pLabel = __SETZ  ;
+mButton[_SETA].pLabel = __SETA  ;
 mButton[_SETXYZ].pLabel = __SETXYZ  ;
+mButton[_SETXYZA].pLabel = __SETXYZA  ;
 mButton[_TOOL].pLabel = __TOOL  ;
 mButton[_SET_CHANGE].pLabel = __SET_CHANGE  ;
 mButton[_SET_PROBE].pLabel = __SET_PROBE  ;
@@ -264,13 +269,24 @@ fillMPage (_P_PAUSE , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
 
 mPages[_P_MOVE].titel = "Move" ;
 mPages[_P_MOVE].pfBase = fMoveBase ;
+#ifdef AA_AXIS
+fillMPage (_P_MOVE , 0 , _XM , _JUST_LONG_PRESSED_RELEASED , fMove , _XM) ;
+fillMPage (_P_MOVE , 1 , _YP , _JUST_LONG_PRESSED_RELEASED , fMove , _YP) ;
+fillMPage (_P_MOVE , 2 , _XP , _JUST_LONG_PRESSED_RELEASED , fMove , _XP) ;
+fillMPage (_P_MOVE , 3 , _ZP , _JUST_LONG_PRESSED_RELEASED , fMove , _ZP) ;
+fillMPage (_P_MOVE , 4 , _AM , _JUST_LONG_PRESSED_RELEASED , fMove , _AM) ;
+fillMPage (_P_MOVE , 5 , _YM , _JUST_LONG_PRESSED_RELEASED , fMove , _YM) ;
+fillMPage (_P_MOVE , 6 , _AP , _JUST_LONG_PRESSED_RELEASED , fMove , _AP) ;
+fillMPage (_P_MOVE , 7 , _ZM , _JUST_LONG_PRESSED_RELEASED , fMove , _ZM) ;
+#else
 fillMPage (_P_MOVE , 1 , _YP , _JUST_LONG_PRESSED_RELEASED , fMove , _YP) ;
 fillMPage (_P_MOVE , 3 , _ZP , _JUST_LONG_PRESSED_RELEASED , fMove , _ZP) ;
-fillMPage (_P_MOVE , 8 , _XM , _JUST_LONG_PRESSED_RELEASED , fMove , _XM) ;
-fillMPage (_P_MOVE , POS_OF_MOVE_D_AUTO , _D_AUTO , _JUST_PRESSED , fDist, _D_AUTO) ;  // -1 because range here is 0...11 
-fillMPage (_P_MOVE , 10 , _XP , _JUST_LONG_PRESSED_RELEASED , fMove , _XP) ;
-fillMPage (_P_MOVE , 7 , _ZM , _JUST_LONG_PRESSED_RELEASED , fMove , _ZM) ;
 fillMPage (_P_MOVE , 5 , _YM , _JUST_LONG_PRESSED_RELEASED , fMove , _YM) ;
+fillMPage (_P_MOVE , 7 , _ZM , _JUST_LONG_PRESSED_RELEASED , fMove , _ZM) ;
+fillMPage (_P_MOVE , 8 , _XM , _JUST_LONG_PRESSED_RELEASED , fMove , _XM) ;
+fillMPage (_P_MOVE , 10 , _XP , _JUST_LONG_PRESSED_RELEASED , fMove , _XP) ;
+#endif
+fillMPage (_P_MOVE , POS_OF_MOVE_D_AUTO , _D_AUTO , _JUST_PRESSED , fDist, _D_AUTO) ;  // -1 because range here is 0...11 
 fillMPage (_P_MOVE , 11 , _BACK , _JUST_PRESSED , fGoBack , 0) ;
 
 mPages[_P_SETXYZ].titel = "Set X, Y, Z to 0" ;  
@@ -278,7 +294,13 @@ mPages[_P_SETXYZ].pfBase = fSetXYZBase ;
 fillMPage (_P_SETXYZ , 4 , _SETX , _JUST_PRESSED , fSetXYZ , _SETX) ;
 fillMPage (_P_SETXYZ , 5 , _SETY , _JUST_PRESSED , fSetXYZ , _SETY) ;
 fillMPage (_P_SETXYZ , 6 , _SETZ, _JUST_PRESSED , fSetXYZ , _SETZ) ;
-fillMPage (_P_SETXYZ , 7 , _SETXYZ , _JUST_PRESSED , fSetXYZ , _SETXYZ) ;
+#ifdef AA_AXIS
+fillMPage (_P_SETXYZ , 7 , _SETA, _JUST_PRESSED , fSetXYZ , _SETA) ;
+fillMPage (_P_SETXYZ , 8 , _SETXYZ , _JUST_PRESSED , fSetXYZ , _SETXYZ) ;
+fillMPage (_P_SETXYZ , 9 , _SETXYZA , _JUST_PRESSED , fSetXYZ , _SETXYZA) ;
+#else
+fillMPage (_P_SETXYZ , 8 , _SETXYZ , _JUST_PRESSED , fSetXYZ , _SETXYZ) ;
+#endif
 fillMPage (_P_SETXYZ , 10 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP ) ;
 fillMPage (_P_SETXYZ , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
@@ -823,18 +845,25 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   tft.setFreeFont (LABELS12_FONT) ;
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ;
-  tft.setTextPadding (120) ;      // expect to clear 100 pixel when drawing text or float
+  tft.setTextPadding (120) ;      // expect to clear 120 pixel when drawing text or float
   uint8_t c1 = 120, c2 = c1 + 120 ;
-  line += 20 ; tft.drawFloat( wposXYZ[0] , 2 , c1 , line ); tft.drawFloat( mposXYZ[0] , 2 , c2 , line ); 
-  line += 32 ; tft.drawFloat( wposXYZ[1] , 2 , c1 , line ); tft.drawFloat( mposXYZ[1] , 2 , c2 , line );
-  line += 32 ; tft.drawFloat( wposXYZ[2] , 2 , c1 , line ); tft.drawFloat( mposXYZ[2] , 2 , c2 , line  ); 
-  
+#ifdef AA_AXIS
+  uint8_t lineSpacing1 = 24 ;
+#else 
+  uint8_t lineSpacing1 = 34 ; // we have more space for 3 axis
+#endif   
+  line += 20           ; tft.drawFloat( wposXYZA[0] , 2 , c1 , line ); tft.drawFloat( mposXYZA[0] , 2 , c2 , line ); 
+  line += lineSpacing1 ; tft.drawFloat( wposXYZA[1] , 2 , c1 , line ); tft.drawFloat( mposXYZA[1] , 2 , c2 , line );
+  line += lineSpacing1 ; tft.drawFloat( wposXYZA[2] , 2 , c1 , line ); tft.drawFloat( mposXYZA[2] , 2 , c2 , line  ); 
+#ifdef AA_AXIS
+  line += lineSpacing1 ; tft.drawFloat( wposXYZA[3] , 2 , c1 , line ); tft.drawFloat( mposXYZA[3] , 2 , c2 , line  );
+#endif  
   tft.setTextFont( 2 );
   tft.setTextSize(1) ;
   tft.setTextPadding (0) ;
   tft.setTextDatum( TL_DATUM ) ;
   tft.setTextColor(SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND) ; 
-  line += 32 ; tft.drawString(__FEED , 90 , line)  ; tft.drawString(__RPM , 205 , line) ;
+  line += lineSpacing1 ; tft.drawString(__FEED , 90 , line)  ; tft.drawString(__RPM , 205 , line) ;
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND) ;
   tft.setTextPadding (80) ;
   tft.setTextDatum( TR_DATUM ) ;
@@ -870,9 +899,10 @@ void drawDataOnSetupPage() {
 
 void fMoveBase(void) {
   fillMPage (_P_MOVE , POS_OF_MOVE_D_AUTO , _D_AUTO , _JUST_LONG_PRESSED , fDist , _D_AUTO) ;  // reset the button for autochange of speed
-  wposMoveInitXYZ[0] = wposXYZ[0];             // save the position when entering (so we calculate distance between current pos and init pos on this screen)
-  wposMoveInitXYZ[1] = wposXYZ[1];
-  wposMoveInitXYZ[2] = wposXYZ[2];
+  wposMoveInitXYZA[0] = wposXYZA[0];             // save the position when entering (so we calculate distance between current pos and init pos on this screen)
+  wposMoveInitXYZA[1] = wposXYZA[1];
+  wposMoveInitXYZA[2] = wposXYZA[2];
+  wposMoveInitXYZA[3] = wposXYZA[3];
   drawWposOnMovePage() ;
   // multiplier = 0.01 ; // à voir si cela sera encore utilisé (si on met à jour le bouton distance au fur et à mesure, on peut l'utiliser pour calculer 
   // movePosition = 0 ;  à utiliser si on l'affiche 
@@ -880,7 +910,7 @@ void fMoveBase(void) {
 }
 
 
-void fSetXYZBase(void) {                 //  En principe il n'y a rien à faire;
+void fSetXYZBase(void) {                 
   drawWposOnSetXYZPage() ;
 }
 
@@ -916,15 +946,18 @@ void drawWposOnSetXYZPage() {
   tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
-  
   tft.setTextDatum( TR_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
   tft.setTextPadding (80) ;      // expect to clear 70 pixel when drawing text or   
-  uint8_t line = 60 ;
+  uint8_t line = 60 ; // was 60 ;
   uint8_t col = 60 ;
-  tft.drawFloat( wposXYZ[0] , 2 , col , line ); // affiche la valeur avec 3 décimales 
-  tft.drawFloat( wposXYZ[1] , 2 , col + 80 , line );
-  tft.drawFloat( wposXYZ[2] , 2 , col + 160 , line );
-  tft.drawString( __WPOS , col + 240 , line);
+  tft.drawString( __WPOS , col , line);
+  tft.drawFloat( wposXYZA[0] , 2 , col , line ); // affiche la valeur avec 3 décimales 
+  tft.drawFloat( wposXYZA[1] , 2 , col + 80 , line );
+  tft.drawFloat( wposXYZA[2] , 2 , col + 160 , line );
+#ifdef AA_AXIS  
+  tft.drawFloat( wposXYZA[3] , 2 , col + 240 , line );
+#endif  
+  //tft.drawString( __WPOS , col + 240 , line);
 }
 
 
@@ -1032,6 +1065,55 @@ void fOverBase(void) {                 //  En principe il n'y a rien à faire;
 }
 
 void drawWposOnMovePage() {
+#ifdef AA_AXIS
+  //  X-    Y+      X+    Z+
+  //  X-    Y+      X+    Z+
+  //  X-    Y+      X+    Z+
+  //  A-    Y-      A+    Z-
+  //  A-    Y-      A+    Z-
+  //  A-    Y-      A+    Z-
+  //W 0,00 MO,00    Auto Back
+  //  0,00  O,00    Auto Back
+  //  0,00  O,00    Auto Back
+  //  0,00  O,00    Auto Back
+
+  tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+  tft.setTextSize(1) ;           // char is 2 X magnified => 
+  tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when only 1 parameter, background = fond);
+  tft.setTextDatum( TR_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
+  tft.setTextPadding (75) ;      // expect to clear 70 pixel when drawing text or 
+  
+  uint8_t line = 160 ;
+  uint8_t col1 = 75 ;
+  uint8_t col2 = 75 + 80 ;
+  tft.drawString( __WPOS , col1  , line );
+  tft.drawString( __MOVE , col2  , line  );
+  line +=16 ;
+  //tft.drawString( "  X  " , col  , line + 80 );
+  tft.drawFloat( wposXYZA[0] , 2 , col1 , line ); // affiche la valeur avec 2 décimales 
+  tft.drawFloat( wposXYZA[0] - wposMoveInitXYZA[0] , 2 , col2 , line  ); // affiche la valeur avec 2 décimales 
+  line +=16 ;
+  //tft.drawString( "  Y  " , col + 160  , line + 80  );
+  tft.drawFloat( wposXYZA[1] , 2 , col1 , line );
+  tft.drawFloat( wposXYZA[1] - wposMoveInitXYZA[1] , 2 , col2 , line );
+  line +=16 ;
+  //tft.drawString( "  Z  " , col + 160  , line   );
+  tft.drawFloat( wposXYZA[2] , 2 , col1 , line );
+  tft.drawFloat( wposXYZA[2] - wposMoveInitXYZA[2] , 2 , col2 , line ) ;
+  line +=16 ;
+  tft.drawFloat( wposXYZA[3] , 2 , col1 , line );
+  tft.drawFloat( wposXYZA[3] - wposMoveInitXYZA[3] , 2 , col2 , line ) ;
+  
+#else
+  //        Y+      x     Z+
+  // Wpos   Y+      0.0   Z+
+  // Move   Y+      0.0   Z+
+  //   x    Y-      y     Z-
+  //   0.0  Y-      0.0   Z-
+  //   0.0  Y-      0.0   Z-
+  //   X-  Auto     X+    Back
+  //   X-  Auto     X+    Back
+  //   X-  Auto     X+    Back
   tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when only 1 parameter, background = fond);
@@ -1044,16 +1126,18 @@ void drawWposOnMovePage() {
   tft.drawString( __MOVE , col  , line + 40 );
   
   tft.drawString( "  X  " , col  , line + 80 );
-  tft.drawFloat( wposXYZ[0] , 2 , col , line + 100 ); // affiche la valeur avec 2 décimales 
-  tft.drawFloat( wposXYZ[0] - wposMoveInitXYZ[0] , 2 , col , line + 120 ); // affiche la valeur avec 2 décimales 
+  tft.drawFloat( wposXYZA[0] , 2 , col , line + 100 ); // affiche la valeur avec 2 décimales 
+  tft.drawFloat( wposXYZA[0] - wposMoveInitXYZA[0] , 2 , col , line + 120 ); // affiche la valeur avec 2 décimales 
 
   tft.drawString( "  Y  " , col + 160  , line + 80  );
-  tft.drawFloat( wposXYZ[1] , 2 , col + 160 , line +100 );
-  tft.drawFloat( wposXYZ[1] - wposMoveInitXYZ[1] , 2 , col + 160 , line + 120 );
+  tft.drawFloat( wposXYZA[1] , 2 , col + 160 , line +100 );
+  tft.drawFloat( wposXYZA[1] - wposMoveInitXYZA[1] , 2 , col + 160 , line + 120 );
 
   tft.drawString( "  Z  " , col + 160  , line   );
-  tft.drawFloat( wposXYZ[2] , 2 , col + 160 , line + 20 );
-  tft.drawFloat( wposXYZ[2] - wposMoveInitXYZ[2] , 2 , col + 160 , line + 40 ) ;
+  tft.drawFloat( wposXYZA[2] , 2 , col + 160 , line + 20 );
+  tft.drawFloat( wposXYZA[2] - wposMoveInitXYZA[2] , 2 , col + 160 , line + 40 ) ;
+
+#endif
 }
 
 
@@ -1260,13 +1344,16 @@ void drawDataOnOverwritePage() {                                // to do : text 
 
 
 // ******************************** touch calibrate ********************************************
+//#define DEBUG_CALIBRATION
 void touch_calibrate() {
   uint16_t calData[5];
   uint8_t calDataOK = 0;
 
   // check file system exists
   if (!SPIFFS.begin()) {
-    //Serial.println("Formating file system");
+    #ifdef DEBUG_CALIBRATION
+    Serial.println("Formating file system");
+    #endif
     SPIFFS.format();
     SPIFFS.begin();
   }
@@ -1276,13 +1363,22 @@ void touch_calibrate() {
     if (REPEAT_CAL)
     {
       // Delete if we want to re-calibrate
+      #ifdef DEBUG_CALIBRATION
+      Serial.println("Remove file system");
+      #endif
       SPIFFS.remove(CALIBRATION_FILE);
     }
     else
     { 
       fs::File f = SPIFFS.open(CALIBRATION_FILE, "r");
       if (f) {
+        #ifdef DEBUG_CALIBRATION
+        Serial.println("File system opened for reading");
+        #endif
         if (f.readBytes((char *)calData, 14) == 14)
+          #ifdef DEBUG_CALIBRATION
+          Serial.println("Cal Data has 14 bytes");
+          #endif
           calDataOK = 1;
         f.close();
       }
@@ -1291,17 +1387,21 @@ void touch_calibrate() {
 
   if (calDataOK && !REPEAT_CAL) {
     // calibration data valid
+    #ifdef DEBUG_CALIBRATION
+    Serial.println("Use calData");
+    #endif
     tft.setTouch(calData);
   } else {
     // data not valid so recalibrate
+    #ifdef DEBUG_CALIBRATION
+    Serial.println("Perform calibration");
+    #endif
     clearScreen();
     tft.setCursor(20, 0);
     tft.setTextFont(2);
     tft.setTextSize(1);
     tft.setTextColor(SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND);
-
     tft.println(__TOUCH_CORNER );
-
     tft.setTextFont(1);
     tft.println();
 
@@ -1319,6 +1419,9 @@ void touch_calibrate() {
     // store data
     fs::File f = SPIFFS.open(CALIBRATION_FILE, "w");
     if (f) {
+      #ifdef DEBUG_CALIBRATION
+      Serial.println("Write calibration in file system");
+      #endif
       f.write((const unsigned char *)calData, 14);
       f.close();
     }
