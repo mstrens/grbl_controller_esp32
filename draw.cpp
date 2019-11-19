@@ -1142,11 +1142,13 @@ void drawWposOnMovePage() {
 
 
 void drawDataOnLogPage() {
-  // tft has already been cleared before we call this functionSerial.println("begin drawing a page");
+  // tft has already been cleared before we call this function 
+  //Serial.println("begin drawing a page");
   //Serial.print("pFirst at begin ") ; Serial.println( pFirst - logBuffer) ; // to debug
   //Serial.print("pget at begin ") ; Serial.println( pGet - logBuffer) ; // to debug
   //Serial.print("pNext at begin ") ; Serial.println( pNext - logBuffer) ; // to debug
-  tft.setFreeFont (LABELS9_FONT) ;
+  //tft.setFreeFont (LABELS9_FONT) ;
+  tft.setTextFont ( 1 ) ;
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when only 1 parameter, background = fond);
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
@@ -1159,7 +1161,7 @@ void drawDataOnLogPage() {
   while (count ) {
     printOneLogLine(col , line );
     count--;
-    line += 20 ; // goes to next line on screen
+    line += 10 ; // goes to next line on screen (was20 if we use setTextFont(1)
     if (getNextLogLine() < 0 ) count = 0 ; // stop if next line is not complete
   }
 }

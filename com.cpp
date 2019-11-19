@@ -428,6 +428,7 @@ void sendToGrbl( void ) {
     if ( currSendMillis > nextSendMillis) {
        nextSendMillis = currSendMillis + 300 ;
        Serial2.print("?") ; 
+       Serial.println("X");   // just to debug some freezze
     }
   }
   if( statusPrinting != PRINTING_FROM_TELNET ) {               // clear the telnet buffer when not in use

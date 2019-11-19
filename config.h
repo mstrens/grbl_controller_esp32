@@ -165,7 +165,7 @@
 
 #define MAX_FILES 4
 
-#define N_LOG_LINE_MAX 12
+#define N_LOG_LINE_MAX 24 // was 12 when we used a bigger font
 
 //        commands available in menu ; this part is normally not used anymore because cmd are defined in SPIFFS
 //#define CMD1_GRBL_CODE "*X"
