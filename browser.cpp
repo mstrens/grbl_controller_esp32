@@ -42,7 +42,7 @@ void initWifi() {
     }
   }
   //Serial.println("\nConnected to "+WiFi.SSID()+" Use IP address: "+WiFi.localIP().toString()); // Report which SSID and IP is in use
-#else if defined (ESP32_ACT_AS_AP)
+#elif defined (ESP32_ACT_AS_AP)
   WiFi.softAP( MY_SSID , MY_PASSWORD);
   //Serial.println("\nESP has IP address: "+ WiFi.softAPIP().toString()); // Report which SSID and IP is in use
 #endif  
@@ -83,7 +83,7 @@ boolean getWifiIp( char * ipBuf ) {          // return true if wifi status = con
     ipBuf[0] = 0 ;
     return false ;   
   }
-#else if defined ( ESP32_ACT_AS_AP )
+#elif defined ( ESP32_ACT_AS_AP )
   strcpy( ipBuf , WiFi.softAPIP().toString().c_str() ) ;
   return true ;
 #endif   

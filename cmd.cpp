@@ -20,7 +20,7 @@ boolean spiffsInit() {
 boolean cmdNameInit() {  // seach on SPIFFS the names of the commands
   uint8_t i = 0 ;
   const char * pchar; 
-  for (i ; i< 11 ; i++ ){
+  for (i = 0 ; i< 11 ; i++ ){
     cmdName[i][0] = 0 ; // clear fill name   
   }
 

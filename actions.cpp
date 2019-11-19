@@ -166,9 +166,9 @@ void fDist( uint8_t param ) {
 }  
 
 void fMove( uint8_t param ) {
-    float distance ;
-    uint32_t moveMillis = millis() ;
-    static uint32_t prevMoveMillis ;
+    float distance = 0.01 ;
+    //uint32_t moveMillis = millis() ;
+    //static uint32_t prevMoveMillis ;
     if ( mPages[_P_MOVE].boutons[POS_OF_MOVE_D_AUTO] == _D_AUTO ) {
       handleAutoMove(param) ; // process in a similar way as Nunchuk
     } else if (justPressedBtn) {                      // just pressed in non auto mode
@@ -349,7 +349,7 @@ void fSetXYZ(uint8_t param) {     // param contient le n° de la commande
   case _SET_CAL :    memccpy ( printString , _CAL_STRING , '\0' , 249);    break ;  
   case _GO_CHANGE :  memccpy ( printString , _GO_CHANGE_STRING , '\0' , 249); break ; 
   case _GO_PROBE :   memccpy ( printString , _GO_PROBE_STRING , '\0' , 249);  break ; 
-  default : printString[0] ; break ;  // null string for safety; normally can't happen
+  default : printString[0]= '\0' ; break ;  // null string for safety; normally can't happen
   }
   lastStringCmd = param ;           // save the last parameter in order to generate a text when the task is execute
   sendStringToGrbl() ;
