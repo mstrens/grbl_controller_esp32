@@ -3,7 +3,7 @@
 
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 
-#define ESP32_VERSION "v1.0.p"
+#define ESP32_VERSION "v1.0.q"
 
 // decide if you will use Wifi or not (and how)
 #define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
@@ -17,7 +17,7 @@
 // select your language between EN, FR, DE
 #define LANGUAGE EN
 
-//#define AA_AXIS    // uncomment if you want that the firmware handles 4 axes instead of 3 ;(This option has to be implemented in GRBL too)
+//#define AA_AXIS    // uncomment if you want that the firmware handles 4 axes instead of 3 ;(The GRBL STM32 firmware has to be compiled/flashed with the same option)
                     
 
 // Here some pins (GPIO) being used
@@ -141,7 +141,7 @@
 #define _CAL_STRING "G4P0.0\n $G\n M5\n G53 G21 G90 G00 Z-2\n G30\n G21 G91\n G38.2 Z-70 F100\n G00 Z2\n G38.2 Z-3 F10\n G4P0.5\n %z G53 G21 G90 G00 Z-2\n G28\n %M\n"
   
 #define _GO_CHANGE_STRING "G4P0.0\n $G\n $#\n M5\n G53 G21 G90 G00 Z-2\n G28\n"
-#define _GO_PROBE_STRING "G4P0.0\n $#$G\n M5\n G53 G21 G90 G00 Z-2\n G30X%X Y%Y Z-2\n G21 G91\n G38.2 Z-70 F100\n G00 Z2\n G38.2 Z-3 F10\n G10 L20 P1 Z%Z\n G53 G21 G90 G00 Z-2\n %M\n"
+#define _GO_PROBE_STRING "G4P0.0\n $#\n $G\n M5\n G53 G21 G90 G00 Z-2\n G30X%X Y%Y Z-2\n G21 G91\n G38.2 Z-70 F100\n G00 Z2\n G38.2 Z-3 F10\n G10 L20 P1 Z%Z\n G53 G21 G90 G00 Z-2\n %M\n"
 #define _SET_CHANGE_STRING "G28.1\n G4P0.0\n $#\n $G\n" 
 #define _SET_PROBE_STRING "G30.1\n G4P0.0\n $#\n $G\n" 
 
