@@ -39,6 +39,7 @@
 #define GET_GRBL_STATUS_MESSAGE 9
 #define GET_GRBL_STATUS_OV_DATA 10
   
+#define WAIT_OK_SD_TIMEOUT 120000
 
 uint8_t wposIdx = 0 ;
 uint8_t wcoIdx = 0 ;
@@ -380,6 +381,10 @@ void storeGrblState(void) { // search for some char in message
   }
 }
 
+void resetWaitOkWhenSdMillis() {    // after a resume (after a pause), we reset this time to avoid wrong warning
+  waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // wait for 2 min before generating the message again
+}
+
 //-----------------------------  Send ------------------------------------------------------
 void sendToGrbl( void ) {   
                                     // set statusPrinting to PRINTING_STOPPED if eof; exit if we wait an OK from GRBL; 
@@ -389,7 +394,6 @@ void sendToGrbl( void ) {
   int sdChar ;
   static uint32_t nextSendMillis = 0 ;
   uint32_t currSendMillis  ;
-  #define WAIT_OK_SD_TIMEOUT 120000
   if ( waitOk && ( statusPrinting == PRINTING_FROM_SD || statusPrinting == PRINTING_CMD || statusPrinting == PRINTING_STRING ) ) {
       if ( millis() > waitOkWhenSdMillis ) {
         fillMsg(__MISSING_OK_WHEN_SENDING_FROM_SD ) ;   // give an error if we have to wait to much to get an OK from grbl

@@ -157,7 +157,7 @@ void setup() {
   uart_dev_t * dev = (volatile uart_dev_t *)(DR_REG_UART_BASE) ;
   dev->conf1.rxfifo_full_thrhd = 1 ;  // set the number of char received on Serial to 1 before generating an interrupt (original value is 112 and is set by esp32-hal-uart.c)
                                       // this increase the number of interrupts but it allows to forward the char to Serial2 faster
-  Serial.print(" setup: rxfifo size before interrupt="); Serial.println(dev->conf1.rxfifo_full_thrhd) ;
+  //Serial.print(" setup: rxfifo size before interrupt="); Serial.println(dev->conf1.rxfifo_full_thrhd) ;
   
     // initialise le port série vers grbl
   Serial2.begin(115200, SERIAL_8N1, SERIAL2_RXPIN, SERIAL2_TXPIN); // initialise le port série vers grbl

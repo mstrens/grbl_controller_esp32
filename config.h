@@ -3,7 +3,7 @@
 
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 
-#define ESP32_VERSION "v1.0.r"
+#define ESP32_VERSION "v1.0.s"
 
 // decide if you will use Wifi or not (and how)
 #define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 

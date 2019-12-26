@@ -18,6 +18,7 @@ void sendFromCmd() ;
 void sendFromString() ;
 void sendJogCancelAndJog(void) ; 
 boolean sendJogCmd(uint32_t startTime ) ; // parameter is the original time (millis) when we start a ; return true if cmd has been sent
+void resetWaitOkWhenSdMillis() ;
 
 void fillErrorMsg( char * errorMsg ) ; 
 void fillAlarmMsg( char * alarmMsg ) ;

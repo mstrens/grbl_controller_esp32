@@ -149,6 +149,7 @@ void fResume(uint8_t param) {
   if( statusPrinting == PRINTING_PAUSED && machineStatus[0] == 'H') {
   #define RESUME_CMD "~" 
     Serial2.print(RESUME_CMD) ;
+    resetWaitOkWhenSdMillis() ; // we reset the time we sent the last cmd otherwise, we can get a wrong warning saying that we are missing an OK (because it seems that GRBL suspends OK while in pause)
     statusPrinting = PRINTING_FROM_SD ;
     updateFullPage = true ;      // we have to redraw the buttons because Resume should become Pause
   }
