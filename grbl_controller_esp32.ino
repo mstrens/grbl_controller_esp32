@@ -244,10 +244,16 @@ void loop() {
   sendToGrbl() ;           // s'il y de la place libre dans le Tx buffer, le rempli avec le fichier de SD, une CMD ou le flux du PC; envoie périodiquement "?" pour demander le statut
 //  if (newGrblStatusReceived) Serial.println( "newStatus");
 
-  if (newGrblStatusReceived == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP || 
-      currentPage == _P_TOOL || currentPage == _P_OVERWRITE ) ) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
-    updatePartPage = true ;
+  if (newGrblStatusReceived == true) {
+    if( statusPrinting == PRINTING_FROM_SD  && machineStatus[0] == 'H' ) { // If printing from SD and GRBL is paused
+      // set PRINTING_PAUSED
+      statusPrinting = PRINTING_PAUSED ;
+      updateFullPage = true ; // We want to get the resume button 
+    } else if ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP || currentPage == _P_TOOL || currentPage == _P_OVERWRITE ) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
+        updatePartPage = true ;
+    } // end else if
   }
+      
   newGrblStatusReceived = false ;
   if (lastMsgChanged == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP || currentPage == _P_TOOL) ) { //force a refresh if a message has been filled
     updatePartPage = true ;
