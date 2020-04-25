@@ -502,6 +502,7 @@ void sendFromString(){
             //Serial.print( "wpos Z is saved with value = ") ; Serial.println( wposXYZA[2] ) ; // to debug
             break;
          case 'X' : // Put the G30 X offset
+            //Serial.print("G30SavedX"); Serial.println(G30SavedX);
             Serial2.print(G30SavedX) ;
             break;
          case 'Y' : // Put the G30 Y offset

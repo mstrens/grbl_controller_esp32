@@ -4,7 +4,7 @@
 // pour cela, on peut employer une fonction prévue Serial2.setRxBufferSize(size_t)
 
 // to do
-// retirer les serial.print qui ont servi au debug
+
 // permettre l'accès au contenu du fichier SD seulement si le statut est print from SD en pause. 
 
 // prévoir de pouvoir faire un "continue" quand on a une pause alors que l'on est en train d'envoyer des CMD ou des STRING vers GRBL 
