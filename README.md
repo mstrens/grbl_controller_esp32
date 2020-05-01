@@ -64,11 +64,9 @@ The file must contain 3 lines with:<br>
 WIFI="ESP32_ACT_AS_STATION"<br>
 PASSWORD="your password"<br>
 SSID="your access point"<br>
-You can only change:<br>
-"ESP32_ACT_AS_STATION" by "NO_WIFI" or "ESP32_ACT_AS_AP"<br>
-"your password"<br>
-"your access point"<br>
-Once uploaded in config.h or in file wifi.cfg, the parameters are saved inside the ESP32 and are reused until new parameters are uploaded via SD card.
+You can only change: "ESP32_ACT_AS_STATION" (change by "NO_WIFI" or "ESP32_ACT_AS_AP") , "your password" and "your access point"<br>
+Once uploaded from config.h or from file wifi.cfg, the parameters are saved inside the ESP32 and are reused until new parameters are uploaded via SD card.<br>
+So you can remove the "wifi.cfg" file from SD card once the program runs once.
 
    
 Take care that if you do not use my configuration, you can have:<br>
