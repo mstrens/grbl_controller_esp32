@@ -4,6 +4,7 @@
 void tftInit(void) ;
 void testTft(void);
 void  touch_calibrate();
+boolean checkCalibrateOnSD();
 #include <stdint.h>
 #include "config.h"
 

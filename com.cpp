@@ -175,7 +175,9 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
     case '|' :
       if ( getGrblPosState == GET_GRBL_STATUS_START ) {
          getGrblPosState = GET_GRBL_STATUS_WPOS_HEADER ; 
-         memccpy( machineStatus , strGrblBuf , '\0', 9);        
+         memccpy( machineStatus , strGrblBuf , '\0', 9);
+         strGrblIdx = 0;
+         strGrblBuf[strGrblIdx] = 0 ;        
 #ifdef DEBUG_TO_PC
          //Serial.print( "ms= " ) ; Serial.println( machineStatus ) ;
 #endif          
@@ -267,7 +269,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
             strGrblBuf[strGrblIdx] = 0 ;
           }
         } else if ( ( (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ) && ( getGrblPosState == GET_GRBL_STATUS_START || getGrblPosState == GET_GRBL_STATUS_HEADER ||
-                  getGrblPosState == GET_GRBL_STATUS_CLOSED || getGrblPosState == GET_GRBL_STATUS_MESSAGE ) ) { 
+                  getGrblPosState == GET_GRBL_STATUS_CLOSED || getGrblPosState == GET_GRBL_STATUS_MESSAGE  || getGrblPosState == GET_GRBL_STATUS_WPOS_HEADER ) ) { 
            strGrblBuf[strGrblIdx++] = c ;
            strGrblBuf[strGrblIdx] = 0 ;
         }
@@ -566,7 +568,7 @@ void sendJogCancelAndJog(void) {
             jog_status = JOG_NO ; // reset all parameters related to jog .
             jogCancelFlag = false ;
             jogCmdFlag = false ;
-            if(lastMsg[0] || (lastMsg[0] == 32) ) fillMsg( __CAN_JOG_MISSING_OK  ) ; // put a message if there was no message (e.g. alarm:)
+            //if(lastMsg[0] || (lastMsg[0] == 32) ) fillMsg( __CAN_JOG_MISSING_OK  ) ; // put a message if there was no message (e.g. alarm:)
           }
         }
       } 

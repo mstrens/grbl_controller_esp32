@@ -43,6 +43,7 @@ extern uint32_t sdNumberOfCharSent ;
 
 extern char fileNames[4][23] ; // 22 car per line + "\0"
 extern uint16_t firstFileToDisplay ;   // 0 = first file in the directory
+extern SdFat sd;  // is created in ino file
 extern SdBaseFile aDir[DIR_LEVEL_MAX] ;
 
 extern char cmdName[11][17] ;          // contains the names of the commands
@@ -1350,7 +1351,10 @@ void drawDataOnOverwritePage() {                                // to do : text 
 void touch_calibrate() {
   uint16_t calData[5];
   uint8_t calDataOK = 0;
-
+  bool repeatCal = REPEAT_CAL;  // parameter in the config.h file (true when calibration is requested)
+  if (checkCalibrateOnSD()) {
+    repeatCal = true ; // force a recalibration if a file "calibrate.txt" exist on SD card
+  }
   // check file system exists
   if (!SPIFFS.begin()) {
     #ifdef DEBUG_CALIBRATION
@@ -1362,7 +1366,7 @@ void touch_calibrate() {
 
   // check if calibration file exists and size is correct
   if (SPIFFS.exists(CALIBRATION_FILE)) {
-    if (REPEAT_CAL)
+    if (repeatCal)
     {
       // Delete if we want to re-calibrate
       #ifdef DEBUG_CALIBRATION
@@ -1387,7 +1391,7 @@ void touch_calibrate() {
     }
   }
 
-  if (calDataOK && !REPEAT_CAL) {
+  if (calDataOK && !repeatCal) {
     // calibration data valid
     #ifdef DEBUG_CALIBRATION
     Serial.println("Use calData");
@@ -1407,7 +1411,7 @@ void touch_calibrate() {
     tft.setTextFont(1);
     tft.println();
 
-    if (REPEAT_CAL) {
+    if (repeatCal) {
       tft.setTextColor(SCREEN_ALERT_TEXT ,  SCREEN_BACKGROUND);
       tft.println(__SET_REPEAT_CAL );
     }
@@ -1429,6 +1433,34 @@ void touch_calibrate() {
     }
   }
 }
+
+boolean checkCalibrateOnSD(void){
+      // return true if a file calibrate.txt exist on the SD card; if so it means that new calibration is requested
+      SdBaseFile calibrateFile ;  
+      if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
+          Serial.println( __CARD_MOUNT_FAILED  ) ;
+          return false;       
+      }
+      //if ( ! SD.exists( "/" ) ) { // check if root exist
+      if ( ! sd.exists( "/" ) ) { // check if root exist   
+          Serial.println( __ROOT_NOT_FOUND  ) ;
+          return false;  
+      }
+      if ( ! sd.chdir( "/" ) ) {
+          Serial.println( __CHDIR_ERROR  ) ;
+          return false;  
+      }
+      if ( ! calibrateFile.open("/calibrate.txt" ) ) { // try to open calibrate.txt 
+          Serial.println("failed to open calibrate.txt" ) ;
+          return false;  
+      }
+      Serial.println("calibrate.txt exist on SD" ) ;      
+      calibrateFile.close() ;
+      return true ;
+}
+
+
+
 
 void fillMsg( char * msg, uint16_t color) {
   memccpy ( lastMsg , msg , '\0' , 79);

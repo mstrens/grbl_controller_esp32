@@ -131,6 +131,9 @@ volatile boolean waitOk = false ;
 // Nunchuk data.
 extern boolean nunchukOK ;  // keep flag to detect a nunchuk at startup
 
+// type of wifi being used
+uint8_t wifiType ; // can be NO_WIFI(= 0), ESP32_ACT_AS_STATION(= 1), ESP32_ACT_AS_AP(= 2)
+
 // status pour telnet
 boolean statusTelnetIsConnected = false ; 
 
@@ -162,11 +165,10 @@ void setup() {
     // initialise le port série vers grbl
   Serial2.begin(115200, SERIAL_8N1, SERIAL2_RXPIN, SERIAL2_TXPIN); // initialise le port série vers grbl
   Serial2.setRxBufferSize(1024);
-
   pinMode(TFT_LED_PIN , OUTPUT) ;
   digitalWrite(TFT_LED_PIN , HIGH) ;
   tftInit() ; // init screen and touchscreen, set rotation and calibrate
-  if (! spiffsInit() ) {   // just to test. Todo : change for loading the cmd in memory if the file exist in spiffs 
+  if (! spiffsInit() ) {   // try to load the cmd in memory when the files exist in spiffs 
     fillMsg(__SPIFFS_FORMATTED , BUTTON_TEXT ) ;
   } else {
     if (! cmdNameInit() ) {
@@ -174,9 +176,9 @@ void setup() {
     }
   }
   
-  
 //  listSpiffsDir( "/", 0 );   // uncomment to see the SPIFFS content
-  
+  preferences.begin("savedData") ; //define the namespace for saving preferences (used for saving WIFI parameters, and z coord for change tool)
+
   initButtons() ; //initialise les noms des boutons, les boutons pour chaque page.
   dirLevel = -1 ;   // negative value means that SD card has to be uploaded
 
@@ -186,17 +188,17 @@ void setup() {
   updateFullPage = true ;
   // en principe les données pour les buttons sont initialisés automatiquement à 0
   //drawFullPage( ) ;
-#if defined ( ESP32_ACT_AS_STATION ) || defined (ESP32_ACT_AS_AP)  
+//#if defined ( ESP32_ACT_AS_STATION ) || defined (ESP32_ACT_AS_AP)  
   initWifi() ;
   telnetInit() ;
-#endif 
+//#endif 
   delay(100);
   while ( Serial2.available() )  Serial2.read() ; // clear input buffer which can contains messages sent by GRBL in reply to noise captured before Serial port was initialised.
   Serial2.print(0X18) ; // send a soft reset
   Serial2.println(" ") ;Serial2.print("$10=3");Serial2.println(" ") ;   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
   while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
   //Serial2.flush();                                                      // this is used to avoid sending to many jogging movements when using the nunchuk  
-  preferences.begin("savedData") ;
+  
 // to debug
 //  grblLastMessage[0]= 0x80 ;
 //  grblLastMessage[1]= 0x81 ;
@@ -215,19 +217,17 @@ void loop() {
 // Lit les char venant du pc ou de la carte sd et les transmet à grbl
 // Si on a reçu de nouvelles données de GRBL, active un flag pour faire un réaffichage partiel de l'écran
 // réaffiche l'écran (complètement ou partiellement) et fait un reset de flags
-#if defined ( ESP32_ACT_AS_STATION ) || defined (ESP32_ACT_AS_AP)
-  processWifi();
-  checkTelnetConnection();
-  boolean tempTelnetIsConnected = telnetIsConnected() ;
-  if ( statusPrinting == PRINTING_FROM_TELNET && !tempTelnetIsConnected ){
-    statusPrinting = PRINTING_STOPPED ;
-    fillMsg(__TELENET_DISCONNECTED "Telnet disconnected" );
-  }
-//  if ( tempTelnetIsConnected && !statusTelnetIsConnected ) {
-//    fillMsg( "Telnet connected" ) ; 
-//  }
-  statusTelnetIsConnected = tempTelnetIsConnected ;
-#endif 
+//#if defined ( ESP32_ACT_AS_STATION ) || defined (ESP32_ACT_AS_AP)
+  if ( wifiType > 0) {   // handle the wifi if foreseen
+    processWifi();
+    checkTelnetConnection();
+    boolean tempTelnetIsConnected = telnetIsConnected() ;
+    if ( statusPrinting == PRINTING_FROM_TELNET && !tempTelnetIsConnected ){
+      statusPrinting = PRINTING_STOPPED ;
+      fillMsg(__TELENET_DISCONNECTED "Telnet disconnected" );
+    }
+    statusTelnetIsConnected = tempTelnetIsConnected ;
+  } 
  updateBtnState();  // check touch screen and update justPressedBtn ,justReleasedBtn , longPressedBtn and beginChangeBtnMillis
  drawUpdatedBtn() ;        // update color of button if pressed/released, apply actions foreseen for buttons (e.g. change currentPage) 
  executeMainActionBtn () ; // 
@@ -274,6 +274,4 @@ void loop() {
   //  Serial.println( machineStatus ) ;
   //}
 }
-
-
 
