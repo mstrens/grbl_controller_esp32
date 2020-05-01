@@ -3,17 +3,17 @@
 
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 
-#define ESP32_VERSION "v1.0.s"
+#define ESP32_VERSION "v1.0.t"
 
 // decide if you will use Wifi or not (and how)
-#define ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
+#define WIFI ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
 
 // If wifi is used, set the parameter to identify the access point (= the router when ESP32_ACT_AS_STATION or the ESP32 when ESP32_ACT_AS_AP)
 #define MY_SSID "bbox2-58c4"       // replace by the name of your access point (when act as station) or the name you assign to your device (when act as acces point)
 
-// Only for ESP32_ACT_AS_STATION , set the password to get access to your access point (router)
-#define MY_PASSWORD "password" // replace by the password of your access point (when act as station) or the password you want to use to protect your ESP32 (when act as acces point)
-                                      // in this last case, password can remains empty 
+// for ESP32_ACT_AS_STATION , set the password to get access to your access point (router)
+// for ESP_ACT_AS_AP, set the password you want to use to protect your ESP32 ( can be empty)
+#define MY_PASSWORD "your password" // replace by your password 
 // select your language between EN, FR, DE
 #define LANGUAGE EN
 
@@ -141,7 +141,7 @@
 #define _CAL_STRING "G4P0.0\n $G\n M5\n G53 G21 G90 G00 Z-2\n G30\n G21 G91\n G38.2 Z-70 F100\n G00 Z2\n G38.2 Z-3 F10\n G4P0.5\n %z G53 G21 G90 G00 Z-2\n G28\n %M\n"
   
 #define _GO_CHANGE_STRING "G4P0.0\n $G\n $#\n M5\n G53 G21 G90 G00 Z-2\n G28\n"
-#define _GO_PROBE_STRING "G4P0.0\n $#\n $G\n M5\n G53 G21 G90 G00 Z-2\n G90\n G30X%X Y%Y Z-2\n G21 G91\n G38.2 Z-70 F100\n G00 Z2\n G38.2 Z-3 F10\n G10 L20 P1 Z%Z\n G53 G21 G90 G00 Z-2\n %M\n"
+#define _GO_PROBE_STRING "G4P0.0\n $#\n $G\n M5\n G4P0.5\n G53 G21 G90 G00 Z-2\n G53 G21 G90 G00 X%X Y%Y\n G30\n G21 G91\n G38.2 Z-70 F100\n G00 Z2\n G38.2 Z-3 F10\n G10 L20 P1 Z%Z\n G53 G21 G90 G00 Z-2\n %M\n"
 #define _SET_CHANGE_STRING "G28.1\n G4P0.0\n $#\n $G\n" 
 #define _SET_PROBE_STRING "G30.1\n G4P0.0\n $#\n $G\n" 
 
@@ -166,6 +166,10 @@
 #define MAX_FILES 4
 
 #define N_LOG_LINE_MAX 24 // was 12 when we used a bigger font
+
+#define NO_WIFI 0               // code used to identify the wifi mode
+#define ESP32_ACT_AS_STATION 1
+#define ESP32_ACT_AS_AP 2
 
 //        commands available in menu ; this part is normally not used anymore because cmd are defined in SPIFFS
 //#define CMD1_GRBL_CODE "*X"

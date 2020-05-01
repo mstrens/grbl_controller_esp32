@@ -12,6 +12,8 @@
 #include "config.h"
 #include "language.h"
 #include "browser.h"
+#include "SdFat.h"
+#include <Preferences.h>
 #include "draw.h"
 #define MS_WRITE 0b00010101 // we have to define this to open file because there is a conflict between ESP32 and SdFat lib about the code to be used in open cmd
                            // this is the value used by SdFat in version 1.1.0 for read, Write, create, at_end
@@ -22,30 +24,35 @@ String  webpage = "";
 WebServer server(80);
 
 extern SdFat sd;
+extern uint8_t wifiType ; // can be NO_WIFI(= 0), ESP32_ACT_AS_STATION(= 1), ESP32_ACT_AS_AP(= 2)
+char wifiPassword[65] ;
+char wifiSsid[65] ;
+extern Preferences preferences ; // used to save the WIFi parameters  
 
- 
 File root ; // used for Directory 
 
-
 void initWifi() {
-#if defined ( ESP32_ACT_AS_STATION )
-  blankTft("Connecting to Wifi access point", 5 , 20 ) ; // blank screen and display a text at x, y
-  WiFi.begin(MY_SSID , MY_PASSWORD);
-  uint8_t initWifiCnt = 40 ;   // maximum 40 retries for connecting to wifi
-  while (WiFi.status() != WL_CONNECTED)  { // Wait for the Wi-Fi to connect; max 40 retries
-    delay(250); // Serial.print('.');
-    printTft("X") ;
-    initWifiCnt--;
-    if ( initWifiCnt == 0) {
-      fillMsg(__WIFI_NOT_FOUND  );
-      break;
-    }
-  }
-  //Serial.println("\nConnected to "+WiFi.SSID()+" Use IP address: "+WiFi.localIP().toString()); // Report which SSID and IP is in use
-#elif defined (ESP32_ACT_AS_AP)
-  WiFi.softAP( MY_SSID , MY_PASSWORD);
-  //Serial.println("\nESP has IP address: "+ WiFi.softAPIP().toString()); // Report which SSID and IP is in use
-#endif  
+  retrieveWifiParam();
+  if (wifiType == NO_WIFI) {
+      return ; 
+  } else if (wifiType == ESP32_ACT_AS_STATION) {
+      blankTft("Connecting to Wifi access point", 5 , 20 ) ; // blank screen and display a text at x, y
+      WiFi.begin(MY_SSID , MY_PASSWORD);
+      uint8_t initWifiCnt = 40 ;   // maximum 40 retries for connecting to wifi
+      while (WiFi.status() != WL_CONNECTED)  { // Wait for the Wi-Fi to connect; max 40 retries
+        delay(250); // Serial.print('.');
+        printTft("X") ;
+        initWifiCnt--;
+        if ( initWifiCnt == 0) {
+          fillMsg(__WIFI_NOT_FOUND  );
+          break;
+        }
+      }
+      //Serial.println("\nConnected to "+WiFi.SSID()+" Use IP address: "+WiFi.localIP().toString()); // Report which SSID and IP is in use
+  } else if (wifiType == ESP32_ACT_AS_AP) {
+    WiFi.softAP( MY_SSID , MY_PASSWORD);
+    //Serial.println("\nESP has IP address: "+ WiFi.softAPIP().toString()); // Report which SSID and IP is in use
+  }  
   WiFi.setSleep(false);
   //----------------------------------------------------------------------   
   ///////////////////////////// Server Commands 
@@ -65,6 +72,114 @@ void initWifi() {
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void retrieveWifiParam(void){  // get the wifi parameters (type, SSID, password)
+              // parameters are stored in preferences
+              // when a file named wifi.cfg exist on SD card, those parameters are used and saved in preferences
+              // else if parameters exist in preferences, we use them
+              // else use those from config (not saved)
+    char myPassword[] = MY_PASSWORD ;
+    char mySsid[] = MY_SSID ;
+    if ( checkWifiOnSD() ) {   // true when SD contains valid parameters
+      // save parameters in preferences
+      preferences.putChar("WIFI", wifiType ) ;
+      preferences.putString("PASSWORD", wifiPassword ) ;
+      preferences.putString("SSID", wifiSsid ) ;
+      preferences.putChar("wifiDef", 1); // 1 is used to say that a set of wifi preferences is saved
+      //Serial.println("using SD param") ;
+    } else if ( preferences.getChar("wifiDef", 0) ) {  // return 0 when no set is defined and 1 when wifi is defined in preferences
+      // search in preferences
+      wifiType = preferences.getChar("WIFI", NO_WIFI  ) ; // if key does not exist return NO_WIFI
+      preferences.getString("PASSWORD" , wifiPassword , sizeof(wifiPassword)  ) ;
+      preferences.getString("SSID", wifiSsid , sizeof(wifiSsid) ) ;
+      //Serial.println("using preference param") ;
+    } else {
+      // use those from config.h
+      wifiType = WIFI ;
+      strcpy(wifiPassword, myPassword) ;
+      strcpy(wifiSsid, mySsid) ;
+      //Serial.println("using firmware param") ;
+    }
+    //Serial.print("wifiType=") ; Serial.println(wifiType) ;
+    //Serial.print("wifiPassword=") ; Serial.println(wifiPassword) ;
+    //Serial.print("wifiSsid=") ; Serial.println(wifiSsid) ;
+}
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// retieve wifi parameters from SD card in a file wifi.cfg
+// return true if correct parameters are found
+boolean checkWifiOnSD(void){
+      // return true if a valid file wifi.cfg exist on the SD card; if so we use those values
+      SdBaseFile wifiFile ;
+      char line[100] ;  //buffer to get a line from SD
+      bool wifiTypeOk = false;
+      bool wifiPasswordOk = false;
+      bool wifiSsidOk = false;  
+      uint8_t n; // number of bytes in a line
+      char * pBeginValue ;
+      char * pEndValue ;
+      uint8_t sizeValue ;
+      char wifiTypeString[30] ;        
+      if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
+          //Serial.println( __CARD_MOUNT_FAILED  ) ;
+          return false;       
+      }
+      //if ( ! SD.exists( "/" ) ) { // check if root exist
+      if ( ! sd.exists( "/" ) ) { // check if root exist   
+          //Serial.println( __ROOT_NOT_FOUND  ) ;
+          return false;  
+      }
+      if ( ! sd.chdir( "/" ) ) {
+          //Serial.println( __CHDIR_ERROR  ) ;
+          return false;  
+      }
+      if ( ! wifiFile.open("/wifi.cfg" ) ) { // try to open wifi.cfg 
+          //Serial.println("failed to open calibrate.txt" ) ;
+          return false;  
+      }
+      //Serial.println("wifi.cfg exist on SD" ) ;
+      //Serial.print("sizeof line=") ; Serial.println(sizeof(line));      
+      // read the file line by line
+      while ( (n = wifiFile.fgets(line, sizeof(line)-2)) > 0) {
+        //Serial.print("line=");  Serial.println(line) ;
+        line[n+1] = 0;  // add a end of string code in order to use strrchr
+        pBeginValue = strchr(line,'"'); //search first "
+        pEndValue = strrchr(line,'"'); //search last "
+        if ( (pBeginValue !=NULL) && ( pEndValue != NULL) ) {
+          if ( pEndValue > pBeginValue) {
+            *pEndValue = 0 ;
+            sizeValue = pEndValue - pBeginValue -1;  // number of char between the ""
+            if ( memcmp ( "WIFI=", line, sizeof("WIFI=")-1) == 0){
+              wifiTypeOk = true;
+              memcpy(wifiTypeString , pBeginValue+1 , sizeValue) ;
+              if (memcmp ( "NO_WIFI", wifiTypeString ,sizeof("NO_WIFI")-1  )== 0) {
+                wifiType = NO_WIFI ; 
+              } else if (memcmp ( "ESP32_ACT_AS_STATION", wifiTypeString ,sizeof("ESP32_ACT_AS_STATION")-1  )== 0) {
+                wifiType = ESP32_ACT_AS_STATION ; 
+              } else if (memcmp ( "ESP32_ACT_AS_AP", wifiTypeString ,sizeof("ESP32_ACT_AS_AP")-1  )== 0) {
+                wifiType = ESP32_ACT_AS_AP ; 
+              } else {
+                wifiTypeOk = false;
+              }
+            } else if ( memcmp ( "PASSWORD=", line, sizeof("PASSWORD=")-1) == 0){
+              memcpy(wifiPassword , pBeginValue+1 , sizeValue) ; 
+              wifiPasswordOk = true;
+            } else if ( memcmp ( "SSID=", line, sizeof("SSID=")-1) == 0){
+              memcpy(wifiSsid , pBeginValue+1 , sizeValue) ;
+              wifiSsidOk = true ;
+            }  
+          }
+        }
+      }
+      wifiFile.close() ;
+      if ( wifiTypeOk && wifiPasswordOk && wifiSsidOk) {
+        return true ;
+      } else {
+        return false ;
+      }  
+}
+
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void P( char * text) {    // used to debug; print a text and a new line
   Serial.println(text);
 }
@@ -75,18 +190,18 @@ void processWifi(void){
 }
 
 boolean getWifiIp( char * ipBuf ) {          // return true if wifi status = connected
-#if defined ( ESP32_ACT_AS_STATION ) 
-  if (WiFi.status() == WL_CONNECTED ) {
-    strcpy( ipBuf , WiFi.localIP().toString().c_str() ) ;
+  if (wifiType == ESP32_ACT_AS_STATION ) {
+    if (WiFi.status() == WL_CONNECTED ) {
+      strcpy( ipBuf , WiFi.localIP().toString().c_str() ) ;
+      return true ;
+    } else {
+      ipBuf[0] = 0 ;
+      return false ;   
+    }
+  } else if (wifiType == ESP32_ACT_AS_AP ) {
+    strcpy( ipBuf , WiFi.softAPIP().toString().c_str() ) ;
     return true ;
-  } else {
-    ipBuf[0] = 0 ;
-    return false ;   
-  }
-#elif defined ( ESP32_ACT_AS_AP )
-  strcpy( ipBuf , WiFi.softAPIP().toString().c_str() ) ;
-  return true ;
-#endif   
+  }   
 }
 
 // All supporting functions from here...
