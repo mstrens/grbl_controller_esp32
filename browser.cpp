@@ -37,7 +37,7 @@ void initWifi() {
       return ; 
   } else if (wifiType == ESP32_ACT_AS_STATION) {
       blankTft("Connecting to Wifi access point", 5 , 20 ) ; // blank screen and display a text at x, y
-      WiFi.begin(MY_SSID , MY_PASSWORD);
+      WiFi.begin(wifiSsid , wifiPassword);
       uint8_t initWifiCnt = 40 ;   // maximum 40 retries for connecting to wifi
       while (WiFi.status() != WL_CONNECTED)  { // Wait for the Wi-Fi to connect; max 40 retries
         delay(250); // Serial.print('.');
@@ -50,7 +50,7 @@ void initWifi() {
       }
       //Serial.println("\nConnected to "+WiFi.SSID()+" Use IP address: "+WiFi.localIP().toString()); // Report which SSID and IP is in use
   } else if (wifiType == ESP32_ACT_AS_AP) {
-    WiFi.softAP( MY_SSID , MY_PASSWORD);
+    WiFi.softAP( wifiSsid , wifiPassword );
     //Serial.println("\nESP has IP address: "+ WiFi.softAPIP().toString()); // Report which SSID and IP is in use
   }  
   WiFi.setSleep(false);
@@ -99,9 +99,9 @@ void retrieveWifiParam(void){  // get the wifi parameters (type, SSID, password)
       strcpy(wifiSsid, mySsid) ;
       //Serial.println("using firmware param") ;
     }
-    //Serial.print("wifiType=") ; Serial.println(wifiType) ;
-    //Serial.print("wifiPassword=") ; Serial.println(wifiPassword) ;
-    //Serial.print("wifiSsid=") ; Serial.println(wifiSsid) ;
+    Serial.print("wifiType=") ; Serial.println(wifiType) ;
+    Serial.print("wifiPassword=") ; Serial.println(wifiPassword) ;
+    Serial.print("wifiSsid=") ; Serial.println(wifiSsid) ;
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
