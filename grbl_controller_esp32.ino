@@ -138,7 +138,7 @@ uint8_t wifiType ; // can be NO_WIFI(= 0), ESP32_ACT_AS_STATION(= 1), ESP32_ACT_
 boolean statusTelnetIsConnected = false ; 
 
 /***************   Prototypes of function to avoid forward references*********************************************************************/
-//uint16_t fileCnt( void ) ;  // prototype
+//uint16_t fileCnt( level ) ;  // prototype
 void initMenuOptions( void) ;     //prototype
 //void sendGrblMove( int8_t dir , struct menustate* ms) ; 
  

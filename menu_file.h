@@ -5,7 +5,7 @@
 
 void fillFileMenu ( void ) ;
 boolean sdStart( void ) ;  // close all find, check sd card and open currentDir on root.
-uint16_t fileCnt( void ) ; // count number of file in current directory
+uint16_t fileCnt( uint8_t level ) ; // count number of files in directory specified by level
 boolean updateFilesBtn() ;    // update the buttons to be displayed; return false in case of error
 boolean startPrintFile( ) ;   // open the file to be read, fileIdx gives the index of the fileName; return false if file can't be opened and fill a lastMessage
 void closeFileToRead(void ) ; // close fileToRead (file used to send the data)

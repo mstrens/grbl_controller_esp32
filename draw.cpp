@@ -968,8 +968,7 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
     dirLevel = -1 ;              // force a reload of sd data next time we goes to SD card menu
     fInfoBase () ;               // prepare info page (affiche les data et redétermine les boutons à afficher)
   } else {           // if SD seems OK
-    //Serial.println("fSdBase is ok") ;
-    sdFileDirCnt = fileCnt() ;     // count the number of files in working dir
+    sdFileDirCnt = fileCnt(dirLevel) ;     // count the number of files in working dir
     if (sdFileDirCnt == 0) {
       firstFileToDisplay == 0 ;
     } else if ( firstFileToDisplay == 0 ) {

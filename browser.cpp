@@ -32,6 +32,7 @@ extern Preferences preferences ; // used to save the WIFi parameters
 File root ; // used for Directory 
 
 void initWifi() {
+   
   retrieveWifiParam();
   if (wifiType == NO_WIFI) {
       return ; 

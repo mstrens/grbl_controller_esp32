@@ -463,6 +463,7 @@ void sendFromSd() {        // send next char from SD; close file at the end
           }
       } // end while
       if ( aDir[dirLevel+1].available() == 0 ) { 
+        aDir[dirLevel+1].close() ; // close the file when all bytes have been sent.
         statusPrinting = PRINTING_STOPPED  ; 
         updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
         //Serial2.print( (char) 0x18 ) ; //0x85) ;   // cancel jog (just for testing); must be removed

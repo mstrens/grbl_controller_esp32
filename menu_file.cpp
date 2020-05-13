@@ -31,6 +31,7 @@ extern uint8_t statusPrinting ;
 extern uint8_t prevPage , currentPage ;
 
 extern uint16_t sdFileDirCnt ;
+uint16_t sdFileRootCnt ; // count the nbr of files in root; used to check if SD card has been changed
 extern char fileNames[4][23] ; // 22 car per line + "\0"
 //extern char lastMsg[80] ;
 extern uint16_t fileFocus ;
@@ -69,6 +70,28 @@ boolean sdStart( void ) {  // this function is called when we enter the sd scree
                            // else, it try to check if sd card is still there and if OK, it just goes out
                            // ferme les fichiers ouverts, essaie de rouvrir et de se positionner sur le root, return false in case of issue
                            // keep currentDir open (so it can be used by other steps)
+    if (dirLevel != -1) {
+        if ( ! sd.exists( "/" ) ) { // check if root exist       // first check if root exists 
+            fillMsg( __ROOT_NOT_FOUND ) ;
+            dirLevel = -1; 
+            return false;  
+        }  
+        if ( dirLevel == 0 && ( ! aDir[0].isDir() )  ) {
+            fillMsg( __FIRST_DIR_IS_NOT_ROOT ) ;
+            dirLevel = -1; 
+            return false;  
+        }
+        if ( dirLevel > 0 && ( ! aDir[dirLevel].isDir()  ) ){
+            fillMsg(  __CURRENT_DIR_IS_NOT_A_SUB_DIR  ) ;
+            dirLevel = -1; 
+            return false;  
+        }
+        if ( sdFileRootCnt != fileCnt(0)) {  // if the number of files in root changed, the SD card has been perhaps removed and we go back to Root
+            dirLevel = -1;  // force a close all and retry
+            //Serial.println("nbr of files in root has changed") ;
+        }
+    }
+    
     if ( dirLevel == -1) { // after an error or at startup, dirLevel = -1; this means that we have to close all files and we have to try again.
        closeAllFiles() ;
       //p("begin sdstart"); 
@@ -95,46 +118,31 @@ boolean sdStart( void ) {  // this function is called when we enter the sd scree
       //p(nameTest) ;
       dirLevel = 0 ;
       firstFileToDisplay = 0 ;
+      sdFileRootCnt = fileCnt(dirLevel); // store the number of files in Root directory
       //p("end of sdStart to init" ) ;
       return true ;
     }
   // else if we already had some files opened; then we try to recover
     //Serial.println("verify that workDir is still ok") ;
-  if ( ! sd.exists( "/" ) ) { // check if root exist       // first check if root exists 
-      fillMsg( __ROOT_NOT_FOUND ) ;
-      dirLevel = -1; 
-        return false;  
-  }  
-  if ( dirLevel == 0 && ( ! aDir[0].isDir() )  ) {
-      fillMsg( __FIRST_DIR_IS_NOT_ROOT ) ;
-      dirLevel = -1; 
-        return false;  
-  }
-  if ( dirLevel > 0 && ( ! aDir[dirLevel].isDir()  ) ){
-      fillMsg(  __CURRENT_DIR_IS_NOT_A_SUB_DIR  ) ;
-      dirLevel = -1; 
-        return false;  
-  }
+  
   // here we assume that it is ok and so we can continue to use aDir[dirLevel], dirLevel and firstFileToDisplay
-  // so, we wiil (try to) update the name of the button
-  //Serial.println("aDir[dirLevel] is still ok") ;
+  // so, we wil (try to) update the name of the button
   return true ;
 }
 
-uint16_t fileCnt( void ) {
-  // Open next file in volume working directory.  
+uint16_t fileCnt( uint8_t level ) {
+  // Open next file in volume directory specified by level.  
   // Warning, openNext starts at the current position of sd.vwd() so a
   // rewind may be neccessary in your application.
   uint16_t cnt = 0;
   File file ; 
-  aDir[dirLevel].rewind()  ;
-  while ( file.openNext( &aDir[dirLevel] ) ) {
+  aDir[level].rewind()  ;
+  while ( file.openNext( &aDir[level] ) ) {
     cnt++ ;
  //   Serial.print("cnt= " ); Serial.print(cnt ); Serial.print(" , " ); Serial.println(file.name() ); 
     file.close();  
   }
   file.close();
-  //Serial.print("nbr of file in dir= " ); Serial.println(cnt );
   return cnt ;
 }
 
@@ -322,7 +330,7 @@ boolean changeDirectory() {      // change the directory when selected file is a
     fileToRead.close() ; // close current directory
     if (dirLevel > 0 ) dirLevel-- ;
     //workDir = workDirParents[dirLevel] ;
-    sdFileDirCnt = fileCnt() ;
+    sdFileDirCnt = fileCnt(dirLevel) ;
     firstFileToDisplay = 0 ; // todo restore previous value for this upper dir
     return updateFilesBtn() ;
   } else
@@ -330,7 +338,7 @@ boolean changeDirectory() {      // change the directory when selected file is a
     if (dirLevel < (DIR_LEVEL_MAX - 1) ) {  // Goes one level lower 
     //Serial.println("goes one level dir down") ;
     dirLevel++ ;
-    sdFileDirCnt = fileCnt() ;
+    sdFileDirCnt = fileCnt(dirLevel) ;
     //Serial.print("After file cnt =") ;Serial.println(sdFileDirCnt) ;
     firstFileToDisplay = 0 ; 
     return updateFilesBtn() ;
@@ -344,7 +352,7 @@ boolean sdMoveUp() {
   aDir[dirLevel + 1].close() ;
   aDir[dirLevel].close() ;
   dirLevel-- ;
-  sdFileDirCnt = fileCnt() ;
+  sdFileDirCnt = fileCnt(dirLevel) ;
   //Serial.print("After file cnt =") ;Serial.println(sdFileDirCnt) ;
     firstFileToDisplay = 0 ; 
     return updateFilesBtn() ;
