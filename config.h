@@ -3,7 +3,7 @@
 
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 
-#define ESP32_VERSION "v1.0.u"
+#define ESP32_VERSION "v1.0.v"
 
 // decide if you will use Wifi or not (and how)
 #define WIFI ESP32_ACT_AS_STATION               // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
@@ -14,6 +14,14 @@
 // for ESP32_ACT_AS_STATION , set the password to get access to your access point (router)
 // for ESP_ACT_AS_AP, set the password you want to use to protect your ESP32 ( can be empty)
 #define MY_PASSWORD "your password" // replace by your password 
+
+// if you use Wifi, you can (optional) define a fix IP address. Then you have to define 3 parameters
+// If one of next 3 parameters is "", it means that you do not want to use a fix local IP address.
+#define LOCAL_IP "192.168.1.10"   // fix IP address
+#define SUBNET "255.255.255.0"    // subnet mask of your local network
+#define GATEWAY "192.168.1.1"     // gateway that have to check the IP address
+
+
 // select your language between EN, FR, DE
 #define LANGUAGE EN
 

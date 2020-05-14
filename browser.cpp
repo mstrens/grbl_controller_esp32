@@ -27,6 +27,12 @@ extern SdFat sd;
 extern uint8_t wifiType ; // can be NO_WIFI(= 0), ESP32_ACT_AS_STATION(= 1), ESP32_ACT_AS_AP(= 2)
 char wifiPassword[65] ;
 char wifiSsid[65] ;
+IPAddress local_IP; // create IP adress with 4 values = 0; will be filled in init
+IPAddress gateway; // create IP adress with 4 values = 0; will be filled in init
+IPAddress subnet; // create IP adress with 4 values = 0; will be filled in init
+String local_IPStr = ""; // used to store the IP address values in string (for SD, preferences, config) 
+String gatewayStr = ""; // used to store the IP address values in string (for SD, preferences, config)
+String subnetStr = ""; // used to store the IP address values in string (for SD, preferences, config)
 extern Preferences preferences ; // used to save the WIFi parameters  
 
 File root ; // used for Directory 
@@ -36,7 +42,23 @@ void initWifi() {
   retrieveWifiParam();
   if (wifiType == NO_WIFI) {
       return ; 
-  } else if (wifiType == ESP32_ACT_AS_STATION) {
+  }
+  
+  if ( local_IPStr != "" && gatewayStr != "" && subnetStr != "" ){
+    local_IP.fromString(local_IPStr);
+    gateway.fromString(gatewayStr);
+    subnet.fromString(subnetStr);
+    Serial.println("Wifi config will be executed");
+    if (!WiFi.config(local_IP, gateway, subnet)) {
+      Serial.println("Fix IP address failed to configure");
+    }  
+  } else {
+    Serial.println("Wifi start without satic IP address");
+  }
+  if (wifiType == ESP32_ACT_AS_STATION) {
+      //Serial.print("local IP="); Serial.println(local_IPStr);
+      //Serial.print("gateway="); Serial.println(gatewayStr);
+      //Serial.print("subnet="); Serial.println(subnetStr);
       blankTft("Connecting to Wifi access point", 5 , 20 ) ; // blank screen and display a text at x, y
       WiFi.begin(wifiSsid , wifiPassword);
       uint8_t initWifiCnt = 40 ;   // maximum 40 retries for connecting to wifi
@@ -85,25 +107,44 @@ void retrieveWifiParam(void){  // get the wifi parameters (type, SSID, password)
       preferences.putChar("WIFI", wifiType ) ;
       preferences.putString("PASSWORD", wifiPassword ) ;
       preferences.putString("SSID", wifiSsid ) ;
+      preferences.putString("LOCAL_IP", local_IPStr ) ;
+      preferences.putString("GATEWAY", gatewayStr ) ;
+      preferences.putString("SUBNET", subnetStr ) ;
       preferences.putChar("wifiDef", 1); // 1 is used to say that a set of wifi preferences is saved
-      //Serial.println("using SD param") ;
+      Serial.println("using SD param for Wifi") ;
     } else if ( preferences.getChar("wifiDef", 0) ) {  // return 0 when no set is defined and 1 when wifi is defined in preferences
       // search in preferences
       wifiType = preferences.getChar("WIFI", NO_WIFI  ) ; // if key does not exist return NO_WIFI
       preferences.getString("PASSWORD" , wifiPassword , sizeof(wifiPassword)  ) ;
       preferences.getString("SSID", wifiSsid , sizeof(wifiSsid) ) ;
-      //Serial.println("using preference param") ;
+      local_IPStr = preferences.getString("LOCAL_IP" , "") ; // return a string if found, otherwise the null string
+      gatewayStr = preferences.getString("GATEWAY" , "") ; // return a string if found, otherwise the null string
+      subnetStr = preferences.getString("SUBNET" , "") ; // return a string if found, otherwise the null string
+      Serial.println("using preference param for WiFi") ;
     } else {
       // use those from config.h
       wifiType = WIFI ;
       strcpy(wifiPassword, myPassword) ;
       strcpy(wifiSsid, mySsid) ;
-      //Serial.println("using firmware param") ;
+      Serial.println("using config.h param for WiFi") ;
+    #ifdef LOCAL_IP
+      local_IPStr = LOCAL_IP ;
+    #endif
+    #ifdef GATEWAY
+      gatewayStr = GATEWAY ;
+    #endif
+    #ifdef SUBNET
+      subnetStr = SUBNET ;
+    #endif     
     }
-    Serial.print("wifiType=") ; Serial.println(wifiType) ;
-    Serial.print("wifiPassword=") ; Serial.println(wifiPassword) ;
-    Serial.print("wifiSsid=") ; Serial.println(wifiSsid) ;
+    //Serial.print("wifiType=") ; Serial.println(wifiType) ;
+    //Serial.print("wifiPassword=") ; Serial.println(wifiPassword) ;
+    //Serial.print("wifiSsid=") ; Serial.println(wifiSsid) ;
+    //Serial.print("local_IPStr=") ; Serial.println(local_IPStr) ;
+    //Serial.print("gatewayStr=") ; Serial.println(gatewayStr) ;
+    //Serial.print("subnetStr=") ; Serial.println(subnetStr) ;
 }
+
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // retieve wifi parameters from SD card in a file wifi.cfg
@@ -114,12 +155,18 @@ boolean checkWifiOnSD(void){
       char line[100] ;  //buffer to get a line from SD
       bool wifiTypeOk = false;
       bool wifiPasswordOk = false;
-      bool wifiSsidOk = false;  
+      bool wifiSsidOk = false;
+      bool local_IPOk = false ;
+      bool gatewayOk = false ;
+      bool subnetOk = false ;  
       uint8_t n; // number of bytes in a line
       char * pBeginValue ;
       char * pEndValue ;
       uint8_t sizeValue ;
-      char wifiTypeString[30] ;        
+      char wifiTypeString[30] ;
+      char local_IPChar[50] = {0} ;
+      char gatewayChar[50] = {0} ;
+      char subnetChar[50] = {0} ;        
       if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
           //Serial.println( __CARD_MOUNT_FAILED  ) ;
           return false;       
@@ -167,12 +214,24 @@ boolean checkWifiOnSD(void){
             } else if ( memcmp ( "SSID=", line, sizeof("SSID=")-1) == 0){
               memcpy(wifiSsid , pBeginValue+1 , sizeValue) ;
               wifiSsidOk = true ;
+            } else if ( memcmp ( "LOCAL_IP=", line, sizeof("LOCAL_IP=")-1) == 0){
+              memcpy(local_IPChar , pBeginValue+1 , sizeValue) ;
+              local_IPStr = local_IPChar ;
+              local_IPOk = true ;
+            } else if ( memcmp ( "GATEWAY=", line, sizeof("GATEWAY=")-1) == 0){
+              memcpy(gatewayChar , pBeginValue+1 , sizeValue) ;
+              gatewayStr = gatewayChar ;
+              gatewayOk = true ;
+            } else if ( memcmp ( "SUBNET=", line, sizeof("SUBNET=")-1) == 0){
+              memcpy(subnetChar , pBeginValue+1 , sizeValue) ;
+              subnetStr = subnetChar ;
+              subnetOk = true ;
             }  
           }
         }
       }
       wifiFile.close() ;
-      if ( wifiTypeOk && wifiPasswordOk && wifiSsidOk) {
+      if ( wifiTypeOk && wifiPasswordOk && wifiSsidOk ) {
         return true ;
       } else {
         return false ;
