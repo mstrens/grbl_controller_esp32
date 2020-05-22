@@ -119,7 +119,7 @@ int16_t bufferLineLength(int16_t firstCharIdx , int16_t &nCharInFile ) ;   //ret
 int16_t prevBufferLineLength( int16_t beginSearchAt ,  int16_t &nCharInFile ) ;   //return the number of char to be displayed on TFT in the previous line      
 uint8_t convertNCharToNLines ( int16_t nChar ) ; // return the number of lines needed on Tft to display one line in the show buffer
   
-void fillMsg( char * msg , uint16_t msgColor = SCREEN_ALERT_TEXT ) ;
+void fillMsg(  const char * msg , uint16_t msgColor = SCREEN_ALERT_TEXT ) ;
 
 uint8_t getButton( int16_t x, int16_t y ) ; // convert raw position into tft position
 

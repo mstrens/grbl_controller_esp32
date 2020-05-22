@@ -1461,7 +1461,7 @@ boolean checkCalibrateOnSD(void){
 
 
 
-void fillMsg( char * msg, uint16_t color) {
+void fillMsg( const char * msg, uint16_t color) {
   memccpy ( lastMsg , msg , '\0' , 79);
   lastMsgColor = color ;
   lastMsgChanged = true ;

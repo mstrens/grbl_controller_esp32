@@ -261,7 +261,8 @@ boolean getWifiIp( char * ipBuf ) {          // return true if wifi status = con
   } else if (wifiType == ESP32_ACT_AS_AP ) {
     strcpy( ipBuf , WiFi.softAPIP().toString().c_str() ) ;
     return true ;
-  }   
+  } 
+  return false ;  
 }
 
 // All supporting functions from here...
