@@ -427,10 +427,10 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
   int32_t fill = BUTTON_BACKGROUND ;
   int32_t outline = BUTTON_BORDER_NOT_PRESSED ;
   int32_t text = BUTTON_TEXT ;
-  char * pbtnLabel ; 
+  const char * pbtnLabel ; 
   boolean isFileName = false ;
-  int32_t y1 ;
-  char tempText[9] ;              // keep max 8 char + /0
+  //int32_t y1 ;
+  //char tempText[9] ;              // keep max 8 char + /0
   char * pExtensionChar;
   char * pch;
   uint8_t numbChar = 8 ; 
@@ -574,7 +574,7 @@ void updateBtnState( void) {
   static uint32_t nextMillis ;
   static uint8_t prevBt0 ; 
   uint32_t touchMillis = millis(); 
-  uint8_t bt ;
+  //uint8_t bt ;
   uint8_t bt0 = 0; // bt0 is the button nr based on the touched position (0 if not touched, or if touched is not at a valid position, otherwise 1...12)
   boolean touchPressed ;
   justPressedBtn = 0 ;
@@ -970,7 +970,7 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
   } else {           // if SD seems OK
     sdFileDirCnt = fileCnt(dirLevel) ;     // count the number of files in working dir
     if (sdFileDirCnt == 0) {
-      firstFileToDisplay == 0 ;
+      firstFileToDisplay = 0 ;
     } else if ( firstFileToDisplay == 0 ) {
         firstFileToDisplay = 1 ;
     } else if ( (firstFileToDisplay + 4) > sdFileDirCnt ) {
@@ -1157,7 +1157,7 @@ void drawDataOnLogPage() {
   uint8_t line = 2 ;
   uint8_t col = 0 ;
   uint8_t count = N_LOG_LINE_MAX ;
-  int16_t nCar = 0 ;
+  //int16_t nCar = 0 ;
   while (count ) {
     printOneLogLine(col , line );
     count--;
@@ -1249,7 +1249,7 @@ void drawDataOnSdShowPage() { // this function assume that sdShowBuffer contains
   tft.setTextPadding (0) ;
   
   uint16_t line = 20 ;
-  uint8_t col = 0 ;
+  //uint8_t col = 0 ;
   int16_t sdShowCurrent  = sdShowFirst ;   // next char to display (during the loop)
   int16_t nChar ; // number of char in buffer for the current line
   uint8_t nLines ; // number of lines on TFT needed to display the current line from buffer

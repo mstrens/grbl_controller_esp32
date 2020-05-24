@@ -14,7 +14,7 @@ boolean checkCalibrateOnSD();
 // créer un array de structure de bouton
 struct M_Button {
   //uint8_t  textsize ;  // To use if we want different text size.
-  char  * pLabel ;
+  const char  * pLabel ;
 };
 
 // Liste des boutons disponibles
@@ -58,7 +58,7 @@ enum { PRINTING_STOPPED = 0 , PRINTING_FROM_SD , PRINTING_ERROR , PRINTING_PAUSE
 //          array de fonction à exécuter
 //          array de paramètres à utiliser par la fonction
 struct M_Page {            // defini une page
-  char  * titel ;          // un titre à afficher en haut de la page = pointeur vers une chaine de char
+  const char  * titel ;          // un titre à afficher en haut de la page = pointeur vers une chaine de char
   void (*pfBase)(void);    // un pointeur vers une fonction pour gérer l'affichage en dehors des boutons
   uint8_t boutons[12] ;     // array de n° de bouton [12] dans l'ordre des 12 max à afficher, 0= ne pas afficher cet emplacement
   uint8_t actions[12] ;     // array de code de type d'action par bouton (action = just pressed, long pressed, just pressed or long pressed, just released)

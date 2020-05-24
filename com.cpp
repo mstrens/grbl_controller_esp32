@@ -109,7 +109,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
   static uint8_t c;
   static uint8_t lastC = 0 ;
   static uint32_t millisLastGetGBL = 0 ;
-  uint8_t i = 0 ;
+  //uint8_t i = 0 ;
   static int cntOk = 0 ;
   while (Serial2.available() ) {
 #ifdef DEBUG_TO_PC
@@ -686,7 +686,7 @@ boolean sendJogCmd(uint32_t startTime) {
         return true ; // true means that cmd has been sent
 }
 
-char * errorArrayMsg[] = { __UNKNOWN_ERROR  , 
+const char * errorArrayMsg[] = { __UNKNOWN_ERROR  , 
               __EXPECTED_CMD_LETTER ,
               __BAD_NUMBER_FORMAT ,
               __INVALID_$_SYSTEM_CMD ,
@@ -727,7 +727,7 @@ char * errorArrayMsg[] = { __UNKNOWN_ERROR  ,
               __TOOL_NUMBER_EXCEED_MAX 
 };
 
-char * alarmArrayMsg[] = { __UNKNOWN_ALARM  , 
+const char * alarmArrayMsg[] = { __UNKNOWN_ALARM  , 
               __HARD_LIMIT_REACHED ,
               __MOTION_EXCEED_CNC ,
               __RESET_IN_MOTION ,
@@ -739,7 +739,7 @@ char * alarmArrayMsg[] = { __UNKNOWN_ALARM  ,
               __LIMIT_MISSING_HOMING 
 }; 
 
-char * stringExecuteMsg[] = { __SETX_EXECUTED  ,  // messages must be defined here in the same sequence as the buttons used to call the string commands 
+const char * stringExecuteMsg[] = { __SETX_EXECUTED  ,  // messages must be defined here in the same sequence as the buttons used to call the string commands 
                               __SETY_EXECUTED  ,
                               __SETZ_EXECUTED  ,
                               __SETA_EXECUTED  ,
@@ -754,12 +754,12 @@ char * stringExecuteMsg[] = { __SETX_EXECUTED  ,  // messages must be defined he
                               
 };
 
-void fillErrorMsg( char * errorMsg ) {   // errorMsg contains "Error:xx"
+void fillErrorMsg( const char * errorMsg ) {   // errorMsg contains "Error:xx"
    int errorNum = atoi( &errorMsg[6]) ;
    if (errorNum < 1 || errorNum > 38 ) errorNum = 0 ;
    fillMsg( errorArrayMsg[errorNum]  ) ;
 }
-void fillAlarmMsg( char * alarmMsg ) {   //alarmMsg contains "ALARM:xx"
+void fillAlarmMsg( const char * alarmMsg ) {   //alarmMsg contains "ALARM:xx"
   int alarmNum = atoi( &alarmMsg[6]) ;
    if (alarmNum < 1 || alarmNum > 9 ) alarmNum = 0 ;
    fillMsg( alarmArrayMsg[alarmNum] ) ;

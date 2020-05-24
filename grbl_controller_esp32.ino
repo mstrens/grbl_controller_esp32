@@ -69,7 +69,7 @@ Sur l'écran de base, prévoir l'affichage des infos
 #include "soc/uart_reg.h"
 #include "soc/uart_struct.h"
 
-uart_dev_t * dev = (volatile uart_dev_t *)(DR_REG_UART_BASE) ;
+//uart_dev_t * dev = (volatile uart_dev_t *)(DR_REG_UART_BASE) ;
 //
 //  uart_t _uart_bus_array[3] = {
 //    {(volatile uart_dev_t *)(DR_REG_UART_BASE), 0, NULL, NULL},
@@ -192,13 +192,17 @@ void setup() {
   initWifi() ;
   telnetInit() ;
 //#endif 
-  delay(100);
+  
   while ( Serial2.available() )  Serial2.read() ; // clear input buffer which can contains messages sent by GRBL in reply to noise captured before Serial port was initialised.
-  Serial2.print(0X18) ; // send a soft reset
-  Serial2.println(" ") ;Serial2.print("$10=3");Serial2.println(" ") ;   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
+  Serial2.write(0x18) ; // send a soft reset
+  delay(100);
+  Serial2.println("$10=3");   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
   while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
   //Serial2.flush();                                                      // this is used to avoid sending to many jogging movements when using the nunchuk  
-  
+  //delay(100);
+  //while ( Serial2.available() ) {
+  //  Serial.println(Serial2.read(),HEX);
+  //}
 // to debug
 //  grblLastMessage[0]= 0x80 ;
 //  grblLastMessage[1]= 0x81 ;

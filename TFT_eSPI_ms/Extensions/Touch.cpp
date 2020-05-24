@@ -32,11 +32,12 @@ uint16_t TFT_eSPI::getTouch1Axis(uint8_t axis) {
 		dataMin = 0xFF ;
 		dataMax = 0 ;
 		dataSum = 0 ;
-		for (i ; i<4 ; i++) {
+		while (i<4) {
 			data = SPI.transfer16(axis) >> 3 ;
 			if (data > dataMin) dataMin = data ;
 			if (data < dataMax) dataMax = data ;
 			dataSum += data ;
+			i++;
 		}		
 	} while ( (dataMax - dataMin) > 30 ) ; // repeat if difference between min and max > tolerance	
 	return dataSum >> 2 ;
