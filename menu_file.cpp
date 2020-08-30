@@ -360,8 +360,7 @@ boolean sdMoveUp() {
 
 
 void closeAllFiles() {
-  uint8_t i = 0 ;
-  for (i ; i < DIR_LEVEL_MAX ; i++ ) {
+  for (uint8_t i = 0; i < DIR_LEVEL_MAX ; i++ ) {
     aDir[i].close() ;
   }
   //memset(workDirParents , 0 , sizeof(workDirParents)) ;
