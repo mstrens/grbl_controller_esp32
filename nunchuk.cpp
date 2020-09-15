@@ -179,7 +179,7 @@ void handleNunchuk (void) {
             } 
           }
           //if ( (machineStatus[0] == 'J' ) && ( ( prevMoveX != moveX) || ( prevMoveY != moveY)  || ( prevMoveZ != moveZ) ) ) { // cancel Jog if jogging and t least one direction change 
-          if ( (machineStatus[0] == 'J' || machineStatus[0] == 'I' ) && ( ( prevMoveX != moveX) || ( prevMoveY != moveY)  || ( prevMoveZ != moveZ) ) ||  ( prevMoveA != moveA) ) { // cancel Jog if jogging and at least one direction change       
+      if ( (machineStatus[0] == 'J' || machineStatus[0] == 'I' ) && ( prevMoveX != moveX || prevMoveY != moveY  || prevMoveZ != moveZ || prevMoveA != moveA) ) { // cancel Jog if jogging and at least one direction change       
             jogCancelFlag = true ; 
             cntSameMove = 0 ;             // reset the counter
             //Serial.println("cancel jog") ;
