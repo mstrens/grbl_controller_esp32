@@ -188,11 +188,10 @@ void setup() {
   updateFullPage = true ;
   // en principe les données pour les buttons sont initialisés automatiquement à 0
   //drawFullPage( ) ;
-//#if defined ( ESP32_ACT_AS_STATION ) || defined (ESP32_ACT_AS_AP)  
   initWifi() ;
-  telnetInit() ;
-//#endif 
-  
+  if ( (wifiType == ESP32_ACT_AS_STATION ) || (wifiType == ESP32_ACT_AS_AP ) ) {
+    telnetInit() ;
+  }  
   while ( Serial2.available() )  Serial2.read() ; // clear input buffer which can contains messages sent by GRBL in reply to noise captured before Serial port was initialised.
   Serial2.write(0x18) ; // send a soft reset
   delay(100);
