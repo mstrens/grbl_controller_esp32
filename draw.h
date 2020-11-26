@@ -70,8 +70,8 @@ void clearScreen() ; // clear tft screen
 void fillMPage (uint8_t _page , uint8_t _btnPos , uint8_t _boutons, uint8_t _actions , void (*_pfNext)(uint8_t) , uint8_t _parameters )  ;
 void initButtons() ;   // initialise les noms des boutons, les boutons pour chaque page.
 
-void blankTft(char * titel , uint16_t x , uint16_t y ) ; // clear tft screen
-void printTft(char * text) ;
+void blankTft(const char * titel , uint16_t x , uint16_t y ) ; // clear tft screen
+void printTft(const char * text) ;
 
 boolean convertPosToXY( uint8_t pos , int32_t *_x, int32_t *_y , uint16_t btnDef[12][4]) ;
 uint8_t convertBtnPosToBtnIdx( uint8_t page , uint8_t btn ) ;

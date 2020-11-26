@@ -9,6 +9,8 @@
 #include "cmd.h"
 #include "com.h"
 #include "log.h"
+#include "GrblStream.h"
+
 
 // create for touchscreeen
 extern TFT_eSPI tft ;
@@ -98,7 +100,7 @@ void fGoBack(uint8_t param) {
 void fHome(uint8_t param) {
   if( machineStatus[0] == 'I' || machineStatus[0] == 'A' ) {
 #define HOME_CMD "$H"
-    Serial2.println(HOME_CMD) ;  
+    grblStream->println(HOME_CMD) ;  
   } else {
     fillMsg(__INVALID_BTN_HOME ) ;
   }
@@ -107,7 +109,7 @@ void fHome(uint8_t param) {
 
 void fUnlock(uint8_t param) {
   if( machineStatus[0] == 'A') {  // if grbl is in alarm
-    Serial2.println("$X") ;    // send command to unlock
+    grblStream->println("$X") ;    // send command to unlock
     //Serial.println("$X has been sent");
   }
 // Stay on current page
@@ -115,7 +117,7 @@ void fUnlock(uint8_t param) {
 }
 
 void fReset(uint8_t param) {
-  Serial2.print( (char) SOFT_RESET) ;
+  grblStream->print( (char) SOFT_RESET) ;
   waitReleased = true ;          // discard "pressed" until a release
   fillMsg( " " );
   
@@ -125,10 +127,10 @@ void fCancel(uint8_t param) {
   if( statusPrinting == PRINTING_FROM_SD || statusPrinting == PRINTING_PAUSED  ) {
     statusPrinting = PRINTING_STOPPED ;
     closeFileToRead() ;    
-    Serial2.print( (char) SOFT_RESET) ;
+    grblStream->print( (char) SOFT_RESET) ;
   }  else if ( statusPrinting == PRINTING_STRING ) {
     statusPrinting = PRINTING_STOPPED ;
-    Serial2.print( (char) SOFT_RESET) ;
+    grblStream->print( (char) SOFT_RESET) ;
   }
   currentPage = _P_INFO ;  // go to page Info
   updateFullPage = true ;  // force a redraw even if current page does not change
@@ -138,7 +140,7 @@ void fCancel(uint8_t param) {
 void fPause(uint8_t param) {
   if( statusPrinting == PRINTING_FROM_SD  && ( machineStatus[0] == 'R' || machineStatus[0] == 'J' ) ) { // test on J added mainly for test purpose
   #define PAUSE_CMD "!" 
-    Serial2.print(PAUSE_CMD) ;
+    grblStream->print(PAUSE_CMD) ;
     statusPrinting = PRINTING_PAUSED ;
     updateFullPage = true ;  // 
   }
@@ -148,7 +150,7 @@ void fPause(uint8_t param) {
 void fResume(uint8_t param) {
   if( statusPrinting == PRINTING_PAUSED && machineStatus[0] == 'H') {
   #define RESUME_CMD "~" 
-    Serial2.print(RESUME_CMD) ;
+    grblStream->print(RESUME_CMD) ;
     resetWaitOkWhenSdMillis() ; // we reset the time we sent the last cmd otherwise, we can get a wrong warning saying that we are missing an OK (because it seems that GRBL suspends OK while in pause)
     statusPrinting = PRINTING_FROM_SD ;
     updateFullPage = true ;      // we have to redraw the buttons because Resume should become Pause
@@ -187,29 +189,29 @@ void fMove( uint8_t param ) {
         distance = 10 ;
         break ;
       }
-      Serial2.println("") ; Serial2.print("$J=G91 G21 ") ;
+      grblStream->println("") ; grblStream->print("$J=G91 G21 ") ;
        
       //switch ( justPressedBtn ) {  // we convert the position of the button into the type of button
-      //  case 7 :  Serial2.print("X")  ;  break ;
-      //  case 5 :  Serial2.print("X-") ;  break ;
-      //  case 2 :  Serial2.print("Y")  ;  break ;
-      //  case 10 :  Serial2.print("Y-") ;  break ;
-      //  case 4 :  Serial2.print("Z")  ;  break ;
-      //  case 12 :  Serial2.print("Z-") ;  break ;
+      //  case 7 :  grblStream->print("X")  ;  break ;
+      //  case 5 :  grblStream->print("X-") ;  break ;
+      //  case 2 :  grblStream->print("Y")  ;  break ;
+      //  case 10 :  grblStream->print("Y-") ;  break ;
+      //  case 4 :  grblStream->print("Z")  ;  break ;
+      //  case 12 :  grblStream->print("Z-") ;  break ;
       // }
       uint8_t typeOfMove ;
       typeOfMove = convertBtnPosToBtnIdx( currentPage , justPressedBtn ) ;
       switch ( typeOfMove ) {  // we convert the position of the button into the type of button
-        case _XP :  Serial2.print("X")  ;  break ;
-        case _XM :  Serial2.print("X-") ;  break ;
-        case _YP :  Serial2.print("Y")  ;  break ;
-        case _YM :  Serial2.print("Y-") ;  break ;
-        case _ZP :  Serial2.print("Z")  ;  break ;
-        case _ZM :  Serial2.print("Z-") ;  break ;
-        case _AP :  Serial2.print("A")  ;  break ;
-        case _AM :  Serial2.print("A-") ;  break ;
+        case _XP :  grblStream->print("X")  ;  break ;
+        case _XM :  grblStream->print("X-") ;  break ;
+        case _YP :  grblStream->print("Y")  ;  break ;
+        case _YM :  grblStream->print("Y-") ;  break ;
+        case _ZP :  grblStream->print("Z")  ;  break ;
+        case _ZM :  grblStream->print("Z-") ;  break ;
+        case _AP :  grblStream->print("A")  ;  break ;
+        case _AM :  grblStream->print("A-") ;  break ;
       }
-      Serial2.print(distance) ; Serial2.println (" F100") ;
+      grblStream->print(distance) ; grblStream->println (" F100") ;
       //Serial.print("move for button") ; Serial.print(justPressedBtn) ;Serial.print(" ") ;  Serial.print(distance) ; Serial.println (" F100") ;
       
       updatePartPage = true ;                     // force a redraw of data
@@ -305,9 +307,9 @@ void fSdFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param c
     return ;
   } else {                    // file can be printed
     waitOk = false ;
-    Serial2.print(PAUSE_CMD) ;
+    grblStream->print(PAUSE_CMD) ;
     delay(10);
-    Serial2.print("?") ;
+    grblStream->print("?") ;
     //waitOk = false ; // do not wait for OK before sending char.
     statusPrinting = PRINTING_PAUSED ; // initially it was PRINTING_FROM_SD ; // change the status, so char will be read and sent in main loop
     prevPage = currentPage ;            // go to INFO page
@@ -506,7 +508,7 @@ void fOverModify (uint8_t BtnParam) {
     grblOverwriteCode += 0x99 ;    // 0x99 is the GRBL code for 100% RPM
   //  Serial.println("We change RPM");   Serial.println(  (uint8_t) grblOverwriteCode, HEX);  // to debug
   }
-  Serial2.print( (char) grblOverwriteCode ) ;  
+  grblStream->print( (char) grblOverwriteCode ) ;  
   updatePartPage = true ;                     // force a redraw of data
   waitReleased = true ;          // discard "pressed" until a release
 }

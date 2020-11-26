@@ -68,6 +68,7 @@ Sur l'écran de base, prévoir l'affichage des infos
 #include <Preferences.h>
 #include "soc/uart_reg.h"
 #include "soc/uart_struct.h"
+#include "GrblStream.h"
 
 //uart_dev_t * dev = (volatile uart_dev_t *)(DR_REG_UART_BASE) ;
 //
@@ -144,6 +145,8 @@ void initMenuOptions( void) ;     //prototype
  
 /**************************************************************************************************/
  
+GrblStream* grblStream;
+
 void setup() {
 // initialiser le serial vers USB
 // initialiser le UART vers GRBL
@@ -193,14 +196,14 @@ void setup() {
     telnetInit() ;
   }  
   while ( Serial2.available() )  Serial2.read() ; // clear input buffer which can contains messages sent by GRBL in reply to noise captured before Serial port was initialised.
-  Serial2.write(0x18) ; // send a soft reset
+  grblStream = new SerialGrblStream(Serial2);
+  grblStream->print(0x18) ; // send a soft reset
   delay(100);
-  Serial2.println("$10=3");   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
-  while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
-  //Serial2.flush();                                                      // this is used to avoid sending to many jogging movements when using the nunchuk  
+  grblStream->println("$10=3");   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
+  grblStream->waitSent();         // wait until all chars are sent 
   //delay(100);
-  //while ( Serial2.available() ) {
-  //  Serial.println(Serial2.read(),HEX);
+  //while ( grblStream->available() ) {
+  //  Serial.println(grblStream->read(),HEX);
   //}
 // to debug
 //  grblLastMessage[0]= 0x80 ;

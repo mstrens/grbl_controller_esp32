@@ -9,15 +9,15 @@
 #define WIFI ESP32_ACT_AS_STATION              // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
 
 // If wifi is used, set the parameter to identify the access point (= the router when ESP32_ACT_AS_STATION or the ESP32 when ESP32_ACT_AS_AP)
-#define MY_SSID "bbox2-58c4"       // replace by the name of your access point (when act as station) or the name you assign to your device (when act as acces point)
+#define MY_SSID "OpenWrt-Bradley"       // replace by the name of your access point (when act as station) or the name you assign to your device (when act as acces point)
 
 // for ESP32_ACT_AS_STATION , set the password to get access to your access point (router)
 // for ESP_ACT_AS_AP, set the password you want to use to protect your ESP32 ( can be empty)
-#define MY_PASSWORD "your password" // replace by your password 
+#define MY_PASSWORD "BunderditBaby" // replace by your password 
 
 // if you use Wifi, you can (optional) define a fix IP address. Then you have to define 3 parameters
 // If one of next 3 parameters is "", it means that you do not want to use a fix local IP address.
-#define LOCAL_IP "192.168.1.10"   // fix IP address
+#define LOCAL_IP "192.168.2.222"   // fix IP address
 #define SUBNET "255.255.255.0"    // subnet mask of your local network
 #define GATEWAY "192.168.1.1"     // gateway that have to check the IP address
 

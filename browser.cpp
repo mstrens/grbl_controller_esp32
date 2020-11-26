@@ -71,10 +71,10 @@ void initWifi() {
           break;
         }
       }
-      //Serial.println("\nConnected to "+WiFi.SSID()+" Use IP address: "+WiFi.localIP().toString()); // Report which SSID and IP is in use
+      Serial.println("\nConnected to "+WiFi.SSID()+" Use IP address: "+WiFi.localIP().toString()); // Report which SSID and IP is in use
   } else if (wifiType == ESP32_ACT_AS_AP) {
     WiFi.softAP( wifiSsid , wifiPassword );
-    //Serial.println("\nESP has IP address: "+ WiFi.softAPIP().toString()); // Report which SSID and IP is in use
+    Serial.println("\nESP has IP address: "+ WiFi.softAPIP().toString()); // Report which SSID and IP is in use
   }  
   WiFi.setSleep(false);
   //----------------------------------------------------------------------   
@@ -156,9 +156,9 @@ boolean checkWifiOnSD(void){
       bool wifiTypeOk = false;
       bool wifiPasswordOk = false;
       bool wifiSsidOk = false;
-      bool local_IPOk = false ;
-      bool gatewayOk = false ;
-      bool subnetOk = false ;  
+      // bool local_IPOk = false ;
+      // bool gatewayOk = false ;
+      // bool subnetOk = false ;
       uint8_t n; // number of bytes in a line
       char * pBeginValue ;
       char * pEndValue ;
@@ -217,15 +217,15 @@ boolean checkWifiOnSD(void){
             } else if ( memcmp ( "LOCAL_IP=", line, sizeof("LOCAL_IP=")-1) == 0){
               memcpy(local_IPChar , pBeginValue+1 , sizeValue) ;
               local_IPStr = local_IPChar ;
-              local_IPOk = true ;
+              // local_IPOk = true ;
             } else if ( memcmp ( "GATEWAY=", line, sizeof("GATEWAY=")-1) == 0){
               memcpy(gatewayChar , pBeginValue+1 , sizeValue) ;
               gatewayStr = gatewayChar ;
-              gatewayOk = true ;
+              // gatewayOk = true ;
             } else if ( memcmp ( "SUBNET=", line, sizeof("SUBNET=")-1) == 0){
               memcpy(subnetChar , pBeginValue+1 , sizeValue) ;
               subnetStr = subnetChar ;
-              subnetOk = true ;
+              // subnetOk = true ;
             }  
           }
         }

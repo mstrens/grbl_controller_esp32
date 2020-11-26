@@ -650,7 +650,7 @@ void executeMainActionBtn( ) {   // find and execute main action for ONE button 
 
 
 // Basis functions
-void blankTft(char * titel, uint16_t x , uint16_t y) {    // blank screen and display one titel
+void blankTft(const char * titel, uint16_t x , uint16_t y) {    // blank screen and display one titel
   clearScreen() ;
   //tft.fillScreen( SCREEN_BACKGROUND ) ;
   // currently titel is not used so folowwing lines can be skipped; uncomment if titel would be used
@@ -666,7 +666,7 @@ void clearScreen() {
   tft.fillScreen( SCREEN_BACKGROUND ) ;
 }
 
-void printTft(char * text ) {     // print a text on screen
+void printTft(const char * text ) {     // print a text on screen
   tft.print( text ) ;
 }
 
