@@ -81,6 +81,8 @@ void updateBtnState( ) ;       // tester le touchscreen et mettre à jour les va
 void drawUpdatedBtn( ) ;       // update the color of the buttons on a page (based on currentPage, justPressedBtn , justReleasedBtn, longPressedBtn)
 void executeMainActionBtn () ; // execute the action forseen for ONE button (if any) (change currentPage, printingStatus,... but do not change the display)
 
+void drawConnectPage();        // Redraw the initial connection page
+
 void drawFullPage() ;          // redraw totally the page
 void drawPartPage() ;          // update only the data on creen (not the button)
 

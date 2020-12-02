@@ -145,7 +145,7 @@ void initMenuOptions( void) ;     //prototype
  
 /**************************************************************************************************/
  
-GrblStream* grblStream;
+GrblStream* grblStream = NULL;
 
 void setup() {
 // initialiser le serial vers USB
@@ -196,8 +196,27 @@ void setup() {
     telnetInit() ;
   }  
   while ( Serial2.available() )  Serial2.read() ; // clear input buffer which can contains messages sent by GRBL in reply to noise captured before Serial port was initialised.
+#ifdef GRBL_IP
+  String grblIP = String(GRBL_IP) + ":" + String(GRBL_PORT);
+  String msg = String(__CONNECT) + grblIP;
+  while (!grblStream) {
+    fillMsg(msg.c_str(), TFT_YELLOW);
+    drawConnectPage();
+    Serial.println(msg);
+    try {
+      grblStream = new TCPGrblStream(GRBL_IP, 23, 3000);
+      // If you send a soft reset via Telnet, the connection will drop
+    } catch (...) {
+    }
+  }
+  msg = String("Grbl @ ") + grblIP;
+  fillMsg(msg.c_str(), TFT_GREEN);
+#else
   grblStream = new SerialGrblStream(Serial2);
-  grblStream->print(0x18) ; // send a soft reset
+  grblStream->print((char)0x18) ; // send a soft reset
+  fillMsg("Grbl @ Serial2", TFT_GREEN);
+#endif
+  drawFullPage();
   delay(100);
   grblStream->println("$10=3");   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
   grblStream->waitSent();         // wait until all chars are sent 

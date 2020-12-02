@@ -71,10 +71,10 @@ void initWifi() {
           break;
         }
       }
-      Serial.println("\nConnected to "+WiFi.SSID()+" Use IP address: "+WiFi.localIP().toString()); // Report which SSID and IP is in use
+      //Serial.println("\nConnected to "+WiFi.SSID()+" Use IP address: "+WiFi.localIP().toString()); // Report which SSID and IP is in use
   } else if (wifiType == ESP32_ACT_AS_AP) {
     WiFi.softAP( wifiSsid , wifiPassword );
-    Serial.println("\nESP has IP address: "+ WiFi.softAPIP().toString()); // Report which SSID and IP is in use
+    //Serial.println("\nESP has IP address: "+ WiFi.softAPIP().toString()); // Report which SSID and IP is in use
   }  
   WiFi.setSleep(false);
   //----------------------------------------------------------------------   

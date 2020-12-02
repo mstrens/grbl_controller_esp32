@@ -11,6 +11,8 @@ public:
     virtual void waitSent() = 0;
     virtual size_t print(char c) = 0;
     virtual size_t print(const char* str) = 0;
+    size_t print(float n) { return print(String(n).c_str()); }
+    size_t print(uint32_t n) { return print(String(n).c_str()); }
     size_t println(const char* str) { size_t n = print(str); return n + print('\n'); } ;
 
     // You need a virtual destructor for 'delete' to work correctly:
@@ -30,11 +32,19 @@ SerialGrblStream(HardwareSerial serial) : _serial(serial) {}
     size_t print(const char* str) override { return _serial.print(str); }
 };
 
-class TelnetGrblStream : public GrblStream
+class TCPGrblStream : public GrblStream
 {
     WiFiClient _netconn;
 public:
-    TelnetGrblStream(WiFiClient netconn) : _netconn(netconn) {}
+    TCPGrblStream(const char *host, uint16_t port, int timeout) {
+        if (_netconn.connect(host, port, timeout) == 0) {
+            throw -2;
+        }
+        _netconn.setNoDelay(true);
+    }
+    ~TCPGrblStream() {
+        _netconn.stop();
+    };
     int available() override { return _netconn.available(); }
     char read() override { return _netconn.read(); }
     bool canSend(size_t n) override { return true; }

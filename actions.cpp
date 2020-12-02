@@ -100,7 +100,7 @@ void fGoBack(uint8_t param) {
 void fHome(uint8_t param) {
   if( machineStatus[0] == 'I' || machineStatus[0] == 'A' ) {
 #define HOME_CMD "$H"
-    grblStream->println(HOME_CMD) ;  
+    grblStream->println(HOME_CMD) ;
   } else {
     fillMsg(__INVALID_BTN_HOME ) ;
   }
@@ -508,7 +508,7 @@ void fOverModify (uint8_t BtnParam) {
     grblOverwriteCode += 0x99 ;    // 0x99 is the GRBL code for 100% RPM
   //  Serial.println("We change RPM");   Serial.println(  (uint8_t) grblOverwriteCode, HEX);  // to debug
   }
-  grblStream->print( (char) grblOverwriteCode ) ;  
+  grblStream->print( (char) grblOverwriteCode ) ;
   updatePartPage = true ;                     // force a redraw of data
   waitReleased = true ;          // discard "pressed" until a release
 }

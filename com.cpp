@@ -434,7 +434,7 @@ void sendToGrbl( void ) {
     currSendMillis = millis() ;                   // ask GRBL current status every X millis sec. GRBL replies with a message with status and position
     if ( currSendMillis > nextSendMillis) {
        nextSendMillis = currSendMillis + 300 ;
-       grblStream->print("?") ; 
+       grblStream->print("?") ;
     }
   }
   if( statusPrinting != PRINTING_FROM_TELNET ) {               // clear the telnet buffer when not in use
@@ -578,7 +578,7 @@ void sendJogCancelAndJog(void) {
     if ( jogCmdFlag ) {
       if ( jog_status == JOG_NO ) {
         //Serial.println( bufferAvailable[0] ) ;
-        if (bufferAvailable[0] > 15) {    // tests shows that GRBL gives errors when we fill to much the block buffer
+        if (bufferAvailable[0] > 14) {    // tests shows that GRBL gives errors when we fill to much the block buffer
           if ( sendJogCmd(startMoveMillis) ) { // if command has been sent
             waitOk = true ;
             jog_status = JOG_WAIT_END_CMD ;
@@ -678,7 +678,7 @@ boolean sendJogCmd(uint32_t startTime) {
         }
         //grblStream->print(" F2000");  grblStream->print( (char) 0x0A) ;
         grblStream->print(" F"); grblStream->print(speedMove); grblStream->print( (char) 0x0A) ;
-        grblStream->waitSent();                        // wait until all chars are sent 
+        grblStream->waitSent();                        // wait until all chars are sent
         
         //Serial.print("Send cmd jog " ); Serial.print(distanceMove) ; Serial.print(" " ); Serial.print(speedMove) ;Serial.print(" " ); Serial.println(millis() - startTime );
         //Serial.print(prevMoveX) ; Serial.print(" " ); Serial.print(prevMoveY) ; Serial.print(" " ); Serial.print(prevMoveZ) ;Serial.print(" ") ; Serial.println(millis()) ;
