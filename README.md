@@ -1,5 +1,16 @@
 # grbl_controller_esp32
 
+*This fork of mstrens/grbl_controller_esp32.git has been modified so
+grbl_controller_esp32 can connect to a GRBL GCode controller using a
+TCP connection instead of a hardwired serial port.  It can thus be
+used as a handheld wireless pendant for Grbl_Esp32.  To configure for
+TCP operation, define GRBL_IP and GRBL_PORT in config.h so they refer
+to the Grbl_Esp32 system.  You will also need to configure the WiFi
+settings as described below.*
+
+*In addition, if THICK_OUTLINE is defined, the highlight for pressed
+buttons is thicker and easier to see.*
+
 This Grbl controller runs on a ESP32
 
 This project allows to control a CNC running GRBL without having to use a pc.<br>
