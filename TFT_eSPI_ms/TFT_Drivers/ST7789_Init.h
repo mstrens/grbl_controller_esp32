@@ -13,7 +13,7 @@
 
   //------------------------------display and color format setting--------------------------------//
   writecommand(ST7789_MADCTL);
-  writedata(0x00);
+  //writedata(0x00);
   writedata(TFT_MAD_COLOR_ORDER);
 
   // JLX240 display datasheet
@@ -23,6 +23,7 @@
 
   writecommand(ST7789_COLMOD);
   writedata(0x55);
+  delay(10);
 
   //--------------------------------ST7789V Frame rate setting----------------------------------//
   writecommand(ST7789_PORCTRL);
@@ -92,7 +93,7 @@
   writedata(0x1b);
   writedata(0x1e);
 
-  writecommand(ST7789_INVOFF);
+  writecommand(ST7789_INVON);
 
   writecommand(ST7789_CASET);    // Column address set
   writedata(0x00);
@@ -108,11 +109,12 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-  spi_end();
+  end_tft_write();
   delay(120);
-  spi_begin();
+  begin_tft_write();
 
   writecommand(ST7789_DISPON);    //Display on
+  delay(120);
 
 #ifdef TFT_BL
   // Turn on the back-light LED

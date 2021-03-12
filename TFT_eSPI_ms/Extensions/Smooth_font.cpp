@@ -8,9 +8,32 @@
 
 /***************************************************************************************
 ** Function name:           loadFont
-** Description:             loads parameters from a new font vlw file stored in SPIFFS
+** Description:             loads parameters from a font vlw array in memory
 *************************************************************************************x*/
-void TFT_eSPI::loadFont(String fontName)
+void TFT_eSPI::loadFont(const uint8_t array[])
+{
+  if (array == nullptr) return;
+  fontPtr = (uint8_t*) array;
+  loadFont("", false);
+}
+
+#ifdef FONT_FS_AVAILABLE
+/***************************************************************************************
+** Function name:           loadFont
+** Description:             loads parameters from a font vlw file
+*************************************************************************************x*/
+void TFT_eSPI::loadFont(String fontName, fs::FS &ffs)
+{
+  fontFS = ffs;
+  loadFont(fontName, false);
+}
+#endif
+
+/***************************************************************************************
+** Function name:           loadFont
+** Description:             loads parameters from a font vlw file
+*************************************************************************************x*/
+void TFT_eSPI::loadFont(String fontName, bool flash)
 {
   /*
     The vlw font format does not appear to be documented anywhere, so some reverse
@@ -48,9 +71,6 @@ void TFT_eSPI::loadFont(String fontName)
        a zero/one terminated character string giving the font name
        last byte is 0 for non-anti-aliased and 1 for anti-aliased (smoothed)
 
-    Then the font name seen by Java when it's created
-    Then the postscript name of the font
-    Then a boolean to tell if smoothing is on or not.
 
     Glyph bitmap example is:
     // Cursor coordinate positions for this and next character are marked by 'C'
@@ -70,25 +90,40 @@ void TFT_eSPI::loadFont(String fontName)
     // |   +     x..@@@@@@@..x     |   x marks the corner pixels of the bitmap
     // |                           |
     // +---------------------------+   yAdvance is y delta for the next line, font size or (ascent + descent)
-    //                                  some fonts can overlay in y direction so may need a user adjust value
+    //                                 some fonts can overlay in y direction so may need a user adjust value
 
   */
 
-   unloadFont();
-    
-  _gFontFilename = "/" + fontName + ".vlw";
+  if (fontLoaded) unloadFont();
 
-  // Avoid a crash on the ESP32 if the file does not exist
-  if (SPIFFS.exists(_gFontFilename) == false) {
-    Serial.println("Font file " + fontName + " not found!");
-    return;
+#ifdef FONT_FS_AVAILABLE
+  if (fontName == "") fs_font = false;
+  else { fontPtr = nullptr; fs_font = true; }
+
+  if (fs_font) {
+    spiffs = flash; // true if font is in SPIFFS
+
+    if(spiffs) fontFS = SPIFFS;
+
+    // Avoid a crash on the ESP32 if the file does not exist
+    if (fontFS.exists("/" + fontName + ".vlw") == false) {
+      Serial.println("Font file " + fontName + " not found!");
+      return;
+    }
+
+    fontFile = fontFS.open( "/" + fontName + ".vlw", "r");
+
+    if(!fontFile) return;
+
+    fontFile.seek(0, fs::SeekSet);
   }
+#else
+  // Avoid unused varaible warning
+  fontName = fontName;
+  flash = flash;
+#endif
 
-  fontFile = SPIFFS.open( _gFontFilename, "r");
-
-  if(!fontFile) return;
-
-  fontFile.seek(0, fs::SeekSet);
+  gFont.gArray   = (const uint8_t*)fontPtr;
 
   gFont.gCount   = (uint16_t)readInt32(); // glyph count in file
                              readInt32(); // vlw encoder version - discard
@@ -97,7 +132,7 @@ void TFT_eSPI::loadFont(String fontName)
   gFont.ascent   = (uint16_t)readInt32(); // top of "d"
   gFont.descent  = (uint16_t)readInt32(); // bottom of "p"
 
-  // These next gFont values will be updated when the Metrics are fetched
+  // These next gFont values might be updated when the Metrics are fetched
   gFont.maxAscent  = gFont.ascent;   // Determined from metrics
   gFont.maxDescent = gFont.descent;  // Determined from metrics
   gFont.yAdvance   = gFont.ascent + gFont.descent;
@@ -106,9 +141,7 @@ void TFT_eSPI::loadFont(String fontName)
   fontLoaded = true;
 
   // Fetch the metrics for each glyph
-  loadMetrics(gFont.gCount);
-
-  //fontFile.close();
+  loadMetrics();
 }
 
 
@@ -117,41 +150,68 @@ void TFT_eSPI::loadFont(String fontName)
 ** Description:             Get the metrics for each glyph and store in RAM
 *************************************************************************************x*/
 //#define SHOW_ASCENT_DESCENT
-void TFT_eSPI::loadMetrics(uint16_t gCount)
+void TFT_eSPI::loadMetrics(void)
 {
   uint32_t headerPtr = 24;
-  uint32_t bitmapPtr = 24 + gCount * 28;
+  uint32_t bitmapPtr = headerPtr + gFont.gCount * 28;
 
-  gUnicode  = (uint16_t*)malloc( gCount * 2); // Unicode 16 bit Basic Multilingual Plane (0-FFFF)
-  gHeight   =  (uint8_t*)malloc( gCount );    // Height of glyph
-  gWidth    =  (uint8_t*)malloc( gCount );    // Width of glyph
-  gxAdvance =  (uint8_t*)malloc( gCount );    // xAdvance - to move x cursor
-  gdY       =   (int8_t*)malloc( gCount );    // offset from bitmap top edge from lowest point in any character
-  gdX       =   (int8_t*)malloc( gCount );    // offset for bitmap left edge relative to cursor X
-  gBitmap   = (uint32_t*)malloc( gCount * 4); // seek pointer to glyph bitmap in SPIFFS file
+#if defined (ESP32) && defined (CONFIG_SPIRAM_SUPPORT)
+  if ( psramFound() )
+  {
+    gUnicode  = (uint16_t*)ps_malloc( gFont.gCount * 2); // Unicode 16 bit Basic Multilingual Plane (0-FFFF)
+    gHeight   =  (uint8_t*)ps_malloc( gFont.gCount );    // Height of glyph
+    gWidth    =  (uint8_t*)ps_malloc( gFont.gCount );    // Width of glyph
+    gxAdvance =  (uint8_t*)ps_malloc( gFont.gCount );    // xAdvance - to move x cursor
+    gdY       =  (int16_t*)ps_malloc( gFont.gCount * 2); // offset from bitmap top edge from lowest point in any character
+    gdX       =   (int8_t*)ps_malloc( gFont.gCount );    // offset for bitmap left edge relative to cursor X
+    gBitmap   = (uint32_t*)ps_malloc( gFont.gCount * 4); // seek pointer to glyph bitmap in the file
+  }
+  else
+#endif
+  {
+    gUnicode  = (uint16_t*)malloc( gFont.gCount * 2); // Unicode 16 bit Basic Multilingual Plane (0-FFFF)
+    gHeight   =  (uint8_t*)malloc( gFont.gCount );    // Height of glyph
+    gWidth    =  (uint8_t*)malloc( gFont.gCount );    // Width of glyph
+    gxAdvance =  (uint8_t*)malloc( gFont.gCount );    // xAdvance - to move x cursor
+    gdY       =  (int16_t*)malloc( gFont.gCount * 2); // offset from bitmap top edge from lowest point in any character
+    gdX       =   (int8_t*)malloc( gFont.gCount );    // offset for bitmap left edge relative to cursor X
+    gBitmap   = (uint32_t*)malloc( gFont.gCount * 4); // seek pointer to glyph bitmap in the file
+  }
 
 #ifdef SHOW_ASCENT_DESCENT
   Serial.print("ascent  = "); Serial.println(gFont.ascent);
   Serial.print("descent = "); Serial.println(gFont.descent);
 #endif
 
+#ifdef FONT_FS_AVAILABLE
+  if (fs_font) fontFile.seek(headerPtr, fs::SeekSet);
+#endif
+
   uint16_t gNum = 0;
-  fontFile.seek(headerPtr, fs::SeekSet);
-  while (gNum < gCount)
+
+  while (gNum < gFont.gCount)
   {
     gUnicode[gNum]  = (uint16_t)readInt32(); // Unicode code point value
     gHeight[gNum]   =  (uint8_t)readInt32(); // Height of glyph
     gWidth[gNum]    =  (uint8_t)readInt32(); // Width of glyph
     gxAdvance[gNum] =  (uint8_t)readInt32(); // xAdvance - to move x cursor
-    gdY[gNum]       =   (int8_t)readInt32(); // y delta from baseline
+    gdY[gNum]       =  (int16_t)readInt32(); // y delta from baseline
     gdX[gNum]       =   (int8_t)readInt32(); // x delta from cursor
     readInt32(); // ignored
 
-    // Different glyph sets have different ascent values not always based on "d", so get maximum glyph ascent
+    //Serial.print("Unicode = 0x"); Serial.print(gUnicode[gNum], HEX); Serial.print(", gHeight  = "); Serial.println(gHeight[gNum]);
+    //Serial.print("Unicode = 0x"); Serial.print(gUnicode[gNum], HEX); Serial.print(", gWidth  = "); Serial.println(gWidth[gNum]);
+    //Serial.print("Unicode = 0x"); Serial.print(gUnicode[gNum], HEX); Serial.print(", gxAdvance  = "); Serial.println(gxAdvance[gNum]);
+    //Serial.print("Unicode = 0x"); Serial.print(gUnicode[gNum], HEX); Serial.print(", gdY  = "); Serial.println(gdY[gNum]);
+
+    // Different glyph sets have different ascent values not always based on "d", so we could get
+    // the maximum glyph ascent by checking all characters. BUT this method can generate bad values
+    // for non-existant glyphs, so we will reply on processing for the value and disable this code for now...
+    /*
     if (gdY[gNum] > gFont.maxAscent)
     {
-      // Avoid UTF coding values and characters that tend to give duff values
-      if (((gUnicode[gNum] > 0x20) && (gUnicode[gNum] < 0xA0) && (gUnicode[gNum] != 0x7F)) || (gUnicode[gNum] > 0xFF))
+      // Try to avoid UTF coding values and characters that tend to give duff values
+      if (((gUnicode[gNum] > 0x20) && (gUnicode[gNum] < 0x7F)) || (gUnicode[gNum] > 0xA0))
       {
         gFont.maxAscent   = gdY[gNum];
 #ifdef SHOW_ASCENT_DESCENT
@@ -159,6 +219,7 @@ void TFT_eSPI::loadMetrics(uint16_t gCount)
 #endif
       }
     }
+    */
 
     // Different glyph sets have different descent values not always based on "p", so get maximum glyph descent
     if (((int16_t)gHeight[gNum] - (int16_t)gdY[gNum]) > gFont.maxDescent)
@@ -174,8 +235,6 @@ void TFT_eSPI::loadMetrics(uint16_t gCount)
     }
 
     gBitmap[gNum] = bitmapPtr;
-
-    headerPtr += 28;
 
     bitmapPtr += gWidth[gNum] * gHeight[gNum];
 
@@ -237,120 +296,13 @@ void TFT_eSPI::unloadFont( void )
     gBitmap = NULL;
   }
 
-  if(fontFile) fontFile.close();
+  gFont.gArray = nullptr;
+
+#ifdef FONT_FS_AVAILABLE
+  if (fs_font && fontFile) fontFile.close();
+#endif
+
   fontLoaded = false;
-}
-
-
-/***************************************************************************************
-** Function name:           decodeUTF8
-** Description:             Line buffer UTF-8 decoder with fall-back to extended ASCII
-*************************************************************************************x*/
-#define DECODE_UTF8
-uint16_t TFT_eSPI::decodeUTF8(uint8_t *buf, uint16_t *index, uint16_t remaining)
-{
-  byte c = buf[(*index)++];
-  //Serial.print("Byte from string = 0x"); Serial.println(c, HEX);
-
-#ifdef DECODE_UTF8
-  // 7 bit Unicode
-  if ((c & 0x80) == 0x00) return c;
-
-  // 11 bit Unicode
-  if (((c & 0xE0) == 0xC0) && (remaining > 1))
-    return ((c & 0x1F)<<6) | (buf[(*index)++]&0x3F);
-
-  // 16 bit Unicode
-  if (((c & 0xF0) == 0xE0) && (remaining > 2))
-  {
-    c = ((c & 0x0F)<<12) | ((buf[(*index)++]&0x3F)<<6);
-    return  c | ((buf[(*index)++]&0x3F));
-  }
-
-  // 21 bit Unicode not supported so fall-back to extended ASCII
-  // if ((c & 0xF8) == 0xF0) return c;
-#endif
-
-  return c; // fall-back to extended ASCII
-}
-
-/***************************************************************************************
-** Function name:           decodeUTF8
-** Description:             Serial UTF-8 decoder with fall-back to extended ASCII
-*************************************************************************************x*/
-uint16_t TFT_eSPI::decodeUTF8(uint8_t c)
-{
-
-#ifdef DECODE_UTF8
-  if (decoderState == 0)
-  {
-    // 7 bit Unicode
-    if ((c & 0x80) == 0x00) return (uint16_t)c;
-
-    // 11 bit Unicode
-    if ((c & 0xE0) == 0xC0)
-    {
-      decoderBuffer = ((c & 0x1F)<<6);
-      decoderState = 1;
-      return 0;
-    }
-
-    // 16 bit Unicode
-    if ((c & 0xF0) == 0xE0)
-    {
-      decoderBuffer = ((c & 0x0F)<<12);
-      decoderState = 2;
-      return 0;
-    }
-    // 21 bit Unicode not supported so fall-back to extended ASCII
-    if ((c & 0xF8) == 0xF0) return (uint16_t)c;
-  }
-  else
-  {
-    if (decoderState == 2)
-    {
-      decoderBuffer |= ((c & 0x3F)<<6);
-      decoderState--;
-      return 0;
-    }
-    else
-    {
-      decoderBuffer |= (c & 0x3F);
-      decoderState = 0;
-      return decoderBuffer;
-    }
-  }
-#endif
-
-  return (uint16_t)c; // fall-back to extended ASCII
-}
-
-
-
-/***************************************************************************************
-** Function name:           alphaBlend
-** Description:             Blend foreground and background and return new colour
-*************************************************************************************x*/
-uint16_t TFT_eSPI::alphaBlend(uint8_t alpha, uint16_t fgc, uint16_t bgc)
-{
-  // For speed use fixed point maths and rounding to permit a power of 2 division
-  uint16_t fgR = ((fgc >> 10) & 0x3E) + 1;
-  uint16_t fgG = ((fgc >>  4) & 0x7E) + 1;
-  uint16_t fgB = ((fgc <<  1) & 0x3E) + 1;
-
-  uint16_t bgR = ((bgc >> 10) & 0x3E) + 1;
-  uint16_t bgG = ((bgc >>  4) & 0x7E) + 1;
-  uint16_t bgB = ((bgc <<  1) & 0x3E) + 1;
-
-  // Shift right 1 to drop rounding bit and shift right 8 to divide by 256
-  uint16_t r = (((fgR * alpha) + (bgR * (255 - alpha))) >> 9);
-  uint16_t g = (((fgG * alpha) + (bgG * (255 - alpha))) >> 9);
-  uint16_t b = (((fgB * alpha) + (bgB * (255 - alpha))) >> 9);
-
-  // Combine RGB565 colours into 16 bits
-  //return ((r&0x18) << 11) | ((g&0x30) << 5) | ((b&0x18) << 0); // 2 bit greyscale
-  //return ((r&0x1E) << 11) | ((g&0x3C) << 5) | ((b&0x1E) << 0); // 4 bit greyscale
-  return (r << 11) | (g << 5) | (b << 0);
 }
 
 
@@ -361,10 +313,23 @@ uint16_t TFT_eSPI::alphaBlend(uint8_t alpha, uint16_t fgc, uint16_t bgc)
 uint32_t TFT_eSPI::readInt32(void)
 {
   uint32_t val = 0;
-  val |= fontFile.read() << 24;
-  val |= fontFile.read() << 16;
-  val |= fontFile.read() << 8;
-  val |= fontFile.read();
+
+#ifdef FONT_FS_AVAILABLE
+  if (fs_font) {
+    val |= fontFile.read() << 24;
+    val |= fontFile.read() << 16;
+    val |= fontFile.read() << 8;
+    val |= fontFile.read();
+  }
+  else
+#endif
+  {
+    val |= pgm_read_byte(fontPtr++) << 24;
+    val |= pgm_read_byte(fontPtr++) << 16;
+    val |= pgm_read_byte(fontPtr++) << 8;
+    val |= pgm_read_byte(fontPtr++);
+  }
+
   return val;
 }
 
@@ -394,9 +359,13 @@ bool TFT_eSPI::getUnicodeIndex(uint16_t unicode, uint16_t *index)
 // Expects file to be open
 void TFT_eSPI::drawGlyph(uint16_t code)
 {
+  uint16_t fg = textcolor;
+  uint16_t bg = textbgcolor;
+
   if (code < 0x21)
   {
     if (code == 0x20) {
+      //if (fg!=bg) fillRect(cursor_x, cursor_y, gFont.spaceWidth, gFont.yAdvance, bg);
       cursor_x += gFont.spaceWidth;
       return;
     }
@@ -404,7 +373,7 @@ void TFT_eSPI::drawGlyph(uint16_t code)
     if (code == '\n') {
       cursor_x = 0;
       cursor_y += gFont.yAdvance;
-      if (cursor_y >= _height) cursor_y = 0;
+      if (textwrapY && (cursor_y >= height())) cursor_y = 0;
       return;
     }
   }
@@ -412,36 +381,65 @@ void TFT_eSPI::drawGlyph(uint16_t code)
   uint16_t gNum = 0;
   bool found = getUnicodeIndex(code, &gNum);
   
-  uint16_t fg = textcolor;
-  uint16_t bg = textbgcolor;
-
   if (found)
   {
 
-    if (textwrapX && (cursor_x + gWidth[gNum] + gdX[gNum] > _width))
+    if (textwrapX && (cursor_x + gWidth[gNum] + gdX[gNum] > width()))
     {
       cursor_y += gFont.yAdvance;
       cursor_x = 0;
     }
-    if (textwrapY && ((cursor_y + gFont.yAdvance) >= _height)) cursor_y = 0;
+    if (textwrapY && ((cursor_y + gFont.yAdvance) >= height())) cursor_y = 0;
     if (cursor_x == 0) cursor_x -= gdX[gNum];
 
-    fontFile.seek(gBitmap[gNum], fs::SeekSet); // This is taking >30ms for a significant position shift
+    uint8_t* pbuffer = nullptr;
+    const uint8_t* gPtr = (const uint8_t*) gFont.gArray;
 
-    uint8_t pbuffer[gWidth[gNum]];
-
-    int16_t xs = 0;
-    uint32_t dl = 0;
+#ifdef FONT_FS_AVAILABLE
+    if (fs_font)
+    {
+      fontFile.seek(gBitmap[gNum], fs::SeekSet); // This is taking >30ms for a significant position shift
+      pbuffer =  (uint8_t*)malloc(gWidth[gNum]);
+    }
+#endif
 
     int16_t cy = cursor_y + gFont.maxAscent - gdY[gNum];
     int16_t cx = cursor_x + gdX[gNum];
 
+    int16_t  xs = cx;
+    uint32_t dl = 0;
+    uint8_t pixel;
+
+    startWrite(); // Avoid slow ESP32 transaction overhead for every pixel
+
+    //if (fg!=bg) fillRect(cursor_x, cursor_y, gxAdvance[gNum], gFont.yAdvance, bg);
+
     for (int y = 0; y < gHeight[gNum]; y++)
     {
-      fontFile.read(pbuffer, gWidth[gNum]); //<//
+#ifdef FONT_FS_AVAILABLE
+      if (fs_font) {
+        if (spiffs)
+        {
+          fontFile.read(pbuffer, gWidth[gNum]);
+          //Serial.println("SPIFFS");
+        }
+        else
+        {
+          endWrite();    // Release SPI for SD card transaction
+          fontFile.read(pbuffer, gWidth[gNum]);
+          startWrite();  // Re-start SPI for TFT transaction
+          //Serial.println("Not SPIFFS");
+        }
+      }
+#endif
       for (int x = 0; x < gWidth[gNum]; x++)
       {
-        uint8_t pixel = pbuffer[x]; //<//
+#ifdef FONT_FS_AVAILABLE
+        if (fs_font) pixel = pbuffer[x];
+        else
+#endif
+        pixel = pgm_read_byte(gPtr + gBitmap[gNum] + x + gWidth[gNum] * y);
+
         if (pixel)
         {
           if (pixel != 0xFF)
@@ -451,6 +449,7 @@ void TFT_eSPI::drawGlyph(uint16_t code)
               else drawFastHLine( xs, y + cy, dl, fg);
               dl = 0;
             }
+            if (getColor) bg = getColor(x + cx, y + cy);
             drawPixel(x + cx, y + cy, alphaBlend(pixel, fg, bg));
           }
           else
@@ -467,7 +466,9 @@ void TFT_eSPI::drawGlyph(uint16_t code)
       if (dl) { drawFastHLine( xs, y + cy, dl, fg); dl = 0; }
     }
 
+    if (pbuffer) free(pbuffer);
     cursor_x += gxAdvance[gNum];
+    endWrite();
   }
   else
   {
@@ -475,7 +476,6 @@ void TFT_eSPI::drawGlyph(uint16_t code)
     drawRect(cursor_x, cursor_y + gFont.maxAscent - gFont.ascent, gFont.spaceWidth, gFont.ascent, fg);
     cursor_x += gFont.spaceWidth + 1;
   }
-  
 }
 
 /***************************************************************************************
@@ -485,12 +485,6 @@ void TFT_eSPI::drawGlyph(uint16_t code)
 void TFT_eSPI::showFont(uint32_t td)
 {
   if(!fontLoaded) return;
-
-  if(!fontFile)
-  {
-    fontLoaded = false;
-    return;
-  }
 
   int16_t cursorX = width(); // Force start of new page to initialise cursor
   int16_t cursorY = height();// for the first character

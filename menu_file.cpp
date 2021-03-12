@@ -50,7 +50,7 @@ extern int8_t dirLevel ;
 extern uint16_t firstFileToDisplay ;   // 0 = first file in the directory
 
 // data used to show sd file content
-File fileToShow ;   // this contains the file being sent from SD
+File32 fileToShow ;   // this contains the file being sent from SD
 extern char sdShowBuffer[1000] ; // buffer containing the data to display
 extern int16_t sdShowFirst  ;     // index in buffer of first char to display in the buffer
 extern int16_t sdShowMax ;      // index in buffer of the first char that has not been written in the buffer = Number of char written in sdShowBuffer
@@ -135,7 +135,7 @@ uint16_t fileCnt( uint8_t level ) {
   // Warning, openNext starts at the current position of sd.vwd() so a
   // rewind may be neccessary in your application.
   uint16_t cnt = 0;
-  File file ; 
+  File32 file ; 
   aDir[level].rewind()  ;
   while ( file.openNext( &aDir[level] ) ) {
     cnt++ ;
@@ -162,7 +162,7 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
   fillMPage (_P_SD , 3 , _NO_BUTTON , _NO_ACTION , fSdFilePrint , 0 ) ; 
   aDir[dirLevel].rewind();
   uint16_t cnt = 1 ;
-  File file ;
+  File32 file ;
   
   while ( ( cnt ) < firstFileToDisplay ) {
     if ( ! file.openNext( &aDir[dirLevel] ) ) {       // ouvre le prochain fichier dans le répertoire courant ; en cas d'erreur, retour à la page info avec un message d'erreur 

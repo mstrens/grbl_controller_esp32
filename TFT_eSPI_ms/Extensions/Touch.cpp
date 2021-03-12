@@ -1,3 +1,4 @@
+
 // original file
 // The following touch screen support code by maxpautsch was merged 1/10/17
 // https://github.com/maxpautsch
@@ -14,6 +15,26 @@
 // modified by ms
 
 #define DEBUG_CALIBRATION // put the calibration parameters on serial port
+
+// copied from tft_espi.cpp old version
+
+inline void TFT_eSPI::spi_begin_touch(void){
+#if defined (SPI_HAS_TRANSACTION) && defined (SUPPORT_TRANSACTIONS)
+if (locked) {locked = false; SPI.beginTransaction(SPISettings(SPI_TOUCH_FREQUENCY, MSBFIRST, SPI_MODE0));}
+#else
+SPI.setFrequency(SPI_TOUCH_FREQUENCY);
+#endif
+}
+
+inline void TFT_eSPI::spi_end_touch(void){
+#if defined (SPI_HAS_TRANSACTION) && defined (SUPPORT_TRANSACTIONS)
+if(!inTransaction) {if (!locked) {locked = true; SPI.endTransaction();}}
+#else
+SPI.setFrequency(SPI_FREQUENCY);
+#endif
+}
+
+
 
 /***************************************************************************************
 ** Function name:           getTouch1Axis

@@ -35,7 +35,7 @@ String gatewayStr = ""; // used to store the IP address values in string (for SD
 String subnetStr = ""; // used to store the IP address values in string (for SD, preferences, config)
 extern Preferences preferences ; // used to save the WIFi parameters  
 
-File root ; // used for Directory 
+File32 root ; // used for Directory 
 
 void initWifi() {
    
@@ -324,7 +324,7 @@ void DownloadFile(String filename){
   if (checkSd() ) { 
     if (sd.exists( filename.c_str() ) ) {
       //Serial.println("Open file") ;
-      File download ;
+      File32 download ;
       download = sd.open( filename.c_str() );
       if (download) {
         //Serial.println("File open successfully") ;
@@ -353,7 +353,7 @@ void File_Upload(){
   server.send(200, "text/html",webpage);
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-File UploadFile;
+File32 UploadFile;
 boolean errorWhileUploading ; 
 void handleFileUpload(){ // upload a new file to the Filing system
   if (checkSd() ) {
@@ -364,7 +364,8 @@ void handleFileUpload(){ // upload a new file to the Filing system
         String filename = uploadfile.filename;
         sd.remove(filename.c_str());                  // Remove a previous version, otherwise data is appended the file again
         UploadFile.close() ;
-        UploadFile = sd.open(filename.c_str() , MS_WRITE);  // Open the file for writing in SPIFFS (create it, if doesn't exist)
+        //UploadFile = sd.open(filename.c_str() , MS_WRITE);  // Open the file for writing in SPIFFS (create it, if doesn't exist)
+        UploadFile = sd.open(filename.c_str() , O_WRITE | O_CREAT);  // Open the file for writing (create it, if doesn't exist)
         if ( ! UploadFile ) errorWhileUploading = true ;
       }
       else if (uploadfile.status == UPLOAD_FILE_WRITE)
@@ -425,7 +426,7 @@ void sd_dir(){
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void printDirectory(const char * dirname, uint8_t levels){
-  File root1 = sd.open(dirname);
+  File32 root1 = sd.open(dirname);
   char fileName[23] ;
   //String fileNameS ;
   if(!root1){
@@ -438,7 +439,7 @@ void printDirectory(const char * dirname, uint8_t levels){
   }
   root1.rewind();
   //P("print Directory:  dirname is a directory") ;
-  File file1 ;
+  File32 file1 ;
   while(file1.openNext(&root1)){
     if (webpage.length() > 1000) {
       SendHTML_Content();
@@ -479,7 +480,7 @@ void File_Delete(){
 void SD_file_delete(String filename) { // Delete the file 
   if (checkSd() ) { 
     SendHTML_Header();  
-    File dataFile = sd.open( filename.c_str() ); //  
+    File32 dataFile = sd.open( filename.c_str() ); //  
     if (dataFile) {
       if (sd.remove( filename.c_str() )) {
         //Serial.println(F("File deleted successfully"));
