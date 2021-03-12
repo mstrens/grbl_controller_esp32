@@ -15,11 +15,6 @@
 #include "SdFat.h"
 #include <Preferences.h>
 #include "draw.h"
-#define MS_WRITE 0b00010101 // we have to define this to open file because there is a conflict between ESP32 and SdFat lib about the code to be used in open cmd
-                           // this is the value used by SdFat in version 1.1.0 for read, Write, create, at_end
-
-//#define MS_WRITE 0b1100011 // we have to define this to open file because there is a conflict between ESP32 and SdFat lib about the code to be used in open cmd
-                           // this is the value used by SdFat in version 1.0.7
 String  webpage = "";
 WebServer server(80);
 
