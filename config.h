@@ -30,12 +30,13 @@
 
 // Here some pins (GPIO) being used
 //************************************
-// pin (GPIO) for touch screen are defined in tft_espi User_Setup.h file
-//#define TS_CS_PIN  15
+// pin (GPIO) for touch screen are defined in tft_espi User_Setup.h file except Touchscreen chip select that mus be defined here
+#define TOUCH_CS_PIN  27
 
 // Note: SPI is currently hardcoded for using following pins
 // MOSI=13, MISO=12, SCK=14
 // Those are used for the display, the touch panel and the SD card reader.
+// in new version, the display should use another ESP32 SPI bus (HSPI) that uses other pins
 
 #define TFT_LED_PIN 25       // pin connected to led of lcd; pin has to be high to set led ON
 

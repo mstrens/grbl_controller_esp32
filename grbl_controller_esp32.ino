@@ -68,6 +68,7 @@ Sur l'écran de base, prévoir l'affichage des infos
 #include <Preferences.h>
 #include "soc/uart_reg.h"
 #include "soc/uart_struct.h"
+#include "touch.h"
 
 //uart_dev_t * dev = (volatile uart_dev_t *)(DR_REG_UART_BASE) ;
 //
@@ -81,7 +82,7 @@ Sur l'écran de base, prévoir l'affichage des infos
 Preferences preferences ; // object from ESP32 lib used to save/get data in flash 
 
 extern TFT_eSPI tft ;       // Invoke custom library
-
+extern TOUCH touchscreen; 
 
 
 //       tft and touchscreen variables 

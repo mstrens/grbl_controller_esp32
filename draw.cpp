@@ -9,6 +9,7 @@
 #include "browser.h"
 #include "com.h"
 #include "log.h"
+#include "touch.h"
 
 #define LABELS9_FONT &FreeSans9pt7b    // Key label font 2
 #define LABELS12_FONT &FreeSans12pt7b
@@ -22,8 +23,11 @@
 //#define NORMAL_BORDER TFT_WHITE 
 //#define SELECTED_BORDER TFT_RED 
 
-// create for touchscreeen
+// create tft and touchscreeen
 TFT_eSPI tft = TFT_eSPI();
+TOUCH touchscreen =  TOUCH();
+SPIClass spiTouch = SPIClass(VSPI);
+
 
 M_Button mButton[_MAX_BTN] ;
 M_Page mPages[_P_MAX_PAGES];
@@ -103,9 +107,9 @@ extern char grblLastMessage[STR_GRBL_BUF_MAX_SIZE] ;
 extern boolean grblLastMessageChanged;
 
 //**************** normal screen definition.
-#define B0 3
+#define But0 3 // was B0 but B0 is already defined in some ESP32 library; so rename B0 to But0
 #define E0 3+74
-#define B1 3+80
+#define But1 3+80 // was B1 but B1 is already defined in some ESP32 library; so rename B1 to But1
 #define E1 3+80+74
 #define B2 3+160
 #define E2 3+160+74
@@ -123,16 +127,16 @@ extern boolean grblLastMessageChanged;
 #define FYE3 2 + 56 + 4  + 56 + 4 + 56 + 4 + 56 
  
 
-uint16_t btnDefNormal[12][4] = {{ B0 , E0 , B0 , E0 } ,  // each line contains the Xmin, Xmax, Ymin , Ymax of one button.
-                                { B1 , E1 , B0 , E0 } ,
-                                { B2 , E2 , B0 , E0 } ,
-                                { B3 , E3 , B0 , E0 } ,
-                                { B0 , E0 , B1 , E1 } ,
-                                { B1 , E1 , B1 , E1 } ,
-                                { B2 , E2 , B1 , E1 } ,
-                                { B3 , E3 , B1 , E1 } ,
-                                { B0 , E0 , B2 , E2 } ,
-                                { B1 , E1 , B2 , E2 } ,
+uint16_t btnDefNormal[12][4] = {{ But0 , E0 , But0 , E0 } ,  // each line contains the Xmin, Xmax, Ymin , Ymax of one button.
+                                { But1 , E1 , But0 , E0 } ,
+                                { B2 , E2 , But0 , E0 } ,
+                                { B3 , E3 , But0 , E0 } ,
+                                { But0 , E0 , But1 , E1 } ,
+                                { But1 , E1 , But1 , E1 } ,
+                                { B2 , E2 , But1 , E1 } ,
+                                { B3 , E3 , But1 , E1 } ,
+                                { But0 , E0 , B2 , E2 } ,
+                                { But1 , E1 , B2 , E2 } ,
                                 { B2 , E2 , B2 , E2 } ,
                                 { B3 , E3 , B2 , E2 } } ;
 
@@ -140,10 +144,10 @@ uint16_t btnDefFiles[12][4] = {{ FXB , FXE , FYB0 , FYE0 } ,  // each line conta
                                 { FXB , FXE , FYB1 , FYE1 } ,
                                 { FXB , FXE , FYB2 , FYE2 } ,
                                 { FXB , FXE , FYB3 , FYE3 } ,
-                                { B2 , E2 , B0 , E0 } ,
-                                { B3 , E3 , B0 , E0 } ,
-                                { B2 , E2 , B1 , E1 } ,
-                                { B3 , E3 , B1 , E1 } ,
+                                { B2 , E2 , But0 , E0 } ,
+                                { B3 , E3 , But0 , E0 } ,
+                                { B2 , E2 , But1 , E1 } ,
+                                { B3 , E3 , But1 , E1 } ,
                                 { B2 , E2 , B2 , E2 } ,
                                 { B3 , E3 , B2 , E2 } ,
                                 { 0 , 0 , 0 , 0 } ,
@@ -377,6 +381,10 @@ void tftInit() {
                 //Cette fonction met les pins en mode input/output; elle envoie aussi les commandes d'initialisation
   // Set the rotation before we calibrate
   tft.setRotation(1); // normally, this is already done in tft.int() but it is not clear how is rotation set (probably 0); so it can be usefull to change it here
+  
+  
+  touchscreen.begin(SPI , TOUCH_CS_PIN ) ; // specify the SPI being used (SPI = default = VSPI) and the pin used for touchscreen Chip select 
+  
   touch_calibrate(); // call screen calibration
   //tft.printCalibration() ;  // print calibration data (print on Serial port the calibration data ; only for debug
   clearScreen();   // clear screen
@@ -580,7 +588,7 @@ void updateBtnState( void) {
   justPressedBtn = 0 ;
   justReleasedBtn = 0 ;  
   if ( touchMillis > nextMillis ) {    // s'il n'y a pas assez longtemps depuis la dernière lecture, on fait juste un reset des justPressedBtn et justReleasedBtn
-    touchPressed = tft.getTouch( &x,  &y, 600);   // read the touch screen; // later perhaps exit immediately if IrqPin is HIGH (not touched)
+    touchPressed = touchscreen.getTouch( &x,  &y, 600);   // read the touch screen; // later perhaps exit immediately if IrqPin is HIGH (not touched)
                                                 // false = key not pressed
     nextMillis = touchMillis + WAIT_TIME_BETWEEN_TOUCH ;
     if ( touchPressed)  {
@@ -588,6 +596,7 @@ void updateBtnState( void) {
         bt0 = getButton(x , y , btnDefFiles) ;  // convertit x, y en n° de bouton ; retourne 0 si en dehors de la zone des boutons; sinon retourne 1 à 12
       } else {
         bt0 = getButton(x , y , btnDefNormal) ;  // convertit x, y en n° de bouton ; retourne 0 si en dehors de la zone des boutons; sinon retourne 1 à 12
+        Serial.print("btn="); Serial.println(bt0);
       }  
 //    Serial.print("x=") ; Serial.print(x) ; Serial.print( " ," ) ; Serial.print( y) ; Serial.print( " ," ) ; Serial.println(bt0) ;
     } else {
@@ -1348,7 +1357,7 @@ void drawDataOnOverwritePage() {                                // to do : text 
 // ******************************** touch calibrate ********************************************
 //#define DEBUG_CALIBRATION
 void touch_calibrate() {
-  uint16_t calData[5];
+  uint16_t calData[5]; // contains calibration parameters 
   uint8_t calDataOK = 0;
   bool repeatCal = REPEAT_CAL;  // parameter in the config.h file (true when calibration is requested)
   if (checkCalibrateOnSD()) {
@@ -1395,7 +1404,7 @@ void touch_calibrate() {
     #ifdef DEBUG_CALIBRATION
     Serial.println("Use calData");
     #endif
-    tft.setTouch(calData);
+    touchscreen.setTouch(calData);
   } else {
     // data not valid so recalibrate
     #ifdef DEBUG_CALIBRATION
@@ -1415,7 +1424,7 @@ void touch_calibrate() {
       tft.println(__SET_REPEAT_CAL );
     }
 
-    tft.calibrateTouch(calData, SCREEN_ALERT_TEXT, SCREEN_BACKGROUND , 15);  
+    perform_calibration(calData, SCREEN_ALERT_TEXT, SCREEN_BACKGROUND , 15 , TFT_HEIGHT, TFT_WIDTH);  // we invert height and width because we use rotation 1 (= landscape) 
     //tft.getTouchCalibration(calData , 15) ; // added by ms for touch_ms_V1 instead of previous
     //tft.setTouch(calData);  // added by ms ; not needed with original because data are already loaded with original version
     tft.setTextColor(SCREEN_NORMAL_TEXT , SCREEN_BACKGROUND );
@@ -1432,6 +1441,122 @@ void touch_calibrate() {
     }
   }
 }
+
+/***************************************************************************************
+** Function name:           calibrateTouch
+** Description:             generates calibration parameters for touchscreen. 
+***************************************************************************************/
+void perform_calibration(uint16_t *parameters, uint32_t color_fg, uint32_t color_bg, uint8_t size, int16_t _width, int16_t _height){
+  int16_t values[] = {0,0,0,0,0,0,0,0};
+  uint16_t x_tmp, y_tmp , z_tmp ;
+  uint16_t touchCalibration_x0 ;
+  uint16_t touchCalibration_x1 ;
+  uint16_t touchCalibration_y0 ;
+  uint16_t touchCalibration_y1;
+  uint8_t  touchCalibration_rotate;
+  uint8_t  touchCalibration_invert_x;
+  uint8_t  touchCalibration_invert_y;
+  
+  for(uint8_t i = 0; i<4; i++){
+    tft.fillRect(0, 0, size+1, size+1, color_bg);
+    tft.fillRect(0, _height-size-1, size+1, size+1, color_bg);
+    tft.fillRect(_width-size-1, 0, size+1, size+1, color_bg);
+    tft.fillRect(_width-size-1, _height-size-1, size+1, size+1, color_bg);
+
+    if (i == 5) break; // used to clear the arrows
+    
+    switch (i) {
+      case 0: // up left
+        tft.drawLine(0, 0, 0, size, color_fg);
+        tft.drawLine(0, 0, size, 0, color_fg);
+        tft.drawLine(0, 0, size , size, color_fg);
+        break;
+      case 1: // bot left
+        tft.drawLine(0, _height-size-1, 0, _height-1, color_fg);
+        tft.drawLine(0, _height-1, size, _height-1, color_fg);
+        tft.drawLine(size, _height-size-1, 0, _height-1 , color_fg);
+        break;
+      case 2: // up right
+        tft.drawLine(_width-size-1, 0, _width-1, 0, color_fg);
+        tft.drawLine(_width-size-1, size, _width-1, 0, color_fg);
+        tft.drawLine(_width-1, size, _width-1, 0, color_fg);
+        break;
+      case 3: // bot right
+        tft.drawLine(_width-size-1, _height-size-1, _width-1, _height-1, color_fg);
+        tft.drawLine(_width-1, _height-1-size, _width-1, _height-1, color_fg);
+        tft.drawLine(_width-1-size, _height-1, _width-1, _height-1, color_fg);
+        break;
+      }
+
+    // user has to get the chance to release
+    if(i>0) delay(1000);
+    while (touchscreen.getTouchRaw( &x_tmp, &y_tmp, &z_tmp )) ;  // wait that touch has been released
+    for(uint8_t j= 0; j<8; j++){
+      while ( !touchscreen.getTouchRaw( &x_tmp, &y_tmp, &z_tmp )) ;
+      // Serial.print("cal x y for corner = ") ; Serial.print(i) ; Serial.print(" , ") ; Serial.print(x_tmp) ; Serial.print(" , ") ; Serial.println(y_tmp) ;  Serial.print(" , ") ; Serial.println(z_tmp) ;
+      values[i*2  ] += x_tmp;
+      values[i*2+1] += y_tmp;
+    } // end for (8X)
+    values[i*2  ] /= 8;
+    values[i*2+1] /= 8;
+  } // end for (4X) 
+
+
+  // from case 0 to case 1, the y value changed. 
+  // If the measured delta of the touch x axis is bigger than the delta of the y axis, the touch and TFT axes are switched.
+  touchCalibration_rotate = false;
+  if(abs(values[0]-values[2]) > abs(values[1]-values[3])){
+    touchCalibration_rotate = true;
+    touchCalibration_x0 = (values[1] + values[3])/2; // calc min x
+    touchCalibration_x1 = (values[5] + values[7])/2; // calc max x
+    touchCalibration_y0 = (values[0] + values[4])/2; // calc min y
+    touchCalibration_y1 = (values[2] + values[6])/2; // calc max y
+  } else {
+    touchCalibration_x0 = (values[0] + values[2])/2; // calc min x
+    touchCalibration_x1 = (values[4] + values[6])/2; // calc max x
+    touchCalibration_y0 = (values[1] + values[5])/2; // calc min y
+    touchCalibration_y1 = (values[3] + values[7])/2; // calc max y
+  }
+
+  // in addition, the touch screen axis could be in the opposite direction of the TFT axis
+  touchCalibration_invert_x = false;
+  if(touchCalibration_x0 > touchCalibration_x1){
+    values[0]=touchCalibration_x0;
+    touchCalibration_x0 = touchCalibration_x1;
+    touchCalibration_x1 = values[0];
+    touchCalibration_invert_x = true;
+  }
+  touchCalibration_invert_y = false;
+  if(touchCalibration_y0 > touchCalibration_y1){
+    values[0]=touchCalibration_y0;
+    touchCalibration_y0 = touchCalibration_y1;
+    touchCalibration_y1 = values[0];
+    touchCalibration_invert_y = true;
+  }
+
+  // pre calculate
+  touchCalibration_x1 -= touchCalibration_x0;
+  touchCalibration_y1 -= touchCalibration_y0;
+
+  if(touchCalibration_x0 == 0) touchCalibration_x0 = 1;
+  if(touchCalibration_x1 == 0) touchCalibration_x1 = 1;
+  if(touchCalibration_y0 == 0) touchCalibration_y0 = 1;
+  if(touchCalibration_y1 == 0) touchCalibration_y1 = 1;
+
+  // export parameters, if pointer valid
+  if(parameters != NULL){
+    parameters[0] = touchCalibration_x0;
+    parameters[1] = touchCalibration_x1;
+    parameters[2] = touchCalibration_y0;
+    parameters[3] = touchCalibration_y1;
+    parameters[4] = touchCalibration_rotate | (touchCalibration_invert_x <<1) | (touchCalibration_invert_y <<2);
+    touchscreen.setTouch(parameters) ; // save parameters in the touchscreen class.
+  }
+#ifdef DEBUG_CALIBRATION
+  Serial.println(  " =>  end of calibration lib" ) ;
+#endif  
+}
+
 
 boolean checkCalibrateOnSD(void){
       // return true if a file calibrate.txt exist on the SD card; if so it means that new calibration is requested
