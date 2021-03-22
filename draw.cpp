@@ -103,6 +103,14 @@ extern char grblLastMessage[STR_GRBL_BUF_MAX_SIZE] ;
 extern boolean grblLastMessageChanged;
 
 //**************** normal screen definition.
+// B0 and B1 can be defined via Arduino.h
+#ifdef B0
+    #undef B0
+#endif
+#ifdef B1
+    #undef B1
+#endif
+
 #define B0 3
 #define E0 3+74
 #define B1 3+80
@@ -548,6 +556,19 @@ void mButtonBorder(uint8_t pos , uint16_t outline) {  // draw the border of a bu
   }
   uint8_t r = min(_w, _h) / 4; // Corner radius
   tft.drawRoundRect( _xl, _yl , _w, _h, r, outline);
+#ifdef THICK_OUTLINE
+  // Draw an extra-thick border so the pressed state can be seen
+  // more easily for people with fat fingers.  In pressed state,
+  // we draw the extra border in the special color, reverting to
+  // the background color when not pressed.
+  if (outline == BUTTON_BORDER_NOT_PRESSED) {
+      outline = SCREEN_BACKGROUND;
+  }
+  tft.drawRoundRect(_xl - 1, _yl - 1, _w + 2, _h + 2, r + 1, outline);
+  tft.drawRoundRect(_xl - 2, _yl - 2, _w + 4, _h + 4, r + 2, outline);
+  tft.drawRoundRect(_xl - 3, _yl - 3, _w + 6, _h + 6, r + 3, outline);
+  tft.drawRoundRect(_xl - 4, _yl - 4, _w + 8, _h + 8, r + 4, outline);
+#endif
 }
  
 uint8_t getButton( int16_t x, int16_t y  , uint16_t btnDef[12][4]) {    // convert x y into a button if possible
@@ -650,7 +671,7 @@ void executeMainActionBtn( ) {   // find and execute main action for ONE button 
 
 
 // Basis functions
-void blankTft(char * titel, uint16_t x , uint16_t y) {    // blank screen and display one titel
+void blankTft(const char * titel, uint16_t x , uint16_t y) {    // blank screen and display one titel
   clearScreen() ;
   //tft.fillScreen( SCREEN_BACKGROUND ) ;
   // currently titel is not used so folowwing lines can be skipped; uncomment if titel would be used
@@ -666,7 +687,7 @@ void clearScreen() {
   tft.fillScreen( SCREEN_BACKGROUND ) ;
 }
 
-void printTft(char * text ) {     // print a text on screen
+void printTft(const char * text ) {     // print a text on screen
   tft.print( text ) ;
 }
 
@@ -755,6 +776,19 @@ void updateButtonsInfoPage (void) { // met à jour le set up de la page en fonct
   }
 }
 
+
+void drawConnectPage() {
+  if ( statusPrintingPrev != statusPrinting ) {
+    tft.setFreeFont (LABELS12_FONT) ;
+    tft.setTextSize(1) ;           // char is 2 X magnified =>
+    tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when only 1 parameter, background = fond);
+    tft.setTextDatum( TL_DATUM ) ; // align Left
+    tft.setTextPadding (200) ;
+    tft.drawString ( &printingStatusText[statusPrinting][0] , 5 , 0 )  ;
+    statusPrintingPrev = statusPrinting ;
+  }
+  drawLastMsg() ;
+}
 
 void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
 //            USB<-->Grbl                  Idle                (or Run, Alarm, ... grbl status)  

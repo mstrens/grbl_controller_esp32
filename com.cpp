@@ -10,6 +10,7 @@
 #include "cmd.h"
 #include "log.h"
 #include <Preferences.h>
+#include "GrblStream.h"
 
 // GRBL status are : Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep
 // a message should look like (note : GRBL sent or WPOS or MPos depending on grbl parameter : to get WPos, we have to set "$10=0"
@@ -111,11 +112,11 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
   static uint32_t millisLastGetGBL = 0 ;
   //uint8_t i = 0 ;
   static int cntOk = 0 ;
-  while (Serial2.available() ) {
+  while (grblStream->available() ) {
 #ifdef DEBUG_TO_PC
     //Serial.print(F("s=")); Serial.print( getGrblPosState ); Serial.println() ;
 #endif    
-    c=Serial2.read() ;
+    c=grblStream->read() ;
 //#define DEBUG_RECEIVED_CHAR
 #ifdef DEBUG_RECEIVED_CHAR      
       Serial.print( (char) c) ;
@@ -285,7 +286,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
     millisLastGetGBL = millis() ;
     newGrblStatusReceived = true ;                            // force a redraw if on info screen
     
-    //Serial2.println( (char) 0x18) ;                             // force a soft reset of grbl
+    //grblStream->print( (char) 0x18) ;                             // force a soft reset of grbl
     
   }
 }
@@ -409,13 +410,13 @@ void sendToGrbl( void ) {
           case PRINTING_FROM_USB :
             while ( Serial.available() && statusPrinting == PRINTING_FROM_USB ) {
               sdChar = Serial.read() ;
-              Serial2.print( (char) sdChar ) ;
+              grblStream->print( (char) sdChar ) ;
             } // end while 
             break ;
           case PRINTING_FROM_TELNET :
             while ( telnetClient.available() && statusPrinting == PRINTING_FROM_TELNET ) {
               sdChar = telnetClient.read() ;
-              Serial2.print( (char) sdChar ) ;
+              grblStream->print( (char) sdChar ) ;
             } // end while       
             break ;
           case PRINTING_CMD :
@@ -433,7 +434,7 @@ void sendToGrbl( void ) {
     currSendMillis = millis() ;                   // ask GRBL current status every X millis sec. GRBL replies with a message with status and position
     if ( currSendMillis > nextSendMillis) {
        nextSendMillis = currSendMillis + 300 ;
-       Serial2.print("?") ; 
+       grblStream->print("?") ;
     }
   }
   if( statusPrinting != PRINTING_FROM_TELNET ) {               // clear the telnet buffer when not in use
@@ -446,7 +447,7 @@ void sendToGrbl( void ) {
 void sendFromSd() {        // send next char from SD; close file at the end
       int sdChar ;
       waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // set time out on 
-      while ( aDir[dirLevel+1].available() > 0 && (! waitOk) && statusPrinting == PRINTING_FROM_SD && Serial2.availableForWrite() > 2 ) {
+      while ( aDir[dirLevel+1].available() > 0 && (! waitOk) && statusPrinting == PRINTING_FROM_SD && grblStream->canSend(2) ) {
           sdChar = aDir[dirLevel+1].read() ;
           if ( sdChar < 0 ) {
             statusPrinting = PRINTING_ERROR  ;
@@ -455,7 +456,7 @@ void sendFromSd() {        // send next char from SD; close file at the end
             sdNumberOfCharSent++ ;
             if( sdChar != 13 && sdChar != ' ' ){             // 13 = carriage return; do not send the space.
                                                              // to do : skip the comments
-              Serial2.print( (char) sdChar ) ;
+              grblStream->print( (char) sdChar ) ;
             }
             if ( sdChar == '\n' ) {        // n= new line = line feed = 10 decimal
                waitOk = true ;
@@ -466,18 +467,18 @@ void sendFromSd() {        // send next char from SD; close file at the end
         aDir[dirLevel+1].close() ; // close the file when all bytes have been sent.
         statusPrinting = PRINTING_STOPPED  ; 
         updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
-        //Serial2.print( (char) 0x18 ) ; //0x85) ;   // cancel jog (just for testing); must be removed
-        Serial2.print( (char) 10 ) ; // sent a new line to be sure that Grbl handle last line.
+        //grblStream->print( (char) 0x18 ) ; //0x85) ;   // cancel jog (just for testing); must be removed
+        grblStream->print( (char) 10 ) ; // sent a new line to be sure that Grbl handle last line.
       }
 } 
 
 void sendFromCmd() {
     int sdChar ;
     waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // set time out on 
-    while ( spiffsAvailableCmdFile() > 0 && (! waitOk) && statusPrinting == PRINTING_CMD && Serial2.availableForWrite() > 2 ) {
+    while ( spiffsAvailableCmdFile() > 0 && (! waitOk) && statusPrinting == PRINTING_CMD && grblStream->canSend(2) ) {
       sdChar = (int) spiffsReadCmdFile() ;
       if( sdChar != 13){
-          Serial2.print( (char) sdChar ) ;
+          grblStream->print( (char) sdChar ) ;
         }
       if ( sdChar == '\n' ) {
            waitOk = true ;
@@ -486,7 +487,7 @@ void sendFromCmd() {
     if ( spiffsAvailableCmdFile() == 0 ) { 
       statusPrinting = PRINTING_STOPPED  ; 
       updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
-      Serial2.print( (char) 0x0A ) ; // sent a new line to be sure that Grbl handle last line.
+      grblStream->print( (char) 0x0A ) ; // sent a new line to be sure that Grbl handle last line.
     }      
 }
 
@@ -506,28 +507,28 @@ void sendFromString(){
             break;
          case 'X' : // Put the G30 X offset
             //Serial.print("G30SavedX"); Serial.println(G30SavedX);
-            Serial2.print(G30SavedX) ;
+            grblStream->print(G30SavedX) ;
             break;
          case 'Y' : // Put the G30 Y offset
-            Serial2.print(G30SavedY) ;
+            grblStream->print(G30SavedY) ;
             break;
          case 'Z' : // Put some char in the flow
             savedWposXYZA[2] = preferences.getFloat("wposZ" , 0 ) ; // if wposZ does not exist in preferences, the function returns 0
             char floatToString[20] ;
             gcvt(savedWposXYZA[2], 3, floatToString); // convert float to string
-            Serial2.print(floatToString) ;
+            grblStream->print(floatToString) ;
             ///Serial.print( "wpos Z is retrieved with value = ") ; Serial.println( floatToString ) ; // to debug
             break;
          case 'M' : // Restore modal G20/G21/G90/G91
-            Serial2.print( modalAbsRel) ;
+            grblStream->print( modalAbsRel) ;
             //Serial.print( modalAbsRel) ; // to debug
-            Serial2.print( modalMmInch) ;
+            grblStream->print( modalMmInch) ;
             //Serial.print( modalMmInch) ; // to debug
             break;
          }   
       } else {
         if( strChar != 13){                  // add here handling of special character for real time process; we skip \r char
-            Serial2.print( strChar ) ;
+            grblStream->print( strChar ) ;
             //Serial.print (strChar) ;  // to debug
           }
         if ( strChar == '\n' ) {
@@ -541,7 +542,7 @@ void sendFromString(){
       statusPrinting = PRINTING_STOPPED  ; 
       fillStringExecuteMsg( lastStringCmd );   // fill with a message saying the command has been executed
       updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
-      Serial2.print( (char) 0x0A ) ; // sent a new line to be sure that Grbl handle last line.
+      grblStream->print( (char) 0x0A ) ; // sent a new line to be sure that Grbl handle last line.
       //Serial.println("last char has been sent") ;
     }      
 }
@@ -551,9 +552,8 @@ void sendJogCancelAndJog(void) {
     if ( jogCancelFlag ) {
       if ( jog_status == JOG_NO ) {
         //Serial.println("send a jog cancel");
-        Serial2.print( (char) 0x85) ; Serial2.print("G4P0") ; Serial2.print( (char) 0x0A) ;    // to be execute after a cancel jog in order to get an OK that says that grbl is Idle.
-        while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
-        //Serial2.flush() ;             // wait that all outgoing char are really sent.!!! in ESP32 it also clear the RX buffer what is not expected in arduino logic
+        grblStream->print( (char) 0x85) ; grblStream->print("G4P0") ; grblStream->print( (char) 0x0A) ;    // to be execute after a cancel jog in order to get an OK that says that grbl is Idle.
+        grblStream->waitSent();             // wait until all chars sent
         
         waitOk = true ;
         jog_status = JOG_WAIT_END_CANCEL ;
@@ -578,7 +578,7 @@ void sendJogCancelAndJog(void) {
     if ( jogCmdFlag ) {
       if ( jog_status == JOG_NO ) {
         //Serial.println( bufferAvailable[0] ) ;
-        if (bufferAvailable[0] > 15) {    // tests shows that GRBL gives errors when we fill to much the block buffer
+        if (bufferAvailable[0] > 14) {    // tests shows that GRBL gives errors when we fill to much the block buffer
           if ( sendJogCmd(startMoveMillis) ) { // if command has been sent
             waitOk = true ;
             jog_status = JOG_WAIT_END_CMD ;
@@ -642,44 +642,43 @@ boolean sendJogCmd(uint32_t startTime) {
         }
         //
         //Serial.println("send a jog") ;  
-        Serial2.print("$J=G91 G21") ;
+        grblStream->print("$J=G91 G21") ;
         if (jogDistX > 0) {
-          Serial2.print(" X") ;
+          grblStream->print(" X") ;
         } else if (jogDistX ) {
-          Serial2.print(" X-") ;
+          grblStream->print(" X-") ;
         }
         if (jogDistX ) {
-          Serial2.print(distanceMove) ;
+          grblStream->print(distanceMove) ;
         }  
         if (jogDistY > 0) {
-          Serial2.print(" Y") ;
+          grblStream->print(" Y") ;
         } else if (jogDistY ) {
-          Serial2.print(" Y-") ;
+          grblStream->print(" Y-") ;
         }
         if (jogDistY ) {
-          //Serial2.print(moveMultiplier) ;
-          Serial2.print(distanceMove) ;
+          //grblStream->print(moveMultiplier) ;
+          grblStream->print(distanceMove) ;
         }
         if (jogDistZ > 0) {
-          Serial2.print(" Z") ;
+          grblStream->print(" Z") ;
         } else if (jogDistZ ) {
-          Serial2.print(" Z-") ;
+          grblStream->print(" Z-") ;
         }
         if (jogDistZ ) {
-          Serial2.print(distanceMove) ;
+          grblStream->print(distanceMove) ;
         }
         if (jogDistA > 0) {
-          Serial2.print(" A") ;
+          grblStream->print(" A") ;
         } else if (jogDistA ) {
-          Serial2.print(" A-") ;
+          grblStream->print(" A-") ;
         }
         if (jogDistA ) {
-          Serial2.print(distanceMove) ;
+          grblStream->print(distanceMove) ;
         }
-        //Serial2.print(" F2000");  Serial2.print( (char) 0x0A) ;
-        Serial2.print(" F"); Serial2.print(speedMove); Serial2.print( (char) 0x0A) ;
-        while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
-        //Serial2.flush() ;       // wait that all char are really sent
+        //grblStream->print(" F2000");  grblStream->print( (char) 0x0A) ;
+        grblStream->print(" F"); grblStream->print(speedMove); grblStream->print( (char) 0x0A) ;
+        grblStream->waitSent();                        // wait until all chars are sent
         
         //Serial.print("Send cmd jog " ); Serial.print(distanceMove) ; Serial.print(" " ); Serial.print(speedMove) ;Serial.print(" " ); Serial.println(millis() - startTime );
         //Serial.print(prevMoveX) ; Serial.print(" " ); Serial.print(prevMoveY) ; Serial.print(" " ); Serial.print(prevMoveZ) ;Serial.print(" ") ; Serial.println(millis()) ;

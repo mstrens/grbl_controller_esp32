@@ -77,6 +77,7 @@
 #define __SET_REPEAT_CAL "Definissez REPEAT_CAL sur false pour ne pas r\x80" "p\x80" "ter cette operation!"
 #define __CAL_COMPLETED "Calibration finie!"
 
+#define __CONNECT "Connecter a "
 #define __SPIFFS_FORMATTED "SPIFFS format\x80"
 #define __CMD_NOT_LOADED "Cmd non charg\x80" "e"
 #define __TELENET_DISCONNECTED "Telnet d\x80" "connect\x80"
@@ -236,6 +237,7 @@
 #define __SET_REPEAT_CAL "REPEAT_CAL auf false setzen, um das erneute Ausf\x83" "hren zu stoppen!"
 #define __CAL_COMPLETED "Kalibrierung abgeschlossen!"
 
+#define __CONNECT "Verbunden mit "
 #define __SPIFFS_FORMATTED "SPIFFS formatiert"
 #define __CMD_NOT_LOADED "Cmd nicht geladen"
 #define __TELENET_DISCONNECTED "Telnet getrennt"
@@ -397,6 +399,7 @@
 #define __SET_REPEAT_CAL "Set REPEAT_CAL to false to stop this running again!"
 #define __CAL_COMPLETED "Calibration complete!"
 
+#define __CONNECT "Connect to "
 #define __SPIFFS_FORMATTED "SPIFFS formatted"
 #define __CMD_NOT_LOADED "Cmd not loaded"
 #define __TELENET_DISCONNECTED "Telnet disconnected"

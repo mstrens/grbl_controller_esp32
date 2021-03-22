@@ -13,14 +13,26 @@
 
 // for ESP32_ACT_AS_STATION , set the password to get access to your access point (router)
 // for ESP_ACT_AS_AP, set the password you want to use to protect your ESP32 ( can be empty)
-#define MY_PASSWORD "your password" // replace by your password 
+#define MY_PASSWORD "your password" // replace by your password
 
 // if you use Wifi, you can (optional) define a fix IP address. Then you have to define 3 parameters
 // If one of next 3 parameters is "", it means that you do not want to use a fix local IP address.
-#define LOCAL_IP "192.168.1.10"   // fix IP address
+#define LOCAL_IP ""   // fix IP address
 #define SUBNET "255.255.255.0"    // subnet mask of your local network
 #define GATEWAY "192.168.1.1"     // gateway that have to check the IP address
 
+// If GRBL_IP is defined, connect to the Grbl controller via a TCP
+// connection.  That is useful for wireless connection to Grbl_ESP32.
+// Otherwise connect via Serial2.
+#define GRBL_IP "192.168.2.120"
+
+// The default port for TCP connection to a GRBL controller is 23,
+// the standard Telnet port.  It is better to use a different port
+// to prevent interference from other telnet clients; the other port
+// should be greater than 1023 because port 0..1023 are reserved for
+// standard services.  The port should be changed both here and in
+// the Grbl_ESP32 configuration.
+#define GRBL_PORT 23
 
 // select your language between EN, FR, DE
 #define LANGUAGE EN
@@ -75,6 +87,8 @@
 // After reset, there will be a button named xxxxxxxxx in the "Setup" + "CMD" menu
 // If you upload a file having the same button position(digit 1...9, A or B) as an existing button, the new file will replace the button name and content of the previous button. 
 // to delete a button create and execute a file having a name like Cmd3_delete where 3 is the button position (digit 1...9, A or B) to delete. 
+
+#define THICK_OUTLINE   // Makes the pressed-button highlight easier to see
 
 // select color between (or define your own) 
 // TFT_BLACK       0x0000      /*   0,   0,   0 */
@@ -162,7 +176,7 @@
 #define _SETXYZA_STRING "G10 L20 P1 X0 Y0 Z0 A0\n"
 // *************************************     normally do not change here below ****************************
 //       debugging
-//#define DEBUG_TO_PC
+#define DEBUG_TO_PC
 #ifdef DEBUG_TO_PC
   #define COPY_GRBL_TO_PC
   #define DEBUG_TO_PC_MENU
