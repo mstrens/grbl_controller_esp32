@@ -27,6 +27,9 @@ void fSdShowPrev(uint8_t param) ;
 void fSdShowNext(uint8_t param) ;
 void fOverSwitch (uint8_t BtnParam) ;
 void fOverModify (uint8_t BtnParam) ;
+void fSerial(uint8_t param) ; // activate GRBL over Serial2
+void fBluetooth(uint8_t param) ; // activate GRBL over Bluetooth
+void fTelnet(uint8_t param) ; // activate GRBL over Telnet
 
 
 void handleAutoMove( uint8_t param) ;

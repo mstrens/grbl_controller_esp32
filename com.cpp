@@ -10,6 +10,9 @@
 #include "cmd.h"
 #include "log.h"
 #include <Preferences.h>
+#include "telnetgrbl.h"
+#include "BluetoothSerial.h"
+#include "bt.h"
 
 // GRBL status are : Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep
 // a message should look like (note : GRBL sent or WPOS or MPos depending on grbl parameter : to get WPos, we have to set "$10=0"
@@ -41,6 +44,9 @@
   
 #define WAIT_OK_SD_TIMEOUT 120000
 
+
+
+uint8_t grblLink = GRBL_LINK_SERIAL ;
 uint8_t wposIdx = 0 ;
 uint8_t wcoIdx = 0 ;
 uint8_t fsIdx = 0 ;
@@ -99,6 +105,7 @@ extern uint8_t cmdToSend ; // cmd to be send
 extern uint32_t sdNumberOfCharSent ;
 
 extern WiFiClient telnetClient;
+extern BluetoothSerial SerialBT;
 
 uint8_t wposOrMpos ;
 uint32_t waitOkWhenSdMillis ;  // timeout when waiting for OK while sending form SD
@@ -111,11 +118,13 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
   static uint32_t millisLastGetGBL = 0 ;
   //uint8_t i = 0 ;
   static int cntOk = 0 ;
-  while (Serial2.available() ) {
+  while (fromGrblAvailable() ) { // check if there are some char from grbl (Serial or Telnet or Bluetooth)
+  //  while (Serial2.Available() ) {
 #ifdef DEBUG_TO_PC
     //Serial.print(F("s=")); Serial.print( getGrblPosState ); Serial.println() ;
 #endif    
-    c=Serial2.read() ;
+    c=fromGrblRead() ; // get the char from grbl (Serial or Telnet or Bluetooth)
+    //c=Serial2.read();
 //#define DEBUG_RECEIVED_CHAR
 #ifdef DEBUG_RECEIVED_CHAR      
       Serial.print( (char) c) ;
@@ -409,13 +418,15 @@ void sendToGrbl( void ) {
           case PRINTING_FROM_USB :
             while ( Serial.available() && statusPrinting == PRINTING_FROM_USB ) {
               sdChar = Serial.read() ;
-              Serial2.print( (char) sdChar ) ;
+              toGrbl( (char) sdChar ) ;
+              //Serial2.print( (char) sdChar ) ;
             } // end while 
             break ;
           case PRINTING_FROM_TELNET :
             while ( telnetClient.available() && statusPrinting == PRINTING_FROM_TELNET ) {
               sdChar = telnetClient.read() ;
-              Serial2.print( (char) sdChar ) ;
+              sdChar = Serial.read() ;
+              //Serial2.print( (char) sdChar ) ;
             } // end while       
             break ;
           case PRINTING_CMD :
@@ -433,7 +444,7 @@ void sendToGrbl( void ) {
     currSendMillis = millis() ;                   // ask GRBL current status every X millis sec. GRBL replies with a message with status and position
     if ( currSendMillis > nextSendMillis) {
        nextSendMillis = currSendMillis + 300 ;
-       Serial2.print("?") ; 
+       toGrbl('?') ; 
     }
   }
   if( statusPrinting != PRINTING_FROM_TELNET ) {               // clear the telnet buffer when not in use
@@ -455,7 +466,8 @@ void sendFromSd() {        // send next char from SD; close file at the end
             sdNumberOfCharSent++ ;
             if( sdChar != 13 && sdChar != ' ' ){             // 13 = carriage return; do not send the space.
                                                              // to do : skip the comments
-              Serial2.print( (char) sdChar ) ;
+              toGrbl((char) sdChar ) ;
+              //Serial2.print( (char) sdChar ) ;
             }
             if ( sdChar == '\n' ) {        // n= new line = line feed = 10 decimal
                waitOk = true ;
@@ -467,7 +479,8 @@ void sendFromSd() {        // send next char from SD; close file at the end
         statusPrinting = PRINTING_STOPPED  ; 
         updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
         //Serial2.print( (char) 0x18 ) ; //0x85) ;   // cancel jog (just for testing); must be removed
-        Serial2.print( (char) 10 ) ; // sent a new line to be sure that Grbl handle last line.
+        toGrbl( (char) 10 ) ;
+        //Serial2.print( (char) 10 ) ; // sent a new line to be sure that Grbl handle last line.
       }
 } 
 
@@ -477,7 +490,8 @@ void sendFromCmd() {
     while ( spiffsAvailableCmdFile() > 0 && (! waitOk) && statusPrinting == PRINTING_CMD && Serial2.availableForWrite() > 2 ) {
       sdChar = (int) spiffsReadCmdFile() ;
       if( sdChar != 13){
-          Serial2.print( (char) sdChar ) ;
+          toGrbl((char) sdChar ) ;
+          //Serial2.print( (char) sdChar ) ;
         }
       if ( sdChar == '\n' ) {
            waitOk = true ;
@@ -486,7 +500,8 @@ void sendFromCmd() {
     if ( spiffsAvailableCmdFile() == 0 ) { 
       statusPrinting = PRINTING_STOPPED  ; 
       updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
-      Serial2.print( (char) 0x0A ) ; // sent a new line to be sure that Grbl handle last line.
+      toGrbl((char) 0x0A ) ;
+      //Serial2.print( (char) 0x0A ) ; // sent a new line to be sure that Grbl handle last line.
     }      
 }
 
@@ -506,28 +521,34 @@ void sendFromString(){
             break;
          case 'X' : // Put the G30 X offset
             //Serial.print("G30SavedX"); Serial.println(G30SavedX);
-            Serial2.print(G30SavedX) ;
+            toGrbl(G30SavedX) ;
+            //Serial2.print(G30SavedX) ;
             break;
          case 'Y' : // Put the G30 Y offset
-            Serial2.print(G30SavedY) ;
+            toGrbl(G30SavedY) ;
+            //Serial2.print(G30SavedY) ;
             break;
          case 'Z' : // Put some char in the flow
             savedWposXYZA[2] = preferences.getFloat("wposZ" , 0 ) ; // if wposZ does not exist in preferences, the function returns 0
             char floatToString[20] ;
             gcvt(savedWposXYZA[2], 3, floatToString); // convert float to string
-            Serial2.print(floatToString) ;
+            toGrbl(floatToString) ;
+            //Serial2.print(floatToString) ;
             ///Serial.print( "wpos Z is retrieved with value = ") ; Serial.println( floatToString ) ; // to debug
             break;
          case 'M' : // Restore modal G20/G21/G90/G91
-            Serial2.print( modalAbsRel) ;
+            toGrbl(modalAbsRel) ;
+            //Serial2.print( modalAbsRel) ;
             //Serial.print( modalAbsRel) ; // to debug
-            Serial2.print( modalMmInch) ;
+            toGrbl(modalMmInch) ;
+            //Serial2.print( modalMmInch) ;
             //Serial.print( modalMmInch) ; // to debug
             break;
          }   
       } else {
         if( strChar != 13){                  // add here handling of special character for real time process; we skip \r char
-            Serial2.print( strChar ) ;
+            toGrbl(strChar ) ;
+            //Serial2.print( strChar ) ;
             //Serial.print (strChar) ;  // to debug
           }
         if ( strChar == '\n' ) {
@@ -541,7 +562,8 @@ void sendFromString(){
       statusPrinting = PRINTING_STOPPED  ; 
       fillStringExecuteMsg( lastStringCmd );   // fill with a message saying the command has been executed
       updateFullPage = true ;           // force to redraw the whole page because the buttons haved changed
-      Serial2.print( (char) 0x0A ) ; // sent a new line to be sure that Grbl handle last line.
+      toGrbl((char) 0x0A ) ;
+      //Serial2.print( (char) 0x0A ) ; // sent a new line to be sure that Grbl handle last line.
       //Serial.println("last char has been sent") ;
     }      
 }
@@ -551,7 +573,8 @@ void sendJogCancelAndJog(void) {
     if ( jogCancelFlag ) {
       if ( jog_status == JOG_NO ) {
         //Serial.println("send a jog cancel");
-        Serial2.print( (char) 0x85) ; Serial2.print("G4P0") ; Serial2.print( (char) 0x0A) ;    // to be execute after a cancel jog in order to get an OK that says that grbl is Idle.
+        toGrbl((char) 0x85) ; toGrbl("G4P0\n\r") ;
+        //Serial2.print( (char) 0x85) ; Serial2.print("G4P0") ; Serial2.print( (char) 0x0A) ;    // to be execute after a cancel jog in order to get an OK that says that grbl is Idle.
         while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
         //Serial2.flush() ;             // wait that all outgoing char are really sent.!!! in ESP32 it also clear the RX buffer what is not expected in arduino logic
         
@@ -615,7 +638,9 @@ boolean sendJogCmd(uint32_t startTime) {
 #define DELAY_BETWEEN_MOVE 100       //msec
 #define DELAY_TO_REACH_MAX_SPEED 2000 // msec
         float distanceMove ;
+        char sdistanceMove[20];
         uint32_t speedMove ;
+        char sspeedMove[20];
         int32_t counter = millis() - startTime ;
         if ( counter < 10 ) {
           distanceMove = MINDIST ;
@@ -640,44 +665,61 @@ boolean sendJogCmd(uint32_t startTime) {
           }
           distanceMove = speedMove * DELAY_BETWEEN_MOVE / 60000.0 * 1.2;   // speed is in mm/min and time in millisec.  1.2 is to increase a little the distance to be sure buffer is filled 
         }
+        sprintf(sdistanceMove, "%.2f" , distanceMove); // convert to string
         //
         //Serial.println("send a jog") ;  
-        Serial2.print("$J=G91 G21") ;
+        bufferise2Grbl("$J=G91 G21" , 'b');
+        //Serial2.print("$J=G91 G21") ;
         if (jogDistX > 0) {
-          Serial2.print(" X") ;
+          bufferise2Grbl(" X") ;
+          //Serial2.print(" X") ;
         } else if (jogDistX ) {
-          Serial2.print(" X-") ;
+          bufferise2Grbl(" X-") ;
+          //Serial2.print(" X-") ;
         }
         if (jogDistX ) {
-          Serial2.print(distanceMove) ;
+          bufferise2Grbl(sdistanceMove) ;
+          //Serial2.print(distanceMove) ;
         }  
         if (jogDistY > 0) {
-          Serial2.print(" Y") ;
+          bufferise2Grbl(" Y") ;
+          //Serial2.print(" Y") ;
         } else if (jogDistY ) {
-          Serial2.print(" Y-") ;
+          bufferise2Grbl(" Y-") ;
+          //Serial2.print(" Y-") ;
         }
         if (jogDistY ) {
           //Serial2.print(moveMultiplier) ;
-          Serial2.print(distanceMove) ;
+          bufferise2Grbl(sdistanceMove) ;
+          //Serial2.print(distanceMove) ;
         }
         if (jogDistZ > 0) {
-          Serial2.print(" Z") ;
+          bufferise2Grbl(" Z") ;
+          //Serial2.print(" Z") ;
         } else if (jogDistZ ) {
-          Serial2.print(" Z-") ;
+          bufferise2Grbl(" Z-") ;
+          //Serial2.print(" Z-") ;
         }
         if (jogDistZ ) {
-          Serial2.print(distanceMove) ;
+          bufferise2Grbl(sdistanceMove) ;
+          //Serial2.print(distanceMove) ;
         }
         if (jogDistA > 0) {
-          Serial2.print(" A") ;
+          bufferise2Grbl(" A") ;
+          //Serial2.print(" A") ;
         } else if (jogDistA ) {
-          Serial2.print(" A-") ;
+          bufferise2Grbl(" A-") ;
+          //Serial2.print(" A-") ;
         }
         if (jogDistA ) {
-          Serial2.print(distanceMove) ;
+          bufferise2Grbl(sdistanceMove) ;
+          //Serial2.print(distanceMove) ;
         }
         //Serial2.print(" F2000");  Serial2.print( (char) 0x0A) ;
-        Serial2.print(" F"); Serial2.print(speedMove); Serial2.print( (char) 0x0A) ;
+        sprintf(sspeedMove, "%u" , speedMove); // convert to string integer
+                
+        bufferise2Grbl(" F"); bufferise2Grbl(sspeedMove);bufferise2Grbl("\n\r",'s') ;
+        //Serial2.print(" F"); Serial2.print(speedMove); Serial2.print( (char) 0x0A) ;
         while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
         //Serial2.flush() ;       // wait that all char are really sent
         
@@ -778,3 +820,150 @@ void fillStringExecuteMsg( uint8_t buttonMessageIdx ) {   // buttonMessageIdx co
    //Serial.print("message= ") ; Serial.println( stringExecuteMsg[buttonMessageIdx] ) ; // to debug
 }
 
+
+void toGrbl(char c){  // send only one char to GRBL on Serial, Bluetooth or telnet 
+  switch (grblLink) {
+    case GRBL_LINK_SERIAL:
+      Serial2.print(c);
+      //Serial.print("send char="); Serial.println(c);
+      break;
+    case GRBL_LINK_BT :
+      toBt(c);
+      break;
+    case GRBL_LINK_TELNET :
+      toTelnet(c);
+      break;
+  }
+}
+void toGrbl(const char * data){ // send one string to GRBL on Serial, Bluetooth or telnet 
+ switch (grblLink) {
+    case GRBL_LINK_SERIAL:
+      Serial2.print(data);
+      //Serial.print("send buffer="); Serial.println(data);
+      break;
+    case GRBL_LINK_BT :
+      toBt(data);
+      break;
+    case GRBL_LINK_TELNET :
+      toTelnet(data);
+      break;
+  } 
+}
+
+void bufferise2Grbl(const char * data , char beginEnd){  // group data in a buffer before sending to grbl (via Serial, Bluetooth ot telnet)
+                                                          //if beginEnd = 'b', clear the fuffer before writing
+                                                          // if 's', send after bufferising
+                                                          // if 'w' send after bufferising and wait that it has been sent (not implemented yet
+                                                          // other, just write
+                                                          // to do; return a bool to say if done or not
+  static char buffer[255];
+  static uint16_t bufferIdx = 0;
+  if (beginEnd == 'b') {
+    bufferIdx = 0;
+    buffer[bufferIdx] = '\0' ;
+    //Serial.println("begin to buffer");
+    delay(100);
+  }
+  uint8_t i = 0;
+  while ( ( data[i] != '\0') && ( i < 254 ) && (bufferIdx < 255 )) {
+    buffer[bufferIdx] = data[i];
+    bufferIdx++;
+    buffer[bufferIdx] = '\0' ;
+    i++;
+  }
+  //Serial.print("buffer=") ; Serial.println(buffer);
+  delay(100);
+  if (beginEnd == 's') {
+    //Serial.println("sending");
+    //Serial.print(buffer);
+    //Serial.println("EndOfText");
+    delay(100);
+    toGrbl(buffer) ;
+  }
+}
+
+
+int fromGrblAvailable(){    // return the number of char in the read buffer
+  switch (grblLink) {
+    case GRBL_LINK_SERIAL:
+      return Serial2.available();
+    case GRBL_LINK_BT :
+      return SerialBT.available();
+    case GRBL_LINK_TELNET :
+      return fromTelnetAvailable();
+  } 
+}
+
+int fromGrblRead(){       // return the first character in the read buffer
+  switch (grblLink) {
+    case GRBL_LINK_SERIAL:
+      return Serial2.read();
+    case GRBL_LINK_BT :
+      return SerialBT.read();
+    case GRBL_LINK_TELNET :
+      return fromTelnetRead();
+  }
+}
+
+
+void startGrblCom(uint8_t comMode){
+  preferences.putChar("grblLink", comMode) ;
+  // First stop BT or Telnet
+  if (grblLink == GRBL_LINK_BT){
+    btGrblStop();
+  } else if (grblLink == GRBL_LINK_TELNET) {
+    telnetGrblStop();
+  }
+  if (comMode == GRBL_LINK_SERIAL) {
+    grblLink = GRBL_LINK_SERIAL ;
+    while (Serial2.available()>0) Serial2.read() ; // clear the serial2 buffer
+    fillMsg("GRBL connected with wires (serial)");  
+  } else if (comMode == GRBL_LINK_BT) {
+    grblLink = GRBL_LINK_BT ;
+    btGrblInit();
+  } else if (comMode == GRBL_LINK_TELNET) {
+    grblLink = GRBL_LINK_TELNET ;
+    telnetGrblInit();
+  }  
+}
+
+
+/*
+
+BluetoothSerial SerialBT;
+int i = 0;
+
+
+//String MACadd = "AA:BB:CC:11:22:33";
+//uint8_t address[6]  = {0xAA, 0xBB, 0xCC, 0x11, 0x22, 0x33};
+////uint8_t address[6]  = {0x00, 0x1D, 0xA5, 0x02, 0xC3, 0x22};
+String name = "ESP32_BT"; //                  <------- set this to be the name of the other ESP32!!!!!!!!!
+//char *pin = "1234"; //<- standard pin would be provided by default
+bool btConnected;
+
+void btInit() {
+  SerialBT.begin("ESP32testm", true); 
+  //SerialBT.setPin(pin);
+  Serial.println("The device started in master mode, make sure remote BT device is on!");
+  
+  // connect(address) is fast (upto 10 secs max), connect(name) is slow (upto 30 secs max) as it needs
+  // to resolve name to address first, but it allows to connect to different devices with the same name.
+  // Set CoreDebugLevel to Info to view devices bluetooth address and device names
+  btConnected = SerialBT.connect(name);
+  //connected = SerialBT.connect(address);
+  
+  if(btConnected) {
+    Serial.println("Connected Succesfully in BT!");
+  } else {
+    while(!SerialBT.connected(10000)) {
+      Serial.println("Failed to connect. Make sure remote device is available and in range, then restart app."); 
+    }
+  }
+  // disconnect() may take upto 10 secs max
+  if (SerialBT.disconnect()) {
+    Serial.println("Disconnected Succesfully from BT!");
+  }
+  // this would reconnect to the name(will use address, if resolved) or address used with connect(name/address).
+  SerialBT.connect();
+}
+*/

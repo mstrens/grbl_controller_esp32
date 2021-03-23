@@ -10,6 +10,22 @@
 // prévoir de pouvoir faire un "continue" quand on a une pause alors que l'on est en train d'envoyer des CMD ou des STRING vers GRBL 
 // prévoir des icones pour les boutons; on peut créer des charactères en format RLE
 // sans doute autoriser des déplacements en jog (avec la nunchuk notamment) si le statut est en HOLD ou en DOOR? (actuellement seul les statuts Jog et Idle sont autorisés pour la nunchuk
+// déplacer les tests relatifs à la place restant dans le serial2 bufferwrite dans la fonction qui regroupe les transmissions à grbl - voir plusieurs fois (Serial2.availableForWrite() != 0x7F ) 
+// afficher un message sur le tft si une liaison BT est demandée pour dire de patienter car cela peu durer longtemps
+// afficher un message sur le tft si la liaison telnet ou BT vers grbl est demandée mais ne s'active pas
+// afficher un message sur le tft si la liaison telnet ou BT vers grbl est demandée mais est perdue
+// pouvoir choisir entre Serial2, BT et Telnet pour la liaison GRBL (ajouter des boutons, à chaque changement, arrêter le service actif et lancer le nouveau)
+// ajouter un paramètre dans config pour dire si on utilise GRBL_ESP32, et si oui, quel sont les noms de BT sur cet ESP32 et sur GRBL_ESP32 et l'adresse (ou nom du serveur) telnet 
+// pouvoir afficher la liste des fichiers sur GRBL (si on utilise GRBL_ESP32) et povoir demander l'exécution d'un des fichiers
+// ne pouvoir choisir BT ou telnet que si GRBL_ESP32 est activé 
+// remplacer certains messages envoyés à Serial par des messages affichés au TFT notamment au sujet des (dé)connectios de BT et Telnet vers GRBL.
+// Créer un caractère pour afficher la présence d'une liaison BT ou Telnet vers GRBL et changer la couleur selon qu'elle est active ou non
+// afficher ce caractère à coté du caractère telnet actuel. 
+// créer un bouton sur l'écran setup pour accéder aux données wifi (adresse IP) et au choix de la communication avec GRBL; déplacer l'adresse ip vers ce nouvel écran
+//  
+
+
+
 
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.
@@ -69,6 +85,8 @@ Sur l'écran de base, prévoir l'affichage des infos
 #include "soc/uart_reg.h"
 #include "soc/uart_struct.h"
 #include "touch.h"
+#include "telnetgrbl.h"
+#include "bt.h"
 
 //uart_dev_t * dev = (volatile uart_dev_t *)(DR_REG_UART_BASE) ;
 //
@@ -134,6 +152,7 @@ extern boolean nunchukOK ;  // keep flag to detect a nunchuk at startup
 
 // type of wifi being used
 uint8_t wifiType ; // can be NO_WIFI(= 0), ESP32_ACT_AS_STATION(= 1), ESP32_ACT_AS_AP(= 2)
+extern uint8_t grblLink ;
 
 // status pour telnet
 boolean statusTelnetIsConnected = false ; 
@@ -179,7 +198,7 @@ void setup() {
   
 //  listSpiffsDir( "/", 0 );   // uncomment to see the SPIFFS content
   preferences.begin("savedData") ; //define the namespace for saving preferences (used for saving WIFI parameters, and z coord for change tool)
-
+  grblLink = preferences.getChar("grblLink", GRBL_LINK_SERIAL) ; // retrieve the last used way of communication with GRBL
   initButtons() ; //initialise les noms des boutons, les boutons pour chaque page.
   dirLevel = -1 ;   // negative value means that SD card has to be uploaded
 
@@ -194,21 +213,26 @@ void setup() {
     telnetInit() ;
   }  
   while ( Serial2.available() )  Serial2.read() ; // clear input buffer which can contains messages sent by GRBL in reply to noise captured before Serial port was initialised.
-  Serial2.write(0x18) ; // send a soft reset
+  toGrbl( (char) 0x18 ) ;
+  //Serial2.write(0x18) ; // send a soft reset
   delay(100);
-  Serial2.println("$10=3");   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
+  toGrbl("$10=3\n\r");
+  //Serial2.println("$10=3");   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
   while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
-  //Serial2.flush();                                                      // this is used to avoid sending to many jogging movements when using the nunchuk  
-  //delay(100);
-  //while ( Serial2.available() ) {
-  //  Serial.println(Serial2.read(),HEX);
-  //}
 // to debug
 //  grblLastMessage[0]= 0x80 ;
 //  grblLastMessage[1]= 0x81 ;
 //  grblLastMessage[2]= 0x82 ;
 //  grblLastMessage[3]= 0x83 ;
-
+  clearScreen() ;
+  if (grblLink == GRBL_LINK_TELNET) {
+    
+    telnetGrblInit(); // this start the connection with grbl over telnet.
+  }
+  if (grblLink == GRBL_LINK_BT) {
+    
+    btGrblInit();  // this start the connection over Bluetooth
+  }
 }
 
 //******************************** Main loop ***************************************
@@ -253,13 +277,15 @@ void loop() {
       // set PRINTING_PAUSED
       statusPrinting = PRINTING_PAUSED ;
       updateFullPage = true ; // We want to get the resume button 
-    } else if ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP || currentPage == _P_TOOL || currentPage == _P_OVERWRITE ) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
+    } else if ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP || currentPage == _P_TOOL 
+              || currentPage == _P_OVERWRITE || currentPage == _P_COMMUNICATION) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
         updatePartPage = true ;
     } // end else if
   }
       
   newGrblStatusReceived = false ;
-  if (lastMsgChanged == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP || currentPage == _P_TOOL) ) { //force a refresh if a message has been filled
+  if (lastMsgChanged == true && ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP 
+                                || currentPage == _P_TOOL || currentPage == _P_COMMUNICATION ) ) { //force a refresh if a message has been filled
     updatePartPage = true ;
   }
   
@@ -277,5 +303,6 @@ void loop() {
   //  prevMachine = machineStatus[0] ;
   //  Serial.println( machineStatus ) ;
   //}
+  yield();
 }
 

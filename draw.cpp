@@ -86,6 +86,10 @@ extern boolean jogCmdFlag  ;
 
 extern boolean statusTelnetIsConnected ;
 
+extern uint8_t wifiType ; // can be NO_WIFI(= 0), ESP32_ACT_AS_STATION(= 1), ESP32_ACT_AS_AP(= 2)
+extern uint8_t grblLink;
+extern bool btConnected;
+
 extern uint8_t logBuffer[MAX_BUFFER_SIZE] ;                              // log data
 //extern uint8_t * pNext ; // position of the next char to be written
 //extern uint8_t * pFirst ; // position of the first char
@@ -140,8 +144,8 @@ uint16_t btnDefNormal[12][4] = {{ But0 , E0 , But0 , E0 } ,  // each line contai
                                 { B2 , E2 , B2 , E2 } ,
                                 { B3 , E3 , B2 , E2 } } ;
 
-uint16_t btnDefFiles[12][4] = {{ FXB , FXE , FYB0 , FYE0 } ,  // each line contains the Xmin, Xmax, Ymin , Ymax of one button.
-                                { FXB , FXE , FYB1 , FYE1 } ,
+uint16_t btnDefFiles[12][4] = {{ FXB , FXE , FYB0 , FYE0 } ,  // each line contains the Xmin, Xmax, Ymin , Ymax of one button for the menu File.
+                                { FXB , FXE , FYB1 , FYE1 } , // currently they are only 10 btn
                                 { FXB , FXE , FYB2 , FYE2 } ,
                                 { FXB , FXE , FYB3 , FYE3 } ,
                                 { B2 , E2 , But0 , E0 } ,
@@ -236,16 +240,21 @@ mButton[_OVER_10M].pLabel = __OVER_10M ;
 mButton[_OVER_1P].pLabel = __OVER_1P ;
 mButton[_OVER_1M].pLabel = __OVER_1M ;
 mButton[_OVER_100].pLabel = __OVER_100 ;
+mButton[_COMMUNICATION].pLabel = __COMMUNICATION ;
+mButton[_SERIAL].pLabel = __SERIAL ;
+mButton[_BLUETOOTH].pLabel = __BLUETOOTH ;
+mButton[_TELNET].pLabel = __TELNET ;
 
-mPages[_P_INFO].titel = "Info" ;
+mPages[_P_INFO].titel = "" ;
 mPages[_P_INFO].pfBase = fInfoBase ;
 fillMPage (_P_INFO , 0 , _MASKED1 , _JUST_PRESSED , fGoToPage , _P_LOG ) ; // this button is masked but clicking on the zone call another screen
 fillMPage (_P_INFO , 3 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; // this button is masked but clicking on the zone call another screen
 fillMPage (_P_INFO , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;   // those buttons are changed dynamically based on status (no print, ...)
 fillMPage (_P_INFO , 11 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;   // those buttons are changed dynamically based on status (no print, ...)
 
-mPages[_P_SETUP].titel = "Setup" ;
+mPages[_P_SETUP].titel = "" ;
 mPages[_P_SETUP].pfBase = fSetupBase ;
+fillMPage (_P_SETUP , 0 , _COMMUNICATION , _JUST_PRESSED , fGoToPage , _P_COMMUNICATION ) ;
 fillMPage (_P_SETUP , 4 , _HOME , _JUST_PRESSED , fHome , 0) ;
 fillMPage (_P_SETUP , 5 , _UNLOCK , _JUST_PRESSED , fUnlock , 0) ;
 fillMPage (_P_SETUP , 6 , _RESET , _JUST_PRESSED , fReset , 0) ;
@@ -255,7 +264,7 @@ fillMPage (_P_SETUP , 9 , _SET_WCS , _JUST_PRESSED , fGoToPage , _P_SETXYZ ) ;
 fillMPage (_P_SETUP , 10 , _TOOL , _JUST_PRESSED , fGoToPage , _P_TOOL ) ;
 fillMPage (_P_SETUP , 11 , _INFO , _JUST_PRESSED , fGoToPageAndClearMsg ,  _P_INFO) ;
 
-mPages[_P_PRINT].titel = "Print" ;
+mPages[_P_PRINT].titel = "" ;
 mPages[_P_PRINT].pfBase = fNoBase ;
 fillMPage (_P_PRINT , 4 , _SD , _JUST_PRESSED , fGoToPage , _P_SD) ;
 fillMPage (_P_PRINT , 5 , _USB_GRBL , _JUST_PRESSED , fStartUsb , 0) ;
@@ -264,7 +273,7 @@ fillMPage (_P_PRINT , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
 fillMPage (_P_PRINT , 10 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;
 fillMPage (_P_PRINT , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
 
-mPages[_P_PAUSE].titel = "Paused" ;
+mPages[_P_PAUSE].titel = "" ;
 mPages[_P_PAUSE].pfBase = fNoBase ;
 fillMPage (_P_PAUSE , 4 , _CANCEL , _JUST_PRESSED , fCancel , 0) ;
 fillMPage (_P_PAUSE , 5 , _RESUME , _JUST_PRESSED , fResume , 0) ;
@@ -272,7 +281,7 @@ fillMPage (_P_PAUSE , 6 , _SD_SHOW , _JUST_PRESSED , fGoToPage , _P_SD_SHOW ) ;
 fillMPage (_P_PAUSE , 7 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE) ;
 fillMPage (_P_PAUSE , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
 
-mPages[_P_MOVE].titel = "Move" ;
+mPages[_P_MOVE].titel = "" ;
 mPages[_P_MOVE].pfBase = fMoveBase ;
 #ifdef AA_AXIS
 fillMPage (_P_MOVE , 0 , _XM , _JUST_LONG_PRESSED_RELEASED , fMove , _XM) ;
@@ -294,7 +303,7 @@ fillMPage (_P_MOVE , 10 , _XP , _JUST_LONG_PRESSED_RELEASED , fMove , _XP) ;
 fillMPage (_P_MOVE , POS_OF_MOVE_D_AUTO , _D_AUTO , _JUST_PRESSED , fDist, _D_AUTO) ;  // -1 because range here is 0...11 
 fillMPage (_P_MOVE , 11 , _BACK , _JUST_PRESSED , fGoBack , 0) ;
 
-mPages[_P_SETXYZ].titel = "Set X, Y, Z to 0" ;  
+mPages[_P_SETXYZ].titel = "" ;  
 mPages[_P_SETXYZ].pfBase = fSetXYZBase ;
 fillMPage (_P_SETXYZ , 4 , _SETX , _JUST_PRESSED , fSetXYZ , _SETX) ;
 fillMPage (_P_SETXYZ , 5 , _SETY , _JUST_PRESSED , fSetXYZ , _SETY) ;
@@ -309,14 +318,14 @@ fillMPage (_P_SETXYZ , 8 , _SETXYZ , _JUST_PRESSED , fSetXYZ , _SETXYZ) ;
 fillMPage (_P_SETXYZ , 10 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP ) ;
 fillMPage (_P_SETXYZ , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
-mPages[_P_SD].titel = "Select a file on Sd card" ;  // this screen has only 10 buttons instead of 12
+mPages[_P_SD].titel = "" ;  // this screen has only 10 buttons instead of 12
 mPages[_P_SD].pfBase = fSdBase ;   // cette fonction doit remplir les 4 premiers boutons en fonction des fichiers disponibles
 fillMPage (_P_SD , 6 , _PG_PREV , _JUST_PRESSED , fSdMove , _PG_PREV ) ;
 fillMPage (_P_SD , 7 , _UP , _JUST_PRESSED , fSdMove , _UP ) ;
 fillMPage (_P_SD , 8 , _PG_NEXT , _JUST_PRESSED , fSdMove , _PG_NEXT) ;
 fillMPage (_P_SD , 9 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
-mPages[_P_CMD].titel = "Select a command" ;
+mPages[_P_CMD].titel = "" ;
 mPages[_P_CMD].pfBase = fCmdBase ; // 
 if (cmdName[0][0] ) fillMPage (_P_CMD , 0 , _CMD1 , _JUST_PRESSED , fCmd , _CMD1) ; // le paramètre contient le n° du bouton
 if (cmdName[1][0] ) fillMPage (_P_CMD , 1 , _CMD2 , _JUST_PRESSED , fCmd , _CMD2) ; // le paramètre contient le n° du bouton
@@ -331,13 +340,13 @@ if (cmdName[9][0] ) fillMPage (_P_CMD , 9 , _CMD10 , _JUST_PRESSED , fCmd , _CMD
 if (cmdName[10][0] ) fillMPage (_P_CMD , 10 , _CMD11 , _JUST_PRESSED , fCmd , _CMD11) ; // le paramètre contient le n° du bouton
 fillMPage (_P_CMD , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
-mPages[_P_LOG].titel = "Log" ;
+mPages[_P_LOG].titel = "" ;
 mPages[_P_LOG].pfBase = fLogBase ;
 fillMPage (_P_LOG , POS_OF_LOG_PG_PREV , _PG_PREV , _JUST_PRESSED , fLogPrev , 0) ;
 fillMPage (_P_LOG , POS_OF_LOG_PG_NEXT , _PG_NEXT , _JUST_PRESSED , fLogNext , 0) ;
 fillMPage (_P_LOG , 11 , _BACK , _JUST_PRESSED , fGoBack , 0) ;
 
-mPages[_P_TOOL].titel = "Change tool" ;
+mPages[_P_TOOL].titel = "" ;
 mPages[_P_TOOL].pfBase = fToolBase ;
 fillMPage (_P_TOOL , 4 , _SETXYZ , _JUST_PRESSED , fSetXYZ , _SETXYZ) ;
 fillMPage (_P_TOOL , 5 , _SET_CAL , _JUST_PRESSED , fSetXYZ , _SET_CAL) ;
@@ -348,14 +357,14 @@ fillMPage (_P_TOOL , 9 , _SET_PROBE , _JUST_PRESSED , fSetXYZ , _SET_PROBE) ;
 fillMPage (_P_TOOL , 10 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP ) ;
 fillMPage (_P_TOOL , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
-mPages[_P_SD_SHOW].titel = "Show Sd" ;
+mPages[_P_SD_SHOW].titel = "" ;
 mPages[_P_SD_SHOW].pfBase = fSdShowBase ;
 fillMPage (_P_SD_SHOW , POS_OF_SD_SHOW_PG_PREV , _PG_PREV , _JUST_PRESSED , fSdShowPrev , 0) ;
 fillMPage (_P_SD_SHOW , POS_OF_SD_SHOW_PG_NEXT , _PG_NEXT , _JUST_PRESSED , fSdShowNext , 0) ;
 fillMPage (_P_SD_SHOW , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
 
-mPages[_P_OVERWRITE].titel = "Change tool" ;
+mPages[_P_OVERWRITE].titel = "" ;
 mPages[_P_OVERWRITE].pfBase = fOverBase ;
 fillMPage (_P_OVERWRITE , POS_OF_OVERWRITE_OVERWRITE , _OVER_SWITCH_TO_SPINDLE , _JUST_PRESSED , fOverSwitch , _OVER_SWITCH_TO_SPINDLE ) ;
 fillMPage (_P_OVERWRITE , 4 , _OVER_10M , _JUST_PRESSED , fOverModify , _OVER_10M) ;
@@ -364,6 +373,14 @@ fillMPage (_P_OVERWRITE , 6 , _OVER_1P , _JUST_PRESSED , fOverModify , _OVER_1P)
 fillMPage (_P_OVERWRITE , 7 , _OVER_10P , _JUST_PRESSED , fOverModify , _OVER_10P) ;
 fillMPage (_P_OVERWRITE , 10 , _OVER_100 , _JUST_PRESSED , fOverModify , _OVER_100) ;
 fillMPage (_P_OVERWRITE , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
+
+mPages[_P_COMMUNICATION].titel = "" ;
+mPages[_P_COMMUNICATION].pfBase = fCommunicationBase ;
+fillMPage (_P_COMMUNICATION , 8 , _SERIAL , _JUST_PRESSED , fSerial , 0) ;
+fillMPage (_P_COMMUNICATION , 9 , _BLUETOOTH , _JUST_PRESSED , fBluetooth , 0) ;
+fillMPage (_P_COMMUNICATION , 10 , _TELNET , _JUST_PRESSED , fTelnet , 0) ;
+fillMPage (_P_COMMUNICATION , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
+
 
 }  // end of init
 
@@ -596,7 +613,7 @@ void updateBtnState( void) {
         bt0 = getButton(x , y , btnDefFiles) ;  // convertit x, y en n° de bouton ; retourne 0 si en dehors de la zone des boutons; sinon retourne 1 à 12
       } else {
         bt0 = getButton(x , y , btnDefNormal) ;  // convertit x, y en n° de bouton ; retourne 0 si en dehors de la zone des boutons; sinon retourne 1 à 12
-        Serial.print("btn="); Serial.println(bt0);
+        //Serial.print("btn="); Serial.println(bt0);
       }  
 //    Serial.print("x=") ; Serial.print(x) ; Serial.print( " ," ) ; Serial.print( y) ; Serial.print( " ," ) ; Serial.println(bt0) ;
     } else {
@@ -661,14 +678,16 @@ void executeMainActionBtn( ) {   // find and execute main action for ONE button 
 // Basis functions
 void blankTft(char * titel, uint16_t x , uint16_t y) {    // blank screen and display one titel
   clearScreen() ;
-  //tft.fillScreen( SCREEN_BACKGROUND ) ;
-  // currently titel is not used so folowwing lines can be skipped; uncomment if titel would be used
-  //tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
-  //tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
-  //tft.setTextSize(1) ;           // char is 2 X magnified => 
-  //tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
-  //tft.drawString( titel , x , y ) ;     // affiche un texte
-  //tft.setCursor( x , y + 30 , 2) ; // x, y, font
+  if ( strlen(titel) > 0) {
+    //tft.fillScreen( SCREEN_BACKGROUND ) ;
+    //currently titel is not used so folowwing lines can be skipped; uncomment if titel would be used
+    tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+    tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
+    tft.setTextSize(1) ;           // char is 2 X magnified => 
+    tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
+    tft.drawString( titel , x , y ) ;     // affiche un texte
+    tft.setCursor( x , y + 30 , 2) ; // x, y, font
+  }
 }
 
 void clearScreen() {
@@ -710,6 +729,8 @@ void drawPartPage() {          // update only the data on screen (not the button
     drawDataOnToolPage() ;
   } else if (currentPage == _P_OVERWRITE ){
     drawDataOnOverwritePage() ;
+  } else if (currentPage == _P_COMMUNICATION ){
+    drawDataOnCommunicationPage() ;
   }   
 }
 
@@ -891,20 +912,29 @@ void fSetupBase(void) {
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
   uint8_t line = 2 ;
-  uint8_t col = 1 ;
-  char ipBuffer[20] ;
-  if ( getWifiIp( ipBuffer ) ) { 
-    tft.drawString( "IP:" , col , line );
-    tft.drawString( ipBuffer , col + 20 , line ); // affiche la valeur avec 3 décimales 
-  } else {
-    tft.drawString( "No WiFi" , col , line ); 
-  }
-  tft.drawString( ESP32_VERSION,  col + 140 , line ) ;
+  //uint8_t col = 1 ;
+  //char ipBuffer[20] ;
+  //if ( getWifiIp( ipBuffer ) ) { 
+  //  tft.drawString( "IP:" , col , line );
+  //  tft.drawString( ipBuffer , col + 20 , line ); // affiche la valeur avec 3 décimales 
+  //} else {
+  //  tft.drawString( "No WiFi" , col , line ); 
+  //}
+  tft.drawString( ESP32_VERSION,  100 , line ) ;
 }
 
 void drawDataOnSetupPage() {  
   drawMachineStatus() ;       // draw machine status in the upper right corner
-  drawLastMsg() ;
+  tft.setTextSize(1) ;
+  tft.setTextColor(lastMsgColor ,  SCREEN_BACKGROUND ) ; // color is defined in lastMsgColor ; previously SCREEN_ALERT_TEXT
+  tft.setTextDatum( TL_DATUM ) ; // align Left
+  tft.setTextPadding (240) ; 
+  tft.setFreeFont(LABELS9_FONT); 
+  if ( strlen( lastMsg) > 30 ) {
+     tft.drawString ( " " , 85 , 32) ; // print space first in the larger font to clear the pixels
+     tft.setTextFont( 1 );           
+  }
+  tft.drawString ( &lastMsg[0] , 85 , 32) ;
 }
 
 void fMoveBase(void) {
@@ -1353,7 +1383,69 @@ void drawDataOnOverwritePage() {                                // to do : text 
   tft.drawString(  "%" , 155 , line + 20 )  ;
 }
 
+// Fill the first part of the Communication page.
+void fCommunicationBase(void) { // fonction pour l'affichage de l'écran communication
+  // display the wifi status mode and Ip adress on first line  
+  tft.setFreeFont (LABELS9_FONT) ;
+  tft.setTextSize(1) ;           // char is 2 X magnified => 
+  tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
+  tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
+  uint8_t line = 2 ;
+  uint8_t col = 1 ;
+  char ipBuffer[20] ;
+  if (wifiType == NO_WIFI ) {
+    tft.drawString( "No WiFi" , col , line );
+  } else {
+    if (wifiType == ESP32_ACT_AS_STATION ) {
+      tft.drawString( "STA: " , col , line );
+    } else {
+      tft.drawString( "AP: " , col , line );
+    }  
+    if ( getWifiIp( ipBuffer ) ) { 
+      tft.drawString( "IP=" , col + 50 , line );
+      tft.drawString( ipBuffer , col + 80 , line ); // affiche la valeur avec 3 décimales 
+    } else {
+      tft.drawString( "No IP assigned" , col + 50  , line ); 
+    }
+  }  
+}
 
+void drawDataOnCommunicationPage() {
+  // Show:  the IP adress (already done in Sbase); wifi mode (no wifi, Station, access point)
+  //  
+  drawMachineStatus() ;       // draw machine status in the upper right corner
+  drawLastMsg() ;
+  tft.setFreeFont (LABELS9_FONT) ;
+  tft.setTextSize(1) ;           // char is 2 X magnified => 
+  tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
+  tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
+  uint8_t line = 100 ;
+  uint8_t col = 1 ;
+  if ( grblLink == GRBL_LINK_SERIAL) {
+    tft.drawString( "GRBL connection uses wires" , col , line );
+  } else if ( grblLink == GRBL_LINK_BT) {
+      if (btConnected) {
+        tft.drawString( "GRBL connection uses bluetooth" , col , line );
+      } else {
+        tft.drawString("Not connected in bluetooth; please retry" , col , line );
+      }
+  } else if ( grblLink == GRBL_LINK_TELNET) {
+    tft.drawString( "GRBL connection uses Telnet" , col , line );
+  }  
+}
+
+void drawMsgOnTft(const char * msg1 , const char * msg2){
+  tft.setFreeFont (LABELS9_FONT) ;
+  tft.setTextSize(1) ;           // char is 2 X magnified => 
+  tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
+  tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
+  uint8_t line = 100 ;
+  uint8_t col = 1 ;
+  tft.drawString( msg1 , col , line );
+  tft.drawString( msg2 , col , line+20 );
+  
+}
+// ********************************************************************************************
 // ******************************** touch calibrate ********************************************
 //#define DEBUG_CALIBRATION
 void touch_calibrate() {
@@ -1562,20 +1654,20 @@ boolean checkCalibrateOnSD(void){
       // return true if a file calibrate.txt exist on the SD card; if so it means that new calibration is requested
       SdBaseFile calibrateFile ;  
       if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
-          Serial.println( __CARD_MOUNT_FAILED  ) ;
+          Serial.print("[MSG:");Serial.print( __CARD_MOUNT_FAILED  ) ;Serial.println("]");
           return false;       
       }
       //if ( ! SD.exists( "/" ) ) { // check if root exist
       if ( ! sd.exists( "/" ) ) { // check if root exist   
-          Serial.println( __ROOT_NOT_FOUND  ) ;
+          Serial.print("[MSG:");Serial.println( __ROOT_NOT_FOUND  ) ;Serial.println("]");
           return false;  
       }
       if ( ! sd.chdir( "/" ) ) {
-          Serial.println( __CHDIR_ERROR  ) ;
+          Serial.print("[MSG:");Serial.println( __CHDIR_ERROR  ) ;Serial.println("]");
           return false;  
       }
       if ( ! calibrateFile.open("/calibrate.txt" ) ) { // try to open calibrate.txt 
-          Serial.println("failed to open calibrate.txt" ) ;
+          Serial.println("[MSG:failed to open calibrate.txt]" ) ;
           return false;  
       }
       Serial.println("calibrate.txt exist on SD" ) ;      

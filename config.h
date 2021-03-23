@@ -3,7 +3,7 @@
 
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 
-#define ESP32_VERSION "v1.0.w"
+#define ESP32_VERSION "vers.2.0.a"
 
 // decide if you will use Wifi or not (and how)
 #define WIFI ESP32_ACT_AS_STATION              // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
@@ -17,9 +17,15 @@
 
 // if you use Wifi, you can (optional) define a fix IP address. Then you have to define 3 parameters
 // If one of next 3 parameters is "", it means that you do not want to use a fix local IP address.
-#define LOCAL_IP "192.168.1.10"   // fix IP address
+#define LOCAL_IP ""   // fix IP address
+//#define LOCAL_IP "192.168.1.10"   // fix IP address
 #define SUBNET "255.255.255.0"    // subnet mask of your local network
 #define GATEWAY "192.168.1.1"     // gateway that have to check the IP address
+
+#define GRBL_TELNET_IP "192.168.1.11" // IP address of GRBL_ESP32 telnet server 
+
+
+#define GRBL_BT_NAME "ESP32_BT"   // name of GRBL_ESP32 bluetooth device (as defined in GRBL_ESP32
 
 
 // select your language between EN, FR, DE

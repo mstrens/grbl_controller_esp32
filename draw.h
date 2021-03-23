@@ -24,11 +24,13 @@ _MOVE , _RESUME , _STOP_PC_GRBL , _XP , _XM , _YP , _YM , _ZP , _ZM, _AP, _AM, _
 _SETX , _SETY , _SETZ, _SETA , _SETXYZ , _SETXYZA ,_SET_CHANGE,  _SET_PROBE, _SET_CAL , _GO_CHANGE, _GO_PROBE , _TOOL , _BACK , _LEFT, _RIGHT , _UP ,
  _CMD1 ,_CMD2 ,_CMD3 ,_CMD4 ,_CMD5 ,_CMD6 ,_CMD7 , _CMD8 , _CMD9 , _CMD10 , _CMD11 , _MORE_PAUSE , _FILE0 , _FILE1 , _FILE2 , _FILE3 ,
  _MASKED1 , _PG_PREV , _PG_NEXT, _SD_SHOW , 
- _OVERWRITE, _OVER_SWITCH_TO_FEEDRATE , _OVER_SWITCH_TO_SPINDLE, _OVER_100 , _OVER_10P, _OVER_10M,_OVER_1P, _OVER_1M, _TOOGLE_SPINDLE, _MAX_BTN} ; // keep _MAX_BTN latest
+ _OVERWRITE, _OVER_SWITCH_TO_FEEDRATE , _OVER_SWITCH_TO_SPINDLE, _OVER_100 , _OVER_10P, _OVER_10M,_OVER_1P, _OVER_1M, _TOOGLE_SPINDLE, 
+ _COMMUNICATION , _SERIAL , _BLUETOOTH , _TELNET ,
+ _MAX_BTN} ; // keep _MAX_BTN latest
 
 // Liste des pages définies
 enum { _P_NULL = 0  , _P_INFO , _P_SETUP , _P_PRINT , _P_PAUSE , _P_MOVE , _P_SETXYZ , _P_SD , _P_CMD , _P_LOG , _P_TOOL, 
-      _P_SD_SHOW , _P_OVERWRITE, _P_MAX_PAGES} ; // keep _P_MAX_PAGE latest
+      _P_SD_SHOW , _P_OVERWRITE, _P_COMMUNICATION, _P_MAX_PAGES} ; // keep _P_MAX_PAGE latest
 
 // Liste des actions définies
 enum { _NO_ACTION = 0 , _JUST_PRESSED  , _JUST_RELEASED , _JUST_LONG_PRESSED , _LONG_PRESSED , _JUST_LONG_PRESSED_RELEASED } ;
@@ -101,6 +103,7 @@ void fToolBase(void) ;  // fonction pour l'affichage de l'écran Change tool
 void fSdShowBase(void) ;  // fonction pour l'affichage de l'écran SdShow
 void fOverBase(void) ;  // fonction pour l'affichage de l'écran Overwrite
 void printOneLogLine(uint8_t col , uint8_t line ) ; // imprime une ligne de log
+void fCommunicationBase(void) ; // fonction pour l'affichage de l'écran communication
 
 void updateButtonsInfoPage() ; // met à jour le set up de la page en fonction du statut d'impression
 void drawMachineStatus() ;   // affiche le status GRBL dans le coin supérieur droit
@@ -115,12 +118,14 @@ void drawDataOnLogPage() ; // affiche une page de log (sans les boutons)
 void drawDataOnToolPage() ; // affiche le statut GRBL et le lastMsg
 void drawDataOnSdShowPage() ; // affiche une page de données de SD (sans les boutons)
 void drawDataOnOverwritePage() ; // affiche les données Feedrate et RPM (en absolu et en % d'overwrite) et précise si les boutons concernent la modification de feedrate ou de RPM 
+void drawDataOnCommunicationPage() ; // affiche l'adresse IP et qq autre info sur l'écran communication
 
 int16_t bufferLineLength(int16_t firstCharIdx , int16_t &nCharInFile ) ;   //return the number of char to be displayed on TFT       
 int16_t prevBufferLineLength( int16_t beginSearchAt ,  int16_t &nCharInFile ) ;   //return the number of char to be displayed on TFT in the previous line      
 uint8_t convertNCharToNLines ( int16_t nChar ) ; // return the number of lines needed on Tft to display one line in the show buffer
   
 void fillMsg(  const char * msg , uint16_t msgColor = SCREEN_ALERT_TEXT ) ;
+void drawMsgOnTft( const char * msg1 , const char * msg2);
 
 uint8_t getButton( int16_t x, int16_t y ) ; // convert raw position into tft position
 

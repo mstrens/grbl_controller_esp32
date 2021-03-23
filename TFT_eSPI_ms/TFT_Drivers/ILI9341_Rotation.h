@@ -4,7 +4,6 @@
   rotation = m % 8; // Limit the range of values to 0-7
 
   writecommand(TFT_MADCTL);
-  Serial.print("rotation=") ; Serial.println(rotation);
   switch (rotation) {
     case 0:
 #ifdef M5STACK

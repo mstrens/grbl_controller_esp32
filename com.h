@@ -4,6 +4,9 @@
 #include "Arduino.h"
 
 #define STR_GRBL_BUF_MAX_SIZE 80         // size has been increased from 10 to 60 to support grbl [Msg:] Longest is [GC:....] message
+#define GRBL_LINK_SERIAL 0
+#define GRBL_LINK_BT 1
+#define GRBL_LINK_TELNET 2
 
 void getFromGrblAndForward( void ) ;   //get char from GRBL, forward them is statusprinting = PRINTING_FROM_PC and decode the data (look for "OK", for <xxxxxx> sentence
                                        // fill machineStatus[] and mPosXYZ[]
@@ -23,6 +26,12 @@ void resetWaitOkWhenSdMillis() ;
 void fillErrorMsg( const char * errorMsg ) ; 
 void fillAlarmMsg( const char * alarmMsg ) ;
 void fillStringExecuteMsg( uint8_t buttonMessageIdx ) ; 
-
+void toGrbl(char c);
+void toGrbl(const char * data);
+void bufferise2Grbl(const char * data , char beginEnd = 'c');
+int fromGrblAvailable();
+int fromGrblRead();
+void btInit() ;
+void startGrblCom(uint8_t comMode);
 #endif                                       
 

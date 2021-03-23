@@ -25,9 +25,11 @@ char wifiSsid[65] ;
 IPAddress local_IP; // create IP adress with 4 values = 0; will be filled in init
 IPAddress gateway; // create IP adress with 4 values = 0; will be filled in init
 IPAddress subnet; // create IP adress with 4 values = 0; will be filled in init
+IPAddress grbl_Telnet_IP; // create IP adress with 4 values = 0; will be filled in init
 String local_IPStr = ""; // used to store the IP address values in string (for SD, preferences, config) 
 String gatewayStr = ""; // used to store the IP address values in string (for SD, preferences, config)
 String subnetStr = ""; // used to store the IP address values in string (for SD, preferences, config)
+String grbl_Telnet_IPStr =  ""; // used to store the GRBL IP address values in string (for SD, preferences, config)
 extern Preferences preferences ; // used to save the WIFi parameters  
 
 File32 root ; // used for Directory 
@@ -43,18 +45,21 @@ void initWifi() {
     local_IP.fromString(local_IPStr);
     gateway.fromString(gatewayStr);
     subnet.fromString(subnetStr);
-    Serial.println("Wifi config will be executed");
+
+    grbl_Telnet_IP.fromString(grbl_Telnet_IPStr);
+    Serial.println("[MSG:Wifi connecting with fix address]");
+    
     if (!WiFi.config(local_IP, gateway, subnet)) {
-      Serial.println("Fix IP address failed to configure");
+      Serial.println("[MSG:Fix IP address failed to configure]");
     }  
   } else {
-    Serial.println("Wifi start without satic IP address");
+    Serial.println("[MSG:Wifi start without satic IP address]");
   }
   if (wifiType == ESP32_ACT_AS_STATION) {
       //Serial.print("local IP="); Serial.println(local_IPStr);
       //Serial.print("gateway="); Serial.println(gatewayStr);
       //Serial.print("subnet="); Serial.println(subnetStr);
-      blankTft("Connecting to Wifi access point", 5 , 20 ) ; // blank screen and display a text at x, y
+      blankTft("Connecting to Wifi access point", 5 , 20 ) ; // blank screen and display a text at x, y 
       WiFi.begin(wifiSsid , wifiPassword);
       uint8_t initWifiCnt = 40 ;   // maximum 40 retries for connecting to wifi
       while (WiFi.status() != WL_CONNECTED)  { // Wait for the Wi-Fi to connect; max 40 retries
@@ -71,7 +76,7 @@ void initWifi() {
     WiFi.softAP( wifiSsid , wifiPassword );
     //Serial.println("\nESP has IP address: "+ WiFi.softAPIP().toString()); // Report which SSID and IP is in use
   }  
-  WiFi.setSleep(false);
+  //WiFi.setSleep(false);
   //----------------------------------------------------------------------   
   ///////////////////////////// Server Commands 
   server.on("/",         HomePage);
@@ -105,8 +110,10 @@ void retrieveWifiParam(void){  // get the wifi parameters (type, SSID, password)
       preferences.putString("LOCAL_IP", local_IPStr ) ;
       preferences.putString("GATEWAY", gatewayStr ) ;
       preferences.putString("SUBNET", subnetStr ) ;
+      preferences.putString("SUBNET", subnetStr ) ;
+      preferences.putString("GRBL_TELNET_IP", grbl_Telnet_IPStr ) ;
       preferences.putChar("wifiDef", 1); // 1 is used to say that a set of wifi preferences is saved
-      Serial.println("using SD param for Wifi") ;
+      Serial.println("[MSG:using SD param for Wifi]") ;
     } else if ( preferences.getChar("wifiDef", 0) ) {  // return 0 when no set is defined and 1 when wifi is defined in preferences
       // search in preferences
       wifiType = preferences.getChar("WIFI", NO_WIFI  ) ; // if key does not exist return NO_WIFI
@@ -115,13 +122,14 @@ void retrieveWifiParam(void){  // get the wifi parameters (type, SSID, password)
       local_IPStr = preferences.getString("LOCAL_IP" , "") ; // return a string if found, otherwise the null string
       gatewayStr = preferences.getString("GATEWAY" , "") ; // return a string if found, otherwise the null string
       subnetStr = preferences.getString("SUBNET" , "") ; // return a string if found, otherwise the null string
-      Serial.println("using preference param for WiFi") ;
+      grbl_Telnet_IPStr = preferences.getString("GRBL_TELNET_IP" , "") ; // return a string if found, otherwise the null string
+      Serial.println("[MSG:using preference param for WiFi]") ;
     } else {
       // use those from config.h
       wifiType = WIFI ;
       strcpy(wifiPassword, myPassword) ;
       strcpy(wifiSsid, mySsid) ;
-      Serial.println("using config.h param for WiFi") ;
+      Serial.println("[MSG:using config.h param for WiFi]") ;
     #ifdef LOCAL_IP
       local_IPStr = LOCAL_IP ;
     #endif
@@ -130,6 +138,9 @@ void retrieveWifiParam(void){  // get the wifi parameters (type, SSID, password)
     #endif
     #ifdef SUBNET
       subnetStr = SUBNET ;
+    #endif
+    #ifdef GRBL_TELNET_IP
+      grbl_Telnet_IPStr = GRBL_TELNET_IP ;
     #endif     
     }
     //Serial.print("wifiType=") ; Serial.println(wifiType) ;
@@ -153,7 +164,8 @@ boolean checkWifiOnSD(void){
       bool wifiSsidOk = false;
       bool local_IPOk = false ;
       bool gatewayOk = false ;
-      bool subnetOk = false ;  
+      bool subnetOk = false ;
+      bool grbl_Telnet_IPOk = false ;  
       uint8_t n; // number of bytes in a line
       char * pBeginValue ;
       char * pEndValue ;
@@ -161,7 +173,8 @@ boolean checkWifiOnSD(void){
       char wifiTypeString[30] ;
       char local_IPChar[50] = {0} ;
       char gatewayChar[50] = {0} ;
-      char subnetChar[50] = {0} ;        
+      char subnetChar[50] = {0} ;
+      char grbl_Telnet_IPChar[50] = {0};        
       if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
           //Serial.println( __CARD_MOUNT_FAILED  ) ;
           return false;       
@@ -221,6 +234,10 @@ boolean checkWifiOnSD(void){
               memcpy(subnetChar , pBeginValue+1 , sizeValue) ;
               subnetStr = subnetChar ;
               subnetOk = true ;
+            } else if ( memcmp ( "GRBL_TELNET_IP=", line, sizeof("GRBL_TELNET_IP=")-1) == 0){
+              memcpy(grbl_Telnet_IPChar , pBeginValue+1 , sizeValue) ;
+              grbl_Telnet_IPStr = grbl_Telnet_IPChar ;
+              grbl_Telnet_IPOk = true ;
             }  
           }
         }

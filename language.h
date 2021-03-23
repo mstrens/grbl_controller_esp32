@@ -340,6 +340,7 @@
 
 
 #else                                      // by default English
+// list of buttons
 #define __SETUP "Setup" 
 #define __PRINT "Mill" 
 #define __HOME "Home" 
@@ -385,7 +386,10 @@
 #define __OVER_10M "-10%"
 #define __OVER_1P  "+1%"
 #define __OVER_1M  "-1%"
-
+#define __COMMUNICATION "Com"
+#define __SERIAL "Wire"
+#define __BLUETOOTH "Blue*tooth"
+#define __TELNET "Telnet"
 
 
 #define __WPOS "Wpos"
