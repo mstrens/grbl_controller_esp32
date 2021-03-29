@@ -36,6 +36,14 @@ void logBufferWrite(uint8_t c) {
   }
 }
 
+void logBufferWriteLine(char * line){
+  int lineLen = strlen(line);
+  int i = 0;
+  for ( i ; i < lineLen ; i++ ) {
+    logBufferWrite( line[i] ) ;    
+  }
+  logBufferWrite( BUFFER_EOL ) ; // special car to identify the end of the line
+}
 
 int16_t getPrevLogLine () {  // get previous line if any
                                 // we first search an EOL in order to only display full lines

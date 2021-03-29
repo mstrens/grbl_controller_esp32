@@ -10,6 +10,7 @@
 #include "com.h"
 #include "log.h"
 #include "touch.h"
+#include "grbl_file.h"
 
 #define LABELS9_FONT &FreeSans9pt7b    // Key label font 2
 #define LABELS12_FONT &FreeSans12pt7b
@@ -82,7 +83,7 @@ extern float moveMultiplier ;
 // used by nunchuck
 extern uint8_t jog_status  ;
 extern boolean jogCancelFlag ;
-extern boolean jogCmdFlag  ; 
+//extern boolean jogCmdFlag  ; 
 
 extern boolean statusTelnetIsConnected ;
 
@@ -109,6 +110,15 @@ char lineOfText[50] ; // Store 1 line of text for Log screen
 
 extern char grblLastMessage[STR_GRBL_BUF_MAX_SIZE] ;
 extern boolean grblLastMessageChanged;
+extern uint16_t GrblFirstFileToDisplay ;   // 0 = first file in the directory
+//extern boolean grblFileReadingBusy = false;
+extern int grblFileIdx ; // index in the array where next file name being parse would be written = nbr of grbl file names
+extern int grblTotalFilesCount ; // total number of files on grbl sd card; used to avoid reading when no files in current dir
+extern int8_t errorGrblFileReading ; // store the error while reading grbl files (0 = no error)
+extern char grblDirFilter[100] ; // contains the name of the directory to be filtered; "/" for the root; last char must be "/"
+extern char grblFileNames[GRBLFILEMAX][40]; // contain max n filename or directory name with max 40 char.
+extern char grblFileNamesTft[4][40]; // contains only the 4 names to be displayed on TFT (needed because name is altered during btn drawing 
+extern uint8_t firstGrblFileToDisplay ;   // 0 = first file in the directory
 
 //**************** normal screen definition.
 #define But0 3 // was B0 but B0 is already defined in some ESP32 library; so rename B0 to But0
@@ -244,6 +254,12 @@ mButton[_COMMUNICATION].pLabel = __COMMUNICATION ;
 mButton[_SERIAL].pLabel = __SERIAL ;
 mButton[_BLUETOOTH].pLabel = __BLUETOOTH ;
 mButton[_TELNET].pLabel = __TELNET ;
+mButton[_SD_GRBL].pLabel = __SD_GRBL ;
+mButton[_FILE0_GRBL].pLabel = grblFileNamesTft[0] ;
+mButton[_FILE1_GRBL].pLabel = grblFileNamesTft[1] ;
+mButton[_FILE2_GRBL].pLabel = grblFileNamesTft[2] ;
+mButton[_FILE3_GRBL].pLabel = grblFileNamesTft[3] ; 
+
 
 mPages[_P_INFO].titel = "" ;
 mPages[_P_INFO].pfBase = fInfoBase ;
@@ -270,6 +286,7 @@ fillMPage (_P_PRINT , 4 , _SD , _JUST_PRESSED , fGoToPage , _P_SD) ;
 fillMPage (_P_PRINT , 5 , _USB_GRBL , _JUST_PRESSED , fStartUsb , 0) ;
 fillMPage (_P_PRINT , 6 , _TELNET_GRBL , _JUST_PRESSED , fStartTelnet , 0) ;
 fillMPage (_P_PRINT , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
+fillMPage (_P_PRINT , 8 , _SD_GRBL , _JUST_PRESSED , fGoToPage , _P_SD_GRBL_WAIT) ;
 fillMPage (_P_PRINT , 10 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;
 fillMPage (_P_PRINT , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
 
@@ -381,6 +398,16 @@ fillMPage (_P_COMMUNICATION , 9 , _BLUETOOTH , _JUST_PRESSED , fBluetooth , 0) ;
 fillMPage (_P_COMMUNICATION , 10 , _TELNET , _JUST_PRESSED , fTelnet , 0) ;
 fillMPage (_P_COMMUNICATION , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
+mPages[_P_SD_GRBL_WAIT].titel = "" ;  // this screen has only 10 buttons instead of 12
+mPages[_P_SD_GRBL_WAIT].pfBase = fSdGrblWaitBase ;   // cette fonction doit provoque l'envoi d'une commande à GRBL
+
+mPages[_P_SD_GRBL].titel = "" ;  // this screen has only 10 buttons instead of 12
+mPages[_P_SD_GRBL].pfBase = fSdGrblBase ;   // cette fonction doit remplir les 4 premiers boutons en fonction des fichiers disponibles
+fillMPage (_P_SD_GRBL , 6 , _PG_PREV , _JUST_PRESSED , fSdGrblMove , _PG_PREV ) ;
+fillMPage (_P_SD_GRBL , 7 , _UP , _JUST_PRESSED , fSdGrblMove , _UP ) ;
+fillMPage (_P_SD_GRBL , 8 , _PG_NEXT , _JUST_PRESSED , fSdGrblMove , _PG_NEXT) ;
+fillMPage (_P_SD_GRBL , 9 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
+
 
 }  // end of init
 
@@ -428,6 +455,9 @@ void drawAllButtons(){
     uint8_t btnIdx;
     while ( i < 12 ) {           // pour chacun des 12 boutons possibles
       btnIdx = mPages[currentPage].boutons[i] ;
+      //Serial.print("btnIdx="); Serial.println(btnIdx) ;
+      //Serial.print("label de btnIdx="); Serial.println(mButton[btnIdx].pLabel[0]) ;
+      
       //if ( btnIdx && btnIdx != _MASKED1 ) {  // si un n° de bouton est précisé, l'affiche sauf si c'est un bouton masqué (ex: _MASKED1)
       if ( btnIdx && mButton[btnIdx].pLabel[0] != 0 ) {  // si un n° de bouton est précisé, l'affiche sauf si c'est un bouton masqué (dont le label est vide)
         //Serial.print("va afficher le bouton ") ; Serial.println( i) ;
@@ -447,7 +477,7 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
 //                         17              2               1 ; le . sert de séparateur pour répartir les noms de fichier sur 2 lignes si possible 
 // si le btnIdx est un bouton masqué (ex _MASKED1), alors on n'affiche rien
   int32_t _xl , _yl ;
-  int32_t _w = 76 ;
+  int32_t _w = 76 ;  // dimensions are changed here below when it is a button for a file name
   int32_t _h = 76 ;
   int32_t fill = BUTTON_BACKGROUND ;
   int32_t outline = BUTTON_BORDER_NOT_PRESSED ;
@@ -465,7 +495,8 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
   boolean convertPosIsTrue ;
     
   pbtnLabel = mButton[btnIdx].pLabel ;
-  if (  currentPage == _P_SD && btnIdx >= _FILE0 && btnIdx <= _FILE3  ) { // if it is a button for a file name
+  if (  (currentPage == _P_SD && btnIdx >= _FILE0 && btnIdx <= _FILE3  ) ||
+        ( currentPage == _P_SD_GRBL  && btnIdx >= _FILE0_GRBL && btnIdx <= _FILE3_GRBL)  ){ // if it is a button for a file name
     _w = 74+6+80 ;
     _h = 56 ;
     isFileName = true ;
@@ -473,7 +504,8 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
       fill = BUTTON_BORDER_NOT_PRESSED ;
       text = BUTTON_BACKGROUND ;
       pbtnLabel++ ;
-    }
+    } 
+    
     // remove extension if any and put it in fileExtension[]
     pExtensionChar = strrchr( pbtnLabel , '.' ); // search for first . from the right
     if ( pExtensionChar ) {
@@ -488,7 +520,7 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
   }  
 //  Serial.print("pos="); Serial.print( pos ) ; Serial.print(" btnIdx="); Serial.print( btnIdx ) ;
 //  Serial.print("first char of btnName ="); Serial.println( *pbtnLabel ) ;
-  if (  currentPage == _P_SD ) {
+  if (  currentPage == _P_SD || currentPage == _P_SD_GRBL) {
     convertPosIsTrue =  convertPosToXY( pos , &_xl, &_yl , btnDefFiles ) ;          //  Convert position index to colonne and line (top left corner) 
   } else {
     convertPosIsTrue =  convertPosToXY( pos , &_xl, &_yl , btnDefNormal ) ;          //  Convert position index to colonne and line (top left corner) 
@@ -538,6 +570,7 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
     } else { 
       if( memccpy( tempLabel , pbtnLabel , '\0' , 16) == NULL ) tempLabel[16] = 0 ; // copy the label in tmp
       pch = strchr(tempLabel , '.') ;
+      
       if  ( pch!=NULL ) {
         numbChar = pch - tempLabel ;
         if (numbChar >= 8 ) numbChar = 8 ;
@@ -562,7 +595,7 @@ void mButtonBorder(uint8_t pos , uint16_t outline) {  // draw the border of a bu
   int32_t _xl , _yl ;
   int32_t _w = 76 ;
   int32_t _h = 76 ;
-  if (currentPage == _P_SD ) {
+  if (currentPage == _P_SD || currentPage == _P_SD_GRBL ) {
     convertPosToXY( pos , &_xl, &_yl , btnDefFiles) ;
     if ( pos <= 4) { // if it is a button for a file name
       _w = 74+6+80 ;
@@ -609,7 +642,7 @@ void updateBtnState( void) {
                                                 // false = key not pressed
     nextMillis = touchMillis + WAIT_TIME_BETWEEN_TOUCH ;
     if ( touchPressed)  {
-      if ( currentPage == _P_SD ) {             // conversion depend on current screen.
+      if ( currentPage == _P_SD || currentPage == _P_SD_GRBL ) {             // conversion depend on current screen.
         bt0 = getButton(x , y , btnDefFiles) ;  // convertit x, y en n° de bouton ; retourne 0 si en dehors de la zone des boutons; sinon retourne 1 à 12
       } else {
         bt0 = getButton(x , y , btnDefNormal) ;  // convertit x, y en n° de bouton ; retourne 0 si en dehors de la zone des boutons; sinon retourne 1 à 12
@@ -1005,8 +1038,9 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
   if ( ! sdStart() ) {           // try to read the SD card; en cas d'erreur, rempli last message et retourne false
     currentPage = _P_INFO ;      // in case of error, go back to Info
     dirLevel = -1 ;              // force a reload of sd data next time we goes to SD card menu
-    fInfoBase () ;               // prepare info page (affiche les data et redétermine les boutons à afficher)
+    fInfoBase() ;               // prepare info page (affiche les data et redétermine les boutons à afficher)
   } else {           // if SD seems OK
+    
     sdFileDirCnt = fileCnt(dirLevel) ;     // count the number of files in working dir
     if (sdFileDirCnt == 0) {
       firstFileToDisplay = 0 ;
@@ -1442,9 +1476,116 @@ void drawMsgOnTft(const char * msg1 , const char * msg2){
   uint8_t line = 100 ;
   uint8_t col = 1 ;
   tft.drawString( msg1 , col , line );
-  tft.drawString( msg2 , col , line+20 );
-  
+  tft.drawString( msg2 , col , line+20 );  
 }
+
+/*
+Exemple
+[FILE:/System Volume Information/WPSettings.dat|SIZE:12]
+[FILE:/System Volume Information/IndexerVolumeGuid|SIZE:76]
+[FILE:/pcbtft_110320.pdf|SIZE:39253]
+[FILE:/GRBL32_V2_110320.pdf|SIZE:76953]
+[FILE:/TestRoot1.nc|SIZE:5]
+[FILE:/TestRoot2.nc|SIZE:5]
+[FILE:/TestRoot3.nc|SIZE:5]
+[FILE:/dir1/TestDir3.nc|SIZE:5]
+[FILE:/dir1/TestDir1.nc|SIZE:5]
+[FILE:/dir1/TestDir2.nc|SIZE:5]
+[SD Free:119.66 MB Used:288.00 KB Total:119.94 MB]
+
+and here list of SD errors
+"60","SD failed to mount"
+"61","SD card failed to open file for reading"
+"62","SD card failed to open directory"
+"63","SD Card directory not found"
+"64","SD Card file empty"
+*/
+
+void fSdGrblWaitBase(void) {                // cette fonction doit vérifier que la carte est accessible et actualiser les noms des fichiers disponibles sur la carte sd attahée à grbl
+// sauvegarder le fichier courant (au moins son index)
+// Appeler une fonction qui:
+//    demande à GRBL la liste des fichiers présents dans le répertoire courant
+//    afficher un écran disant de patienter et indiquant le dir en cours de lecture
+//    Enregister pourquoi on fait appel à cette fonction    
+//    activer un flag qui sera lu dans Loop et provoquera l'appel d'une fonction callback quand les données auront été lue (ou après un timeout ou une erreur) 
+
+// Dans la fonction callback:
+// S'il y a une erreur, générer un Msg et retour à l'écran Info 
+// Si le fichier courrant existe encore, affiche la liste à partir de ce fichier.
+// Si pas et s'il n'y a pas d'erreur, changer le répertoire courant en "/" et relancer la lecture
+//
+// Si on descend d'un niveau dans les directory, changer le filtre et reconstruire la liste
+// Si on remonte d'un niveau, idem
+// Avoir un array (ou un string) avec les noms des directory du filtre
+// Avoir un array avec les x fichiers ou directory
+// Pour lancer une recherche, vider l'array de 50, remplir le filtre et lancer la recherche
+// La fonction qui lit les caractères venant de GRBL doit reconnaitre et extraire les messages commençant par [FILE:/, et sauter ceux qui commence par System Volume Information
+// Elle doit accumuler les caractères dans un char array jusqu'à la fin de ligne
+// Quand elle voit une ligne qui commence par [SD Free, elle active le flag de fin.
+//  Quand on reçoit une erreur de Grbl dans la série 60, on mémorise cette erreur 
+    grblReadFiles( GRBL_FIRST_READ); 
+    tft.setFreeFont (LABELS9_FONT) ;
+    tft.setTextSize(1) ;
+    tft.setTextDatum( TL_DATUM ) ;
+    tft.setCursor(0 , 20 ) ; // x, y, font
+    tft.println( "Current directory:");
+    tft.println(grblDirFilter) ;
+    tft.println(" ") ;
+    tft.println("Reading files on Grbl");
+    tft.println("please wait");
+}
+
+void executeGrblEndOfFileReading(){
+  // check the reason for reading and act
+  if ( errorGrblFileReading ) {
+    fGoToPage(_P_INFO) ; // go to info in case of error; the error is in the Msg
+  //} else if ( grblFileIdx == 0)  { // No file found with current dir
+    //if ( grblTotalFilesCount == 0 ) { // go to info in case there are no file at all   
+    //  fillMsg("Grbl SD card is empty") ;
+    //  fGoToPage(_P_INFO) ; 
+    //} else {
+    //  fillMsg("Still to do with dir = /") ;
+    //  fGoToPage(_P_INFO) ; 
+    //}
+  } else {
+    fGoToPage(_P_SD_GRBL) ; // will display the file list 
+  }  
+}
+
+void fSdGrblBase(void) {                // cette fonction est appelée une fois la liste de fichier chargée en mémoire (donc par exemple fsdWaitGrblBase doit avoir rempli les noms)
+    if (  grblFileIdx == 0)  { // No file in the array 
+      firstGrblFileToDisplay = 0;
+    } else if  ( firstGrblFileToDisplay == 0) {
+      firstGrblFileToDisplay = 0 ;
+    } else if ( (firstGrblFileToDisplay + 4) > grblFileIdx ) {
+        if (  grblFileIdx <= 4 ) {
+          firstGrblFileToDisplay = 0 ;     // reset firstFileToDisplay 0 if less than 5 files
+        } else {
+          firstGrblFileToDisplay = grblFileIdx - 4 ;  // keep always 4 files on screen
+        }  
+    }
+    //tft.setTextSize(2) ;
+    tft.setFreeFont (LABELS9_FONT) ;
+    tft.setTextSize(1) ;
+    tft.setTextDatum( TL_DATUM ) ;
+    tft.setCursor(180 , 20 ) ; // x, y, font
+    tft.print( firstGrblFileToDisplay + 1 ) ; // we add 1 because first file has an index of 0
+    tft.print( " / " ) ;
+    tft.print( grblFileIdx ) ;  
+    tft.setTextDatum( TR_DATUM ) ;
+    if ( strlen(grblDirFilter) <= 1 ) {
+      tft.drawString( "/" , 310 , 40 );
+    } else {  // search the current 'last' dir in the full filtering name 
+      char * plastDirFilter ; // pointer to the begin of current dir (based on current filter 
+      plastDirFilter = grblDirFilter + strlen(grblDirFilter) - 2;
+      while ( ((*plastDirFilter) != '/')  && (plastDirFilter >= grblDirFilter) ) plastDirFilter--; 
+      tft.drawString( plastDirFilter , 310 , 40 );
+    }
+    updateGrblFilesBtn() ;              // met à jour les boutons à afficher;
+}
+
+
+
 // ********************************************************************************************
 // ******************************** touch calibrate ********************************************
 //#define DEBUG_CALIBRATION

@@ -11,19 +11,14 @@
 // prévoir des icones pour les boutons; on peut créer des charactères en format RLE
 // sans doute autoriser des déplacements en jog (avec la nunchuk notamment) si le statut est en HOLD ou en DOOR? (actuellement seul les statuts Jog et Idle sont autorisés pour la nunchuk
 // déplacer les tests relatifs à la place restant dans le serial2 bufferwrite dans la fonction qui regroupe les transmissions à grbl - voir plusieurs fois (Serial2.availableForWrite() != 0x7F ) 
-// afficher un message sur le tft si une liaison BT est demandée pour dire de patienter car cela peu durer longtemps
 // afficher un message sur le tft si la liaison telnet ou BT vers grbl est demandée mais ne s'active pas
-// afficher un message sur le tft si la liaison telnet ou BT vers grbl est demandée mais est perdue
-// pouvoir choisir entre Serial2, BT et Telnet pour la liaison GRBL (ajouter des boutons, à chaque changement, arrêter le service actif et lancer le nouveau)
-// ajouter un paramètre dans config pour dire si on utilise GRBL_ESP32, et si oui, quel sont les noms de BT sur cet ESP32 et sur GRBL_ESP32 et l'adresse (ou nom du serveur) telnet 
-// pouvoir afficher la liste des fichiers sur GRBL (si on utilise GRBL_ESP32) et povoir demander l'exécution d'un des fichiers
-// ne pouvoir choisir BT ou telnet que si GRBL_ESP32 est activé 
+// afficher un message sur le tft si la liaison telnet ou BT vers grbl est demandée mais est perdue (? comment détecter une liaison telnet perdue?)
+// à voir: ajouter un paramètre dans config pour dire si on utilise GRBL_ESP32, et si oui, quel sont les noms de BT sur cet ESP32 et sur GRBL_ESP32 et l'adresse (ou nom du serveur) telnet 
 // remplacer certains messages envoyés à Serial par des messages affichés au TFT notamment au sujet des (dé)connectios de BT et Telnet vers GRBL.
 // Créer un caractère pour afficher la présence d'une liaison BT ou Telnet vers GRBL et changer la couleur selon qu'elle est active ou non
 // afficher ce caractère à coté du caractère telnet actuel. 
-// créer un bouton sur l'écran setup pour accéder aux données wifi (adresse IP) et au choix de la communication avec GRBL; déplacer l'adresse ip vers ce nouvel écran
-//  
-
+// quel statut appliquer pendant l'exécution d'un print via sd grbl? Quel blocage implémenter. Commennt reconnaître la fin. Voir si le % donné dans la ligne de statut est valable 
+// ajouter des libellés de code d'erreur dans langage. Attention: il y a plus d'erreur et pas mal de trous. Il faut peut être changer le système par exemple en les stockant dans preference.
 
 
 
@@ -135,6 +130,7 @@ uint16_t firstFileToDisplay ;   // 0 = first file in the directory
 uint32_t sdFileSize ;
 uint32_t sdNumberOfCharSent ;
 
+
 //         Commande à exécuter
 char cmdName[11][17] ;     // store the names of the commands
 uint8_t cmdToSend = 0 ;   //store the cmd to be send to grbl
@@ -156,6 +152,11 @@ extern uint8_t grblLink ;
 
 // status pour telnet
 boolean statusTelnetIsConnected = false ; 
+
+// for grbl file system
+extern uint8_t grblFileReadingStatus;
+extern uint8_t parseGrblFilesStatus ;  // status to know if we are reading [FILES: lines from GRBL or if it is just done 
+
 
 /***************   Prototypes of function to avoid forward references*********************************************************************/
 //uint16_t fileCnt( level ) ;  // prototype
@@ -212,27 +213,27 @@ void setup() {
   if ( (wifiType == ESP32_ACT_AS_STATION ) || (wifiType == ESP32_ACT_AS_AP ) ) {
     telnetInit() ;
   }  
-  while ( Serial2.available() )  Serial2.read() ; // clear input buffer which can contains messages sent by GRBL in reply to noise captured before Serial port was initialised.
-  toGrbl( (char) 0x18 ) ;
-  //Serial2.write(0x18) ; // send a soft reset
-  delay(100);
-  toGrbl("$10=3\n\r");
-  //Serial2.println("$10=3");   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
-  while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
-// to debug
+  // to debug
 //  grblLastMessage[0]= 0x80 ;
 //  grblLastMessage[1]= 0x81 ;
 //  grblLastMessage[2]= 0x82 ;
 //  grblLastMessage[3]= 0x83 ;
   clearScreen() ;
-  if (grblLink == GRBL_LINK_TELNET) {
-    
-    telnetGrblInit(); // this start the connection with grbl over telnet.
+  if (grblLink == GRBL_LINK_SERIAL) {
+      while (Serial2.available()>0) Serial2.read() ; // clear the serial2 buffer
+      toGrbl( (char) 0x18 ) ;  // send a soft reset
+      delay(100);
+  } else if (grblLink == GRBL_LINK_TELNET) {
+      telnetGrblInit(); // this start the connection with grbl over telnet.
   }
   if (grblLink == GRBL_LINK_BT) {
-    
-    btGrblInit();  // this start the connection over Bluetooth
+      btGrblInit();  // this start the connection over Bluetooth
   }
+  // Configure Grbl
+  toGrbl("$10=3\n\r");
+  //Serial2.println("$10=3");   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
+  delay(200);    // wait that all char are sent
+  //while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
 }
 
 //******************************** Main loop ***************************************
@@ -267,10 +268,14 @@ void loop() {
 
   getFromGrblAndForward() ; // get char from serial GRBL and always decode them (check for OK, update machineStatus and positions),
                             // if statusprinting = PRINTING_FROM_USB or if telnet is active, then forward received char from GRBL to PC (via Serial)
-                        
-
+                          
   sendToGrbl() ;           // s'il y de la place libre dans le Tx buffer, le rempli avec le fichier de SD, une CMD ou le flux du PC; envoie périodiquement "?" pour demander le statut
 //  if (newGrblStatusReceived) Serial.println( "newStatus");
+
+  if (parseGrblFilesStatus == PARSING_FILE_NAMES_DONE) {
+    parseGrblFilesStatus = PARSING_FILE_NAMES_BLOCKED ; // avoid further execute
+    executeGrblEndOfFileReading(); // Change the display based on the files being read 
+  }
 
   if (newGrblStatusReceived == true) {
     if( statusPrinting == PRINTING_FROM_SD  && machineStatus[0] == 'H' ) { // If printing from SD and GRBL is paused

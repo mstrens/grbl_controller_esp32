@@ -180,6 +180,8 @@
 
 #define MAX_FILES 4
 
+#define GRBLFILEMAX 10 // max number of files read in one dir from grbl sd card
+
 #define N_LOG_LINE_MAX 24 // was 12 when we used a bigger font
 
 #define NO_WIFI 0               // code used to identify the wifi mode

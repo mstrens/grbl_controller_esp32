@@ -14,21 +14,7 @@
 #include "BluetoothSerial.h"
 #include "bt.h"
 
-// GRBL status are : Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep
-// a message should look like (note : GRBL sent or WPOS or MPos depending on grbl parameter : to get WPos, we have to set "$10=0"
-//  <Jog|WPos:1329.142,0.000,0.000|Bf:32,254|FS:2000,0|Ov:100,100,100|A:FM>
-//  <Idle|WPos:0.000,0.000,0.000|FS:0.0,0> or e.g. <Idle|MPos:0.000,0.000,0.000|FS:0.0,0|WCO:0.000,0.000,0.000|OV:100,100,100>
-//CLOSED
-//   START
-//        WPOS_HEADER
-//            WPOS_DATA
-//                               HEADER
-//                                 F_DATA
-//                                   F_DATA
-//                                                                                      WCO_DATA
-// note : status can also be with a ":" like Hold:1
-// outside <...>, we can get "Ok" and "error:12" followed by an CR and/or LF
-// we can also get messages: They are enclosed between [....] ; they are currently discarded. 
+// we can also get messages: They are enclosed between [....] ; they are currently discarded but stored in the log. 
 // used to decode the status and position sent by GRBL
 #define GET_GRBL_STATUS_CLOSED 0
 #define GET_GRBL_STATUS_START 1
@@ -110,8 +96,387 @@ extern BluetoothSerial SerialBT;
 uint8_t wposOrMpos ;
 uint32_t waitOkWhenSdMillis ;  // timeout when waiting for OK while sending form SD
 
+uint8_t parseGrblFilesStatus = PARSING_FILE_NAMES_BLOCKED ;  // status to know if we are reading [FILES: lines from GRBL or if it is just done 
+
+extern char grblDirFilter[100] ; // contains the name of the directory to be filtered; "/" for the root; last char must be "/"
+extern char grblFileNames[GRBLFILEMAX][40]; // contain n filename or directory name
+
+extern int grblFileIdx ; // index in the array where next file name being parse would be written
+uint32_t millisLastGetGBL = 0 ;
+extern int8_t errorGrblFileReading ; // store the error while reading grbl files (0 = no error)
+float decodedFloat[4] ; // used to convert 4 floats comma delimited when parsing a status line
+float runningPercent ; // contains the percentage of char being sent to GRBL from SD card on GRBL_ESP32; to check if it is valid
+  
+const char * errorArrayMsg[] = { __UNKNOWN_ERROR  , 
+              __EXPECTED_CMD_LETTER ,
+              __BAD_NUMBER_FORMAT ,
+              __INVALID_$_SYSTEM_CMD ,
+              __NEGATIVE_VALUE ,
+              __HOMING_NOT_ENABLED ,
+              __STEP_PULSE_LESS_3_USEC ,
+              __EEPROM_READ_FAIL ,
+              __$_WHILE_NOT_IDLE ,
+              __LOCKED_ALARM_OR_JOG ,
+              __SOFT_LIMIT_NO_HOMING ,
+              __LINE_OVERFLOW ,
+              __STEP_RATE_TO_HIGH ,
+              __SAFETY_DOOR_DETECTED ,
+              __LINE_LENGHT_EXCEEDED ,
+              __JOG_TRAVEL_EXCEEDED ,
+              __INVALID_JOG_COMMANF ,
+              __LASER_REQUIRES_PWM ,
+              __UNKNOWN_ERROR  ,
+              __UNKNOWN_ERROR ,
+              __UNSUPPORTED_COMMAND ,
+              __MODAL_GROUP_VIOLATION ,
+              __UNDEF_FEED_RATE ,
+              __CMD_REQUIRES_INTEGER ,
+              __SEVERAL_AXIS_GCODE ,
+              __REPEATED_GCODE ,
+              __AXIS_MISSING_IN_GCODE ,
+              __INVALID_LINE_NUMBER ,
+              __VALUE_MISSING_IN_GCODE ,
+              __G59_WCS_NOT_SUPPORTED ,
+              __G53_WITHOUT_G01_AND_G1 ,
+              __AXIS_NOT_ALLOWED ,
+              __G2_G3_REQUIRE_A_PLANE ,
+              __INVALID_MOTION_TARGET ,
+              __INVALID_ARC_RADIUS ,
+              __G2_G3_REQUIRE_OFFSET ,
+              __UNSUSED_VALUE ,
+              __G431_TOOL_LENGTH ,
+              __TOOL_NUMBER_EXCEED_MAX 
+};
+
+const char * alarmArrayMsg[] = { __UNKNOWN_ALARM  , 
+              __HARD_LIMIT_REACHED ,
+              __MOTION_EXCEED_CNC ,
+              __RESET_IN_MOTION ,
+              __PROBE_INIT_FAIL ,
+              __PROBE_TRAVEL_FAIL  ,
+              __RESET_DURING_HOMING ,
+              __DOOR_OPEN_HOMING ,
+              __LIMIT_ON_HOMING ,
+              __LIMIT_MISSING_HOMING 
+}; 
+
+const char * stringExecuteMsg[] = { __SETX_EXECUTED  ,  // messages must be defined here in the same sequence as the buttons used to call the string commands 
+                              __SETY_EXECUTED  ,
+                              __SETZ_EXECUTED  ,
+                              __SETA_EXECUTED  ,
+                              __SETXYZ_EXECUTED ,
+                              __SETXYZA_EXECUTED ,
+                              __SET_CHANGE_EXECUTED ,
+                              __SET_PROBE_EXECUTED  ,
+                              __SET_CAL_EXECUTED    ,
+                              __GO_CHANGE_EXECUTED  ,
+                              __GO_PROBE_EXECUTED ,
+                              __UNKNOWN_BTN_EXECUTED
+                              
+};
+
+
 // ----------------- fonctions pour lire de GRBL -----------------------------
 void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if statusprinting = PRINTING_FROM_PC and decode the data (look for "OK", for <xxxxxx> sentence
+                                       // fill machineStatus[] and wposXYZA[]
+  #define MAX_LINE_LENGTH_FROM_GRBL 200
+  
+  static char lineToDecode[MAX_LINE_LENGTH_FROM_GRBL] = {'\0'} ;
+  static uint8_t c;
+  //static uint32_t millisLastGetGBL = 0 ;
+  static uint16_t lineToDecodeIdx = 0 ; // position where to write the next char received
+  while (fromGrblAvailable() ) { // check if there are some char from grbl (Serial or Telnet or Bluetooth)
+      c=fromGrblRead() ; // get the char from grbl (Serial or Telnet or Bluetooth)
+#define DEBUG_RECEIVED_CHAR
+#ifdef DEBUG_RECEIVED_CHAR      
+      Serial.print( (char) c) ;
+      //if  (c == 0x0A || c == 0x0C ) Serial.println(millis()) ;
+#endif      
+      if ( statusPrinting == PRINTING_FROM_USB  ) {
+        Serial.print( (char) c) ;                         // forward characters from GRBL to PC when PRINTING_FROM_USB
+      }
+      sendViaTelnet((char) c) ;                   // forward characters from GRBL to telnet when PRINTING_FROM_TELNET
+      if ( c == 0x0A || c == 0x0C ) {
+        lineToDecode[lineToDecodeIdx] = 0 ; // add a 0 to close the string
+        //Serial.print("To decode="); Serial.println(lineToDecode);
+        decodeGrblLine(lineToDecode) ; // decode the line
+        lineToDecodeIdx =  0; // reset the position
+        lineToDecode[lineToDecodeIdx] = '\0' ;
+      } else {                // store the char
+        lineToDecode[lineToDecodeIdx] = c;
+        if (lineToDecodeIdx < (MAX_LINE_LENGTH_FROM_GRBL - 2) ) lineToDecodeIdx++ ;  
+      }
+  } // end while available
+  if ( (millis() - millisLastGetGBL ) > 2500 ) {           // if we did not get a GRBL status since 2500 ms, status become "?"
+    machineStatus[0] = '?' ; machineStatus[1] = '?' ; machineStatus[2] = 0 ; 
+    //Serial.print( "force reset ") ; Serial.print( millis()) ; Serial.print( " LG> = ") ; Serial.print( millis()) ;
+    millisLastGetGBL = millis() ;
+    newGrblStatusReceived = true ;                            // force a redraw if on info screen  
+  }
+}  
+
+/* Response Messages: Normal send command and execution response acknowledgement. Used for streaming.
+
+ok : Indicates the command line received was parsed and executed (or set to be executed).
+error:x : Indicated the command line received contained an error, with an error code x, and was purged. See error code section below for definitions.
+Push Messages:
+
+< > : Enclosed chevrons contains status report data.
+Grbl X.Xx ['$' for help] : Welcome message indicates initialization.
+ALARM:x : Indicates an alarm has been thrown. Grbl is now in an alarm state.
+$x=val and $Nx=line indicate a settings printout from a $ and $N user query, respectively.
+[MSG:] : Indicates a non-queried feedback message.
+[GC:] : Indicates a queried $G g-code state message.
+[HLP:] : Indicates the help message.
+[G54:], [G55:], [G56:], [G57:], [G58:], [G59:], [G28:], [G30:], [G92:], [TLO:], and [PRB:] messages indicate the parameter data printout from a $# user query.
+[VER:] : Indicates build info and string from a $I user query.
+[echo:] : Indicates an automated line echo from a pre-parsed string prior to g-code parsing. Enabled by config.h option.
+>G54G20:ok : The open chevron indicates startup line execution. The :ok suffix shows it executed correctly without adding an unmatched ok response on a new line.
+ */
+
+void decodeGrblLine(char * line){  // decode a full line when CR or LF is received ; line is in lineToDecode 
+  int lengthLine = strlen(line) ;
+  if ( lengthLine == 0) return ;  // Exit if the line is empty
+  if (line[0] == 'o' && line[1] == 'k' && lengthLine == 3){ // for OK, 
+    waitOk = false ;
+    //cntOk++;
+    return;  // avoid to log this line  
+  } else if (line[0] == '[') {      // for [ whe have to check for FILE and SD in a different way
+     parseMsgLine(line) ;
+     return ;  // avoid to log this line ; when it is a line to Log it is already done while parsing.
+  } else if (line[0] == '<') {     // decode a status line   
+    parseSatusLine(line);  
+    return ; // avoid to log this line
+  } else if ( strncmp(line, "error:", strlen("error:")) == 0 ) {
+    parseErrorLine(line);
+  } else if ( strncmp(line, "ALARM:", strlen("ALARM:")) == 0 ) {
+    parseAlarmLine(line);
+  }
+  // discard other cases (but still put them in log buffer (it can e.g. be ALARM:1 or error:10)
+  logBufferWriteLine( line );    // keep trace of the line (in most of case)
+}
+
+void parseErrorLine(const char * line){ // extract error code, convert it in txt
+  int errorNum = atoi( &line[6]) ;
+  if (errorNum < 1 || errorNum > 38 ) errorNum = 0 ;
+  char errorTxt[80] ;
+  int lenLine = strlen(line) ;
+  memcpy(errorTxt, line , lenLine);
+  strncpy(errorTxt + lenLine , errorArrayMsg[errorNum] , 79-lenLine) ;
+  errorTxt[79] = 0 ; // for safety we add a end of string  
+  fillMsg( errorTxt ) ;
+  if ( errorNum >= 60 && errorNum <= 69 ) {
+    errorGrblFileReading = errorNum ; // save the grbl error
+    parseGrblFilesStatus = PARSING_FILE_NAMES_DONE ; // inform main loop that callback function must be executed
+  }
+}
+
+void parseAlarmLine(const char * line){
+  int alarmNum = atoi( &line[6]) ;
+   if (alarmNum < 1 || alarmNum > 9 ) alarmNum = 0 ;
+   char alarmTxt[80] ;
+  int lenLine = strlen(line) ;
+  memcpy(alarmTxt, line , lenLine);
+  strncpy(alarmTxt + lenLine , alarmArrayMsg[alarmNum] , 79-lenLine) ;
+  alarmTxt[79] = 0 ; // for safety we add a end of string  
+  fillMsg( alarmTxt ) ;  
+}
+
+void parseMsgLine(char * line) {  // parse Msg line from GRBL
+     char * pSearch ;
+     char * pEndNumber1 ;
+     char * pEndNumber2 ;
+     if ( strncmp(line, "[FILE:", strlen("[FILE:")) == 0 ) {
+        parseFileLine( line + strlen("[FILE:"));
+        return; // do not log the File lines
+     
+     } else if ( strncmp(line , "[SD Free:", strlen("[SD Free:")) == 0 ) {
+        if ( parseGrblFilesStatus == PARSING_FILE_NAMES_RUNNING ) {
+          parseGrblFilesStatus = PARSING_FILE_NAMES_DONE ; // mark that all lines have been read ; it allows main loop to handle the received list
+          //Serial.println("End of lile list");
+          //Serial.print("Nr of entries=");Serial.println(grblFileIdx);
+          int i = 0; 
+          for ( i  ; i < grblFileIdx ; i++) {
+            //Serial.print("file ="); Serial.println(grblFileNames[i]);
+          }
+          
+        }
+        return; // do not log the SD lines
+     
+     } else if ( strncmp(line , "[GC:", strlen("[GC:") ) == 0 )   {
+          pSearch = strstr( line , "G2" ) ; // can be G20 or G21
+          if (pSearch != NULL ) memcpy( modalAbsRel , pSearch , 3) ;
+          pSearch = strstr( line , "G90" ) ;
+          if (pSearch != NULL ) memcpy( modalMmInch , pSearch , 3) ;
+          pSearch = strstr( line , "G91" ) ;
+          if (pSearch != NULL ) memcpy( modalMmInch , pSearch , 3) ;
+     
+     } else if ( strncmp(line , "[G30:", strlen("[G30:")) == 0 )  { // GRBL reply to $# with e.g. [G28:1.000,2.000,0.000] or [G30:4.000,6.000,0.000]
+          char * pBuf =  line + strlen("[G30:" ) ;
+          pEndNumber1 = strchr(pBuf , ',') ; // find the position of the first ','
+          if (pEndNumber1 != NULL ) { 
+              memcpy( G30SavedX , pBuf , pEndNumber1 - pBuf) ;
+              G30SavedX[pEndNumber1 - pBuf] = 0 ;
+              pEndNumber1++ ; // point to the first char of second number
+              pEndNumber2 = strchr(pEndNumber1 , ',') ; // find the position of the second ','
+              if (pEndNumber2 != NULL ) {
+                memcpy( G30SavedY , pEndNumber1 , pEndNumber2 - pEndNumber1) ;
+                G30SavedY[pEndNumber2 - pEndNumber1] = 0 ;
+              }
+          }    
+     }
+     logBufferWriteLine( line ); 
+}
+
+  
+void parseFileLine(char * line ){  // parse file line from GRBL; "[FILE:" is alredy removed
+  // line looks like [FILE:/dir1/TestDir3.nc|SIZE:5]  [FILE: is alredy removed
+  // grblDirFilter is supposed to contains "/" or "/abc/" or "/abc/de/" (so last char = "/"
+  char * sizePtr ;
+  char * fileNameOrDirPtr ;
+  char * firstNextDirPtr ;
+  int grblDirFilterLen = strlen(grblDirFilter) ; 
+  sizePtr = strchr(line , '|' );  // search for | to separate name from to size
+  //if (parseGrblFilesStatus == PARSING_FILE_NAMES_RUNNING) {      // process line only if requested
+    if ( sizePtr == NULL) return ; // discard the line if it does not contains | separator between name and size
+    *sizePtr = '\0' ;  //Replace | with string terminator
+    if ( strncmp(line , grblDirFilter , grblDirFilterLen ) != 0 )  { // discard the line if it does not contains the dirFilter
+      return;  
+    }
+    if ( strncmp(line , "/System Volume Information" , strlen("/System Volume Information") ) == 0 ) { // discard if the line is a system information
+      return;
+    }
+    fileNameOrDirPtr = line + strlen(grblDirFilter) ; // point to the first char of file or dir name
+    firstNextDirPtr =  strchr(fileNameOrDirPtr  , '/' ) ; // search first '/' after the dirFilter
+    if (firstNextDirPtr != NULL ) { // it means that we have a dir name. We have to extract the first directory and put it in the array with a / as last char.
+                                // if NULL, there are no / and so we can copy the file name
+      //firstNextDirPtr++ ;  //point to the first char after /
+      fileNameOrDirPtr--;     //Point one char before and
+      *fileNameOrDirPtr = '/' ; // Replace first char with '/' instead of '\0'
+      *firstNextDirPtr = '\0' ;  //Replace '/' at the end by string terminator
+      if ( grblFileIdx > 0) {
+        if (strcmp (fileNameOrDirPtr ,  grblFileNames[grblFileIdx-1] ) == 0 ) { // if dirname = previous entry, discard
+          return ;
+        }
+      }
+    }
+    if (grblFileIdx == (GRBLFILEMAX - 1) ) { // discard if we reach the max number of files that can be registered
+        strcpy(grblFileNames[grblFileIdx] , "Etc...")  ; // put etc if we reach the max and discard the file
+    }else {  
+        strncpy(grblFileNames[grblFileIdx] , fileNameOrDirPtr , 39) ; //copy the filename (no "/" at the end)
+        grblFileNames[grblFileIdx] [39] = '\0' ;     // add end of string for safety 
+        grblFileIdx++ ;
+    }
+}
+
+
+void parseSatusLine(char * line) {
+// GRBL status are : Idle, Run, Hold, Jog, Alarm, Door, Check, Home, Sleep
+// a message should look like (note : GRBL sent or WPOS or MPos depending on grbl parameter : to get WPos, we have to set "$10=0"
+//  <Jog|WPos:1329.142,0.000,0.000|Bf:32,254|FS:2000,0|Ov:100,100,100|A:FM>
+//  <Idle|WPos:0.000,0.000,0.000|FS:0.0,0> or e.g. <Idle|MPos:0.000,0.000,0.000|FS:0.0,0|WCO:0.000,0.000,0.000|Ov:100,100,100>
+//CLOSED
+//   START
+//        WPOS_HEADER
+//            WPOS_DATA
+//                               HEADER
+//                                 F_DATA
+//                                   F_DATA
+//                                                                                      WCO_DATA
+// note : status can also be with a ":" like Hold:1 or Door:2
+// outside <...>, we can get "Ok" and "error:12" followed by an CR and/or LF
+// Note: when a job started from a sd card on GRBL_ESP32 is running the line contains also % of execution and file name like this:
+//<Idle|MPos:-10.000,0.000,0.000|Bf:15,0|FS:0,0|SD:14.29,/X4move100.gcode>
+
+
+   char * pBegin ;
+   char * pEndType ;
+   uint8_t i = 0 ;
+   //Serial.print("line len") ; Serial.println(strlen(line)); 
+   //Serial.print("line[len-2]= "); Serial.println(line[strlen(line) -2]);
+   if ( line[strlen(line) -2] != '>' ) return ; // discard if last char is not '>'
+      pBegin = line + 1;
+      pEndType = strchr( pBegin , '|' ) ;
+      *pEndType = '\0' ; // replace | by 0 in order to let memccpy copy end of string too 
+      memccpy( machineStatus , pBegin , '\0', 9);  // copy the status
+      pBegin = strchr(pBegin , '\0') + 1 ;  // point to first Char after the status
+      char MPosOrWPos = ' ' ;
+      while ( true ) {                     // handle each section up to the end of line
+          pEndType = strchr(pBegin , ':') ;
+          if (pEndType ) {
+              decodeFloat(pEndType+1) ;
+              i = 0 ;
+              if ( strncmp( pBegin, "MPos:" , strlen("MPos:") ) == 0 ) {
+                  for (i ; i<4 ; i++) {
+                    mposXYZA[i] = decodedFloat[i] ;
+                    wposXYZA[i] = mposXYZA[i] - wcoXYZA[i] ;
+                    MPosOrWPos = 'M' ;
+                  }      
+              } else if ( strncmp( pBegin, "WPos:" , strlen("WPos:") )== 0 ) {
+                  for (i ; i<4 ; i++) {
+                    wposXYZA[i] = decodedFloat[i] ;
+                    mposXYZA[i] = wposXYZA[i] + wcoXYZA[i] ;
+                    MPosOrWPos = 'W' ;
+                  }  
+              } else if ( strncmp( pBegin, "WCO:" , strlen("WCO:") ) ==0 ){
+                  for (i ; i<4 ; i++) {
+                      wcoXYZA[i] =  decodedFloat[i] ;
+                      if ( MPosOrWPos == 'W') {                  // we previously had a WPos so we update MPos
+                        mposXYZA[i] = wposXYZA[i] + wcoXYZA[i] ;  
+                      } else {                                   // we previously had a MPos so we update WPos
+                        wposXYZA[i] = mposXYZA[i] - wcoXYZA[i] ;
+                      }
+                  }
+              } else if ( strncmp( pBegin, "Bf:" , strlen("Bf:") ) == 0 ) {
+                  bufferAvailable[0] = decodedFloat[0] ;
+                  bufferAvailable[1] = decodedFloat[1] ;
+              } else if ( strncmp( pBegin, "F:" , strlen("F:") ) ==  0 ) {
+                  feedSpindle[0] = decodedFloat[0] ;
+              } else if ( strncmp( pBegin, "FS:" , strlen("FS:") ) == 0 ){
+                  feedSpindle[0] = decodedFloat[0] ;
+                  feedSpindle[1] = decodedFloat[1] ;
+              } else if ( strncmp( pBegin, "Ov:" , strlen("Ov:") ) == 0 ){
+                  overwritePercent[0] = decodedFloat[0] ;
+                  overwritePercent[1] = decodedFloat[1] ;
+                  overwritePercent[2] = decodedFloat[2] ;
+              } else if ( strncmp( pBegin, "SD:" , strlen("SD:") ) == 0 ){
+                  runningPercent = decodedFloat[0] ;
+              } // end testing different fields} // end testing different fields
+              // now, update pBegin to nextField
+              pBegin = strchr(pBegin , '|' ) ; //search begin of next section
+              if (pBegin) {
+                pBegin++;
+                //Serial.print("remaining text=") ; Serial.println(pBegin);   
+              } else {
+                break; // exit while when there are no other section
+          }
+      } // exit While
+      millisLastGetGBL = millis();
+      newGrblStatusReceived = true;     
+   } // end if
+}
+
+void decodeFloat(char * pSection) { // decode up to 4 float numbers comma delimited in a section
+  decodedFloat[0] = 0;
+  decodedFloat[1] = 0;
+  decodedFloat[2] = 0;
+  decodedFloat[3] = 0;
+  char * pEndNum ;
+  int i = 0 ;
+  pEndNum = strpbrk ( pSection , ",|>") ; // cherche un dernier caractère valide après le nombre
+  while ( (i < 4) && pEndNum) { // decode max 4 floats
+      decodedFloat[i] = atof (pSection) ;
+      if ( *pEndNum == ',') { // if last char is ',', then we loop
+        pSection =  pEndNum + 1;
+        i++; 
+        pEndNum = strpbrk ( pSection , ",|>") ; // search first char that end the section and return the position of this end
+      } else {
+        i=4; // force to exit while when the last char was not a comma
+      }
+  }    
+}
+
+void getFromGrblAndForward2( void ) {   //get char from GRBL, forward them if statusprinting = PRINTING_FROM_PC and decode the data (look for "OK", for <xxxxxx> sentence
                                        // fill machineStatus[] and wposXYZA[]
   static uint8_t c;
   static uint8_t lastC = 0 ;
@@ -292,10 +657,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
     machineStatus[0] = '?' ; machineStatus[1] = '?' ; machineStatus[2] = 0 ; 
     //Serial.print( "force reset ") ; Serial.print( millis()) ; Serial.print( " LG> = ") ; Serial.print( millis()) ;
     millisLastGetGBL = millis() ;
-    newGrblStatusReceived = true ;                            // force a redraw if on info screen
-    
-    //Serial2.println( (char) 0x18) ;                             // force a soft reset of grbl
-    
+    newGrblStatusReceived = true ;                            // force a redraw if on info screen  
   }
 }
 
@@ -599,9 +961,10 @@ void sendJogCancelAndJog(void) {
     } // end of jogCancelFlag
     
     if ( jogCmdFlag ) {
+      //Serial.print("jog_status"); Serial.println(jog_status);
       if ( jog_status == JOG_NO ) {
-        //Serial.println( bufferAvailable[0] ) ;
-        if (bufferAvailable[0] > 15) {    // tests shows that GRBL gives errors when we fill to much the block buffer
+          Serial.println( bufferAvailable[0] ) ;
+        if (bufferAvailable[0] > 5) {    // tests shows that GRBL gives errors when we fill to much the block buffer  
           if ( sendJogCmd(startMoveMillis) ) { // if command has been sent
             waitOk = true ;
             jog_status = JOG_WAIT_END_CMD ;
@@ -642,13 +1005,14 @@ boolean sendJogCmd(uint32_t startTime) {
         uint32_t speedMove ;
         char sspeedMove[20];
         int32_t counter = millis() - startTime ;
+        Serial.print("counter=") ; Serial.println(counter);
         if ( counter < 10 ) {
           distanceMove = MINDIST ;
           speedMove = MINSPEED ;
         } else {
           counter = counter - DELAY_BEFORE_REPEAT_MOVE ;
           if (counter < 0) {
-            //Serial.println("counter neg");
+            Serial.println("counter neg");
             return false ;              // do not send a move; // false means that cmd has not been sent
           }
           if ( counter > (  DELAY_TO_REACH_MAX_SPEED - DELAY_BEFORE_REPEAT_MOVE) ) {
@@ -667,7 +1031,7 @@ boolean sendJogCmd(uint32_t startTime) {
         }
         sprintf(sdistanceMove, "%.2f" , distanceMove); // convert to string
         //
-        //Serial.println("send a jog") ;  
+        Serial.println("send a jog") ;  
         bufferise2Grbl("$J=G91 G21" , 'b');
         //Serial2.print("$J=G91 G21") ;
         if (jogDistX > 0) {
@@ -728,73 +1092,6 @@ boolean sendJogCmd(uint32_t startTime) {
         return true ; // true means that cmd has been sent
 }
 
-const char * errorArrayMsg[] = { __UNKNOWN_ERROR  , 
-              __EXPECTED_CMD_LETTER ,
-              __BAD_NUMBER_FORMAT ,
-              __INVALID_$_SYSTEM_CMD ,
-              __NEGATIVE_VALUE ,
-              __HOMING_NOT_ENABLED ,
-              __STEP_PULSE_LESS_3_USEC ,
-              __EEPROM_READ_FAIL ,
-              __$_WHILE_NOT_IDLE ,
-              __LOCKED_ALARM_OR_JOG ,
-              __SOFT_LIMIT_NO_HOMING ,
-              __LINE_OVERFLOW ,
-              __STEP_RATE_TO_HIGH ,
-              __SAFETY_DOOR_DETECTED ,
-              __LINE_LENGHT_EXCEEDED ,
-              __JOG_TRAVEL_EXCEEDED ,
-              __INVALID_JOG_COMMANF ,
-              __LASER_REQUIRES_PWM ,
-              __UNKNOWN_ERROR  ,
-              __UNKNOWN_ERROR ,
-              __UNSUPPORTED_COMMAND ,
-              __MODAL_GROUP_VIOLATION ,
-              __UNDEF_FEED_RATE ,
-              __CMD_REQUIRES_INTEGER ,
-              __SEVERAL_AXIS_GCODE ,
-              __REPEATED_GCODE ,
-              __AXIS_MISSING_IN_GCODE ,
-              __INVALID_LINE_NUMBER ,
-              __VALUE_MISSING_IN_GCODE ,
-              __G59_WCS_NOT_SUPPORTED ,
-              __G53_WITHOUT_G01_AND_G1 ,
-              __AXIS_NOT_ALLOWED ,
-              __G2_G3_REQUIRE_A_PLANE ,
-              __INVALID_MOTION_TARGET ,
-              __INVALID_ARC_RADIUS ,
-              __G2_G3_REQUIRE_OFFSET ,
-              __UNSUSED_VALUE ,
-              __G431_TOOL_LENGTH ,
-              __TOOL_NUMBER_EXCEED_MAX 
-};
-
-const char * alarmArrayMsg[] = { __UNKNOWN_ALARM  , 
-              __HARD_LIMIT_REACHED ,
-              __MOTION_EXCEED_CNC ,
-              __RESET_IN_MOTION ,
-              __PROBE_INIT_FAIL ,
-              __PROBE_TRAVEL_FAIL  ,
-              __RESET_DURING_HOMING ,
-              __DOOR_OPEN_HOMING ,
-              __LIMIT_ON_HOMING ,
-              __LIMIT_MISSING_HOMING 
-}; 
-
-const char * stringExecuteMsg[] = { __SETX_EXECUTED  ,  // messages must be defined here in the same sequence as the buttons used to call the string commands 
-                              __SETY_EXECUTED  ,
-                              __SETZ_EXECUTED  ,
-                              __SETA_EXECUTED  ,
-                              __SETXYZ_EXECUTED ,
-                              __SETXYZA_EXECUTED ,
-                              __SET_CHANGE_EXECUTED ,
-                              __SET_PROBE_EXECUTED  ,
-                              __SET_CAL_EXECUTED    ,
-                              __GO_CHANGE_EXECUTED  ,
-                              __GO_PROBE_EXECUTED ,
-                              __UNKNOWN_BTN_EXECUTED
-                              
-};
 
 void fillErrorMsg( const char * errorMsg ) {   // errorMsg contains "Error:xx"
    int errorNum = atoi( &errorMsg[6]) ;
@@ -846,6 +1143,7 @@ void toGrbl(const char * data){ // send one string to GRBL on Serial, Bluetooth 
       break;
     case GRBL_LINK_TELNET :
       toTelnet(data);
+      //Serial.print("send buffer="); Serial.println(data);
       break;
   } 
 }
@@ -862,7 +1160,7 @@ void bufferise2Grbl(const char * data , char beginEnd){  // group data in a buff
     bufferIdx = 0;
     buffer[bufferIdx] = '\0' ;
     //Serial.println("begin to buffer");
-    delay(100);
+    //delay(100);
   }
   uint8_t i = 0;
   while ( ( data[i] != '\0') && ( i < 254 ) && (bufferIdx < 255 )) {
@@ -872,12 +1170,12 @@ void bufferise2Grbl(const char * data , char beginEnd){  // group data in a buff
     i++;
   }
   //Serial.print("buffer=") ; Serial.println(buffer);
-  delay(100);
+  //delay(100);
   if (beginEnd == 's') {
-    //Serial.println("sending");
-    //Serial.print(buffer);
-    //Serial.println("EndOfText");
-    delay(100);
+    Serial.println("sending");
+    Serial.print(buffer);
+    Serial.println("EndOfText");
+    //delay(100);
     toGrbl(buffer) ;
   }
 }

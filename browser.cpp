@@ -40,15 +40,12 @@ void initWifi() {
   if (wifiType == NO_WIFI) {
       return ; 
   }
-  
+  grbl_Telnet_IP.fromString(grbl_Telnet_IPStr); // convert telnet ip adr
   if ( local_IPStr != "" && gatewayStr != "" && subnetStr != "" ){
     local_IP.fromString(local_IPStr);
     gateway.fromString(gatewayStr);
     subnet.fromString(subnetStr);
 
-    grbl_Telnet_IP.fromString(grbl_Telnet_IPStr);
-    Serial.println("[MSG:Wifi connecting with fix address]");
-    
     if (!WiFi.config(local_IP, gateway, subnet)) {
       Serial.println("[MSG:Fix IP address failed to configure]");
     }  

@@ -61,6 +61,13 @@ extern uint8_t lastStringCmd ;
 
 //extern uint8_t grblLink ; // identify if grbl is connected via Serial, BT or Telnet.
 
+extern char grblDirFilter[100]  ; // contains the name of the directory to be filtered; "/" for the root; last char must be "/"
+extern char grblFileNames[GRBLFILEMAX][40]; // contain max n filename or directory name with max 40 char.
+extern uint8_t firstGrblFileToDisplay ;   // 0 = first file in the directory
+extern int grblFileIdx ; // index in the array where next file name being parse would be written
+
+
+
 uint32_t prevAutoMoveMillis ;
 
 #define SOFT_RESET 0x18 
@@ -113,7 +120,7 @@ void fUnlock(uint8_t param) {
   if( machineStatus[0] == 'A') {  // if grbl is in alarm
     toGrbl("$X\n\r") ;    // send command to unlock
     //Serial2.println("$X") ;    // send command to unlock
-    //Serial.println("$X has been sent");
+    //Serial.println("$X has been sent"); // to remove
   }
 // Stay on current page
   waitReleased = true ;          // discard "pressed" until a release 
@@ -176,7 +183,7 @@ void fDist( uint8_t param ) {
   waitReleased = true ;          // discard "pressed" until a release 
 }  
 
-void fMove( uint8_t param ) {
+void fMove( uint8_t param ) { // param contains the touch being pressed or the released if no touch has been pressed
     float distance = 0.01 ;
     //uint32_t moveMillis = millis() ;
     //static uint32_t prevMoveMillis ;
@@ -256,7 +263,8 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
   } else if ( longPressedBtn  ) {
       pressedBtn = longPressedBtn ; 
       prevAutoMoveMillis = autoMoveMillis ;
-    }
+  }
+  //Serial.print("pressedBtn=");Serial.print(pressedBtn); Serial.print(" jogCmdFlag=");Serial.print(jogCmdFlag); Serial.println(" "); 
   if ( ( pressedBtn ) && (jogCmdFlag == false) ) {
     if (cntSameAutoMove == 0 ) { 
     //  moveMultiplier = 0.01 ; 
@@ -288,6 +296,7 @@ void handleAutoMove( uint8_t param) { // in Auto mode, we support long press to 
         case _AM :  jogDistA = -1  ;  break ;
         
     }
+    //Serial.print("type of move=");Serial.println(typeOfMove);
     jogCmdFlag = true ;                 // the flag will inform the send module that there is a command to be sent based on moveMultiplier and preMove. 
   }  
 }
@@ -334,7 +343,7 @@ void fSdFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param c
   }   
 }
 
-void fSdMove(uint8_t param) {     // param contient _LEFT ou _RIGTH
+void fSdMove(uint8_t param) {     // param contient _PG_PREV ou _PG_NEXT
   if ( param == _PG_PREV ) {
     if ( firstFileToDisplay > 4 ) {
       firstFileToDisplay -= 4 ;
@@ -542,4 +551,58 @@ void fTelnet(uint8_t param) { // activate GRBL over Telnet
   startGrblCom(GRBL_LINK_TELNET);
 }
 
+void fSdGrblMove(uint8_t param) {     // param contient _PG_PREV ou _PG_NEXT
+  if ( param == _PG_PREV ) {               // previous
+    if ( firstGrblFileToDisplay >= 4 ) {
+      firstGrblFileToDisplay -= 4 ;
+    } else {
+      firstGrblFileToDisplay = 0 ;
+    } 
+  } else if ( param == _PG_NEXT ){      // next
+    if ( (firstGrblFileToDisplay + 4) < grblFileIdx )  {
+      firstGrblFileToDisplay += 4 ;
+      if ( ( firstGrblFileToDisplay + 4) >= grblFileIdx ) firstGrblFileToDisplay = grblFileIdx - 4 ;
+    }  
+  } else {             // move one level up
+      if ( strlen(grblDirFilter)  > 2) { // change only if there are more than 1 car in the filter
+          char * lastDirBeginAt ;
+          lastDirBeginAt = grblDirFilter + strlen(grblDirFilter) - 2 ; // point to the car before the last one (last is a '/')
+          while ( *lastDirBeginAt != '/' && lastDirBeginAt > grblDirFilter) lastDirBeginAt-- ; // search the last '/' before the last position
+          *lastDirBeginAt++ ; //point to the first char after '/' 
+          *lastDirBeginAt = '\0' ;  //replace this char by a string terminator
+          currentPage = _P_SD_GRBL_WAIT ; // will go to the page that force to read again the file list 
+        }    
+  }
+  //Serial.print("firstFileToDisplay=") ; Serial.println(firstFileToDisplay);
+  updateFullPage = true ;
+  waitReleased = true ;          // discard "pressed" until a release 
+}
 
+
+void fSdGrblFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param contains l'index (0 à 3) du fichier à ouvrir; pour trouver le nom, il faut ajouter cela à firstGrblFileToDisplay
+   char fullFileName[200] ;
+   if ( (*grblFileNames[param + firstGrblFileToDisplay])  == '/' ) { // if first char = "/", it is a directory
+      if ( ( strlen(grblFileNames[param + firstGrblFileToDisplay]) + strlen(grblDirFilter))  > 99 ){ // when the new filter name would be to big, just discard
+         // discard  
+      } else { // change the filter (adding the dir name to existing filter and a "/" at the end
+        char * pendgrblDirFilter ;
+        pendgrblDirFilter = grblDirFilter + strlen(grblDirFilter) ; // point to the '\0' end of name
+        strcpy(pendgrblDirFilter , grblFileNames[param + firstGrblFileToDisplay]+1 ) ; //add the dirname being selected but not the first char (='/'
+        strcpy(grblDirFilter + strlen(grblDirFilter), "/") ; // add '/' at the end
+      }
+      currentPage = _P_SD_GRBL_WAIT ; // will go to the page that force to read again the file list 
+      updateFullPage = true ;
+      waitReleased = true ;          // discard "pressed" until a release       
+      return ;
+   } else {   // it is a file name; so send the command to Grbl (the command to send is "$SD/Run=/dir/dir/file.ext"
+      strcpy(fullFileName , grblDirFilter ); // copy directory name
+      strcpy(fullFileName + strlen(fullFileName) , grblFileNames[param + firstGrblFileToDisplay] )  ; // add the file name 
+      toGrbl("$SD/run=");
+      toGrbl(fullFileName);
+      toGrbl("\r\n");
+      //prevPage = currentPage ;            // go to INFO page
+      currentPage = _P_INFO ; 
+      updateFullPage = true ;
+      waitReleased = true ;          // discard "pressed" until a release
+  }   
+}

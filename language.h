@@ -65,8 +65,11 @@
 #define __OVER_10M "-10%"
 #define __OVER_1P  "+1%"
 #define __OVER_1M  "-1%"
-
-
+#define __COMMUNICATION "Com"
+#define __SERIAL "Wire"
+#define __BLUETOOTH "Blue*tooth"
+#define __TELNET "Telnet"
+#define __SD_GRBL "SD*Grbl"
 
 #define __WPOS "Wpos"
 #define __MPOS "Mpos"
@@ -224,7 +227,11 @@
 #define __OVER_10M "-10%"
 #define __OVER_1P  "+1%"
 #define __OVER_1M  "-1%"
-
+#define __COMMUNICATION "Com"
+#define __SERIAL "Wire"
+#define __BLUETOOTH "Blue*tooth"
+#define __TELNET "Telnet"
+#define __SD_GRBL "SD*Grbl"
 
 
 #define __WPOS "Wpos"
@@ -390,7 +397,7 @@
 #define __SERIAL "Wire"
 #define __BLUETOOTH "Blue*tooth"
 #define __TELNET "Telnet"
-
+#define __SD_GRBL "SD*Grbl"
 
 #define __WPOS "Wpos"
 #define __MPOS "Mpos"

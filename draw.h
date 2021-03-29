@@ -20,17 +20,21 @@ struct M_Button {
 
 // Liste des boutons disponibles
 enum { _NO_BUTTON = 0 , _SETUP , _PRINT , _HOME, _UNLOCK , _RESET , _SD , _USB_GRBL , _TELNET_GRBL, _PAUSE , _CANCEL , _INFO , _CMD ,
-_MOVE , _RESUME , _STOP_PC_GRBL , _XP , _XM , _YP , _YM , _ZP , _ZM, _AP, _AM, _D_AUTO , _D0_01 , _D0_1 , _D1, _D10 , _SET_WCS ,
+_MOVE , _RESUME , _STOP_PC_GRBL , _XP
+, _XM , _YP , _YM , _ZP , _ZM, _AP, _AM, _D_AUTO , _D0_01 , _D0_1 , _D1, _D10 , _SET_WCS ,
 _SETX , _SETY , _SETZ, _SETA , _SETXYZ , _SETXYZA ,_SET_CHANGE,  _SET_PROBE, _SET_CAL , _GO_CHANGE, _GO_PROBE , _TOOL , _BACK , _LEFT, _RIGHT , _UP ,
  _CMD1 ,_CMD2 ,_CMD3 ,_CMD4 ,_CMD5 ,_CMD6 ,_CMD7 , _CMD8 , _CMD9 , _CMD10 , _CMD11 , _MORE_PAUSE , _FILE0 , _FILE1 , _FILE2 , _FILE3 ,
  _MASKED1 , _PG_PREV , _PG_NEXT, _SD_SHOW , 
  _OVERWRITE, _OVER_SWITCH_TO_FEEDRATE , _OVER_SWITCH_TO_SPINDLE, _OVER_100 , _OVER_10P, _OVER_10M,_OVER_1P, _OVER_1M, _TOOGLE_SPINDLE, 
  _COMMUNICATION , _SERIAL , _BLUETOOTH , _TELNET ,
+ _SD_GRBL, _FILE0_GRBL , _FILE1_GRBL , _FILE2_GRBL , _FILE3_GRBL , 
  _MAX_BTN} ; // keep _MAX_BTN latest
 
 // Liste des pages définies
 enum { _P_NULL = 0  , _P_INFO , _P_SETUP , _P_PRINT , _P_PAUSE , _P_MOVE , _P_SETXYZ , _P_SD , _P_CMD , _P_LOG , _P_TOOL, 
-      _P_SD_SHOW , _P_OVERWRITE, _P_COMMUNICATION, _P_MAX_PAGES} ; // keep _P_MAX_PAGE latest
+      _P_SD_SHOW , _P_OVERWRITE, _P_COMMUNICATION, 
+      _P_SD_GRBL_WAIT ,_P_SD_GRBL ,
+      _P_MAX_PAGES} ; // keep _P_MAX_PAGE latest
 
 // Liste des actions définies
 enum { _NO_ACTION = 0 , _JUST_PRESSED  , _JUST_RELEASED , _JUST_LONG_PRESSED , _LONG_PRESSED , _JUST_LONG_PRESSED_RELEASED } ;
@@ -104,6 +108,10 @@ void fSdShowBase(void) ;  // fonction pour l'affichage de l'écran SdShow
 void fOverBase(void) ;  // fonction pour l'affichage de l'écran Overwrite
 void printOneLogLine(uint8_t col , uint8_t line ) ; // imprime une ligne de log
 void fCommunicationBase(void) ; // fonction pour l'affichage de l'écran communication
+void fSdGrblWaitBase(void) ; // fonction pour afficher la commande de lecture des fichiers à Grbl
+void executeGrblEndOfFileReading() ;// function call when list of file has been provided.
+void fSdGrblBase(void) ; // fonction pour afficher la liste des fichiers sur SD card de  Grbl
+
 
 void updateButtonsInfoPage() ; // met à jour le set up de la page en fonction du statut d'impression
 void drawMachineStatus() ;   // affiche le status GRBL dans le coin supérieur droit
@@ -125,7 +133,8 @@ int16_t prevBufferLineLength( int16_t beginSearchAt ,  int16_t &nCharInFile ) ; 
 uint8_t convertNCharToNLines ( int16_t nChar ) ; // return the number of lines needed on Tft to display one line in the show buffer
   
 void fillMsg(  const char * msg , uint16_t msgColor = SCREEN_ALERT_TEXT ) ;
-void drawMsgOnTft( const char * msg1 , const char * msg2);
+void drawMsgOnTft( const char * msg1 , const char * msg2); // affiche 2 lignes de messages
+void fSdGrblBase(void) ;                // cette fonction doit vérifier que la carte est accessible et actualiser les noms des fichiers disponibles sur la carte sd attahée à grbl
 
 uint8_t getButton( int16_t x, int16_t y ) ; // convert raw position into tft position
 

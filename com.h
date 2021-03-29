@@ -8,6 +8,22 @@
 #define GRBL_LINK_BT 1
 #define GRBL_LINK_TELNET 2
 
+#define PARSING_FILE_NAMES_BLOCKED 0
+#define PARSING_FILE_NAMES_RUNNING 1 
+#define PARSING_FILE_NAMES_DONE   2
+
+
+void getFromGrblAndForward2( void ) ;
+void decodeGrblLine(char * line) ;
+void parseMsgLine( char * line );
+void parseFileLine(char * line );
+void parseSatusLine(char * line);
+void decodeFloat(char * pSection);
+void parseErrorLine(const char * line);
+void parseAlarmLine(const char * line);
+
+
+
 void getFromGrblAndForward( void ) ;   //get char from GRBL, forward them is statusprinting = PRINTING_FROM_PC and decode the data (look for "OK", for <xxxxxx> sentence
                                        // fill machineStatus[] and mPosXYZ[]
 

@@ -48,18 +48,21 @@ bool telnetGrblInit(){
   if (WiFi.status() != WL_CONNECTED) {
         telnetConnected = false ;
         drawMsgOnTft("Unable to connect to GRBL with Telnet", "Wifi not connected" );
-        Serial.println("[MSG: fail to connect to GRBL Telnet; WiFi not connected]");
+        fillMsg("Fail to connect to GRBL Telnet");
+        //Serial.println("[MSG: fail to connect to GRBL Telnet; WiFi not connected]");
     };
   drawMsgOnTft("Trying to connect to GRBL using Telnet", "It can take several sec; please wait" );
-  if (grblClient.connect(grbl_Telnet_IP, 23,1000)) {
+  if (grblClient.connect("192.168.1.11", 23,1000)) {
     grblClient.setNoDelay(true);
     telnetConnected = true ;
     drawMsgOnTft("Connected to GRBL with Telnet", " " );
-    Serial.println("[MSG: Connected to grbl using Telnet]");
+    fillMsg("Connected to GRBL with Telnet");
+    //Serial.println("[MSG: Connected to grbl using Telnet]");
   } else {
     telnetConnected = false ;
     drawMsgOnTft("Unable to connect to GRBL with Telnet", "Wifi is connected" );
-    Serial.println("Unable to connect to GRBL Telnet; Wifi is connected");
+    //Serial.println("Unable to connect to GRBL Telnet; Wifi is connected");
+    fillMsg("Unable to connect to GRBL Telnet");
   } 
   return telnetConnected ;
 }
@@ -67,7 +70,7 @@ bool telnetGrblInit(){
 void telnetGrblStop(){
   grblClient.stop();
   while (grblClient.available() ) grblClient.read() ;
-  grblLink = GRBL_LINK_SERIAL;
+  //grblLink = GRBL_LINK_SERIAL;
   telnetConnected = false ;
 }
 

@@ -30,7 +30,10 @@ void fOverModify (uint8_t BtnParam) ;
 void fSerial(uint8_t param) ; // activate GRBL over Serial2
 void fBluetooth(uint8_t param) ; // activate GRBL over Bluetooth
 void fTelnet(uint8_t param) ; // activate GRBL over Telnet
+void fSdGrblMove(uint8_t param) ;  // param contient _LEFT ou _RIGTH
 
+void fSdFilePrint(uint8_t param ) ;
+void fSdGrblFilePrint(uint8_t param ) ;
 
 void handleAutoMove( uint8_t param) ;
 
