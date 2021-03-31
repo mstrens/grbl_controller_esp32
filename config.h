@@ -1,7 +1,6 @@
 #ifndef _config_h
 #define _config_h
 
-#include "TFT_eSPI_ms/TFT_eSPI.h"
 
 #define ESP32_VERSION "vers.2.0.a"
 
@@ -22,39 +21,21 @@
 #define SUBNET "255.255.255.0"    // subnet mask of your local network
 #define GATEWAY "192.168.1.1"     // gateway that have to check the IP address
 
-#define GRBL_TELNET_IP "192.168.1.11" // IP address of GRBL_ESP32 telnet server 
-
-
-#define GRBL_BT_NAME "ESP32_BT"   // name of GRBL_ESP32 bluetooth device (as defined in GRBL_ESP32
+// if you use GRBL_ESP32 board, you can connect to this board with Serial, telnet and/or Bluetooth
+// to connect via telnet to GRBL_ESP32 board, you have to define here the IP adress of the GRBL_ESP32 board
+#define GRBL_TELNET_IP "192.168.1.11" // IP address of GRBL_ESP32 telnet server  (as defined in GRBL_ESP32) 
+// to connect via Bluetooth, you have to define the Bluetooth name of the GRBL_ESP32 board
+#define GRBL_BT_NAME "ESP32_BT"   // name of GRBL_ESP32 bluetooth device (as defined in GRBL_ESP32)
 
 
 // select your language between EN, FR, DE
 #define LANGUAGE EN
 
 //#define AA_AXIS    // uncomment if you want that the firmware handles 4 axes instead of 3 ;(The GRBL STM32 firmware has to be compiled/flashed with the same option)
-                    
 
-// Here some pins (GPIO) being used
-//************************************
-// pin (GPIO) for touch screen are defined in tft_espi User_Setup.h file except Touchscreen chip select that mus be defined here
-#define TOUCH_CS_PIN  27
+#define TFT_CARD_VERSION 1 // define the version of the TFT board being used ; it can be 1 or 2 (1 uses 4 pins header to connect to GRbl; 2 use RJ45 connector)               
 
-// Note: SPI is currently hardcoded for using following pins
-// MOSI=13, MISO=12, SCK=14
-// Those are used for the display, the touch panel and the SD card reader.
-// in new version, the display should use another ESP32 SPI bus (HSPI) that uses other pins
-
-#define TFT_LED_PIN 25       // pin connected to led of lcd; pin has to be high to set led ON
-
-// other TFT pins are defined in tft_espi User_Setup.h file
-
-#define SD_CHIPSELECT_PIN 26  //5  // pin for SD card selection // to change probably
-
-// pins for Serial to GRBL (it uses Serial2 UART)
-#define SERIAL2_RXPIN 16
-#define SERIAL2_TXPIN 17
-
-// pin for Nunchuk are currently the defalult I2C pin so pins 21, 22
+#define TFT_SIZE 3   // define size of display : must be 3 (for 3.5) or 4     
 
 // This is the file name used to store the touch coordinate in the SPIFFS from ESP32 (in es32 flash memory)
 // calibration data. Cahnge the name to start a new calibration.
@@ -69,19 +50,19 @@
 // it seems that 5000 (mm/min) is a good value for RS-CNC32
 #define MAX_XY_SPEED_FOR_JOGGING 5000 
 
-// note: this project allows to define up to 11 GRBL set of commands (makros) that can be called from setup screen.
+// note: this project allows to define up to 11 GRBL set of commands (macros) that can be called from setup screen.
 // Those are defined by the user on a sd card and loaded on request into the ESP32 flash memory system (SPIFFS)
 // So, once uploaded, they can be called without SD card.
 // To be recognise as command, file name must be like Cmd3_xxxxxxxx.yyyy where
 //       Cmd _ is fixed text (take care to the case)
-//       3 is a digit from 1 up to 9 or the letter "A" or "B"; it defines the position of the button
+//       3 is a digit from 1 up to 9 or the letter "A" or "B" (for 10 and 11); it defines the position of the button
 //       xxxxxxxx will be the name of the button; first char must be a letter; min 1, max 16 characters, no space
 //       yyy is the file name extension; it will be discarded
 // The files to be used for upload must be placed in the root directory of SD card.
 // To upload one of them, use the "Mill" + "SD->GRBL" menus and then select the file.
 // After reset, there will be a button named xxxxxxxxx in the "Setup" + "CMD" menu
 // If you upload a file having the same button position(digit 1...9, A or B) as an existing button, the new file will replace the button name and content of the previous button. 
-// to delete a button create and execute a file having a name like Cmd3_delete where 3 is the button position (digit 1...9, A or B) to delete. 
+// To delete a button create and execute a file having a name like Cmd3_delete where 3 is the button position (digit 1...9, A or B) to delete. 
 
 // select color between (or define your own) 
 // TFT_BLACK       0x0000      /*   0,   0,   0 */
@@ -104,14 +85,6 @@
 // TFT_GREENYELLOW 0xB7E0      /* 180, 255,   0 */
 // TFT_PINK        0xFC9F 
 
-//#define BUTTON_BORDER_NOT_PRESSED TFT_WHITE
-//#define BUTTON_BORDER_PRESSED     TFT_RED
-//#define BUTTON_BACKGROUND         TFT_BLUE
-//#define BUTTON_TEXT               TFT_WHITE
-//#define SCREEN_BACKGROUND         TFT_BLACK
-//#define SCREEN_NORMAL_TEXT        TFT_GREEN
-//#define SCREEN_ALERT_TEXT         TFT_RED
-//#define SCREEN_HEADER_TEXT        TFT_WHITE
 
 #define BUTTON_BORDER_NOT_PRESSED TFT_BLACK
 #define BUTTON_BORDER_PRESSED TFT_RED
@@ -122,6 +95,17 @@
 #define SCREEN_ALERT_TEXT TFT_RED
 #define SCREEN_HEADER_TEXT TFT_WHITE
 #define SCREEN_TO_SEND_TEXT TFT_WHITE   // used when looking at Sd file content for lines still to be sent to GRBL
+
+// here an alternative set of colors
+//#define BUTTON_BORDER_NOT_PRESSED TFT_WHITE
+//#define BUTTON_BORDER_PRESSED     TFT_RED
+//#define BUTTON_BACKGROUND         TFT_BLUE
+//#define BUTTON_TEXT               TFT_WHITE
+//#define SCREEN_BACKGROUND         TFT_BLACK
+//#define SCREEN_NORMAL_TEXT        TFT_GREEN
+//#define SCREEN_ALERT_TEXT         TFT_RED
+//#define SCREEN_HEADER_TEXT        TFT_WHITE
+
 
 // ************************************ Commands for change tools
 // This suppose that we can use G28 and G30 and that milling use G54 WCS.
@@ -167,6 +151,11 @@
 #define _SETA_STRING "G10 L20 P1 Z0\n"
 #define _SETXYZ_STRING "G10 L20 P1 X0 Y0 Z0\n"
 #define _SETXYZA_STRING "G10 L20 P1 X0 Y0 Z0 A0\n"
+
+
+
+
+// ********************************************************************************************************
 // *************************************     normally do not change here below ****************************
 //       debugging
 //#define DEBUG_TO_PC
@@ -176,9 +165,58 @@
 #endif
 
 
-#define DIR_LEVEL_MAX 6
 
-#define MAX_FILES 4
+// Here some pins (GPIO) being used
+//************************************
+#if TFT_CARD_VERSION ==1
+#define TOUCH_CS_PIN  27
+#define TFT_LED_PIN 25        // pin connected to led of lcd; pin has to be high to set led ON
+#define SD_CHIPSELECT_PIN 26  // pin for SD card selection
+
+// Note: SD card, touchscreen AND TFT are using the same (VSPI) SPI bus and thus share the following pins (defined in User_Setup.h file)
+//#define TFT_MISO 19
+//#define TFT_MOSI 23
+//#define TFT_SCLK 18
+
+// furthermore, TFT uses also following pins defined in User_Setup.h file
+//#define TFT_CS   13  // Chip select control pin
+//#define TFT_DC   14  // Data Command control pin
+//#define TFT_RST  12  // Reset pin (could connect to RST pin)
+
+#else  // for board version 2 *********************************
+#define TOUCH_CS_PIN  26
+#define TFT_LED_PIN 25       // pin connected to led of lcd; pin has to be high to set led ON
+#define SD_CHIPSELECT_PIN 5  // pin for SD card selection
+
+// in new version, the TFT uses another ESP32 SPI bus (HSPI) that uses other pins. They are defined in User_setup.h file.
+//#define TFT_MISO 12
+//#define TFT_MOSI 13
+//#define TFT_SCLK 14
+// So HSPI has to be activated. This is done in User_setup.h 
+
+// furthermore, TFT uses also following pins defined in User_Setup.h file
+//#define TFT_CS   32  // Chip select control pin
+//#define TFT_DC   27  // Data Command control pin
+//#define TFT_RST  33  // Reset pin (could connect to RST pin)
+
+//Touchscreen and SD card uses the same SPI bus (VSPI) with folowing pins defined as default for "SPI" in arduino :
+// VSPI MISO 19
+// VSPI MOSI 23
+// VSPI SCLK 18
+  
+#endif
+
+// pins for Serial to GRBL (it uses Serial2 UART)
+#define SERIAL2_RXPIN 16
+#define SERIAL2_TXPIN 17
+
+// pin for Nunchuk are currently the defalult I2C pin so pins 21, 22
+
+
+
+#define DIR_LEVEL_MAX 6  // maximum number of directory levels for SD card on tft
+
+#define MAX_FILES 4  // maximum number of file names displayed on the TFT
 
 #define GRBLFILEMAX 10 // max number of files read in one dir from grbl sd card
 
@@ -188,22 +226,7 @@
 #define ESP32_ACT_AS_STATION 1
 #define ESP32_ACT_AS_AP 2
 
-//        commands available in menu ; this part is normally not used anymore because cmd are defined in SPIFFS
-//#define CMD1_GRBL_CODE "*X"
-//#define CMD2_GRBL_CODE "G01 X02"
-//#define CMD3_GRBL_CODE "G01 X03"
-//#define CMD4_GRBL_CODE "G01 X04"
-//#define CMD5_GRBL_CODE "G01 X05"
-//#define CMD6_GRBL_CODE "G01 X06"
-//#define CMD7_GRBL_CODE "G01 X07"
-
-//#define CMD1_NAME " Unlock GRBL"
-//#define CMD2_NAME "G01 X02"
-//#define CMD3_NAME "G01 X03"
-//#define CMD4_NAME "G01 X04"
-//#define CMD5_NAME "G01 X05"
-//#define CMD6_NAME "G01 X06"
-//#define CMD7_NAME "G01 X07"
+#include "TFT_eSPI_ms/TFT_eSPI.h"
 
 
 #endif

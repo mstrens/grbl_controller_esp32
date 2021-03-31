@@ -15,12 +15,15 @@
 // afficher un message sur le tft si la liaison telnet ou BT vers grbl est demandée mais est perdue (? comment détecter une liaison telnet perdue?)
 // à voir: ajouter un paramètre dans config pour dire si on utilise GRBL_ESP32, et si oui, quel sont les noms de BT sur cet ESP32 et sur GRBL_ESP32 et l'adresse (ou nom du serveur) telnet 
 // remplacer certains messages envoyés à Serial par des messages affichés au TFT notamment au sujet des (dé)connectios de BT et Telnet vers GRBL.
-// Créer un caractère pour afficher la présence d'une liaison BT ou Telnet vers GRBL et changer la couleur selon qu'elle est active ou non
-// afficher ce caractère à coté du caractère telnet actuel. 
 // quel statut appliquer pendant l'exécution d'un print via sd grbl? Quel blocage implémenter. Commennt reconnaître la fin. Voir si le % donné dans la ligne de statut est valable 
 // ajouter des libellés de code d'erreur dans langage. Attention: il y a plus d'erreur et pas mal de trous. Il faut peut être changer le système par exemple en les stockant dans preference.
-
-
+// voir les modifs faites par bradley pour éviter certains warnings; voir ce qu'il a fait pour éviter la perte du telnet au démarrage suite au reset
+// fusionner telnet et Bt dans un seul fichier
+// bouger le caracère telnet dans l'écran COM et y dire s'il a wifi ou pas: Wifi mode: None, STA , AP ; Wifi connected/Wifi not connected
+// afficher le % d'avancement dans l'exécution d'un Gcode si on reçoit la donnée de Grbl_esp32
+// changer la couleur des textes (Msg et grblMsg) selon que ce sont des erreurs/alarmes ou juste une info; ajouter en 1ere position le code couleur
+// vérifier que les messages de grbl sont stockés dans LastgrblMsg et non dans Msg.
+// essayer de charger les langages avec la carte SD et les stocker dans preferences ou dans spifss 
 
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.
