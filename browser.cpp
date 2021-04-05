@@ -12,13 +12,13 @@
 #include "config.h"
 #include "language.h"
 #include "browser.h"
-#include "SdFat.h"
 #include <Preferences.h>
 #include "draw.h"
+#include "setupTxt.h"
 String  webpage = "";
 WebServer server(80);
 
-extern SdFat sd;
+extern SdFat32 sd;
 extern uint8_t wifiType ; // can be NO_WIFI(= 0), ESP32_ACT_AS_STATION(= 1), ESP32_ACT_AS_AP(= 2)
 char wifiPassword[65] ;
 char wifiSsid[65] ;
@@ -64,7 +64,7 @@ void initWifi() {
         printTft("X") ;
         initWifiCnt--;
         if ( initWifiCnt == 0) {
-          fillMsg(__WIFI_NOT_FOUND  );
+          fillMsg(_WIFI_NOT_FOUND  );
           break;
         }
       }
@@ -290,7 +290,6 @@ void HomePage(){
 
 //--------------------------------------------------------------------------
 boolean checkSd() {
-//  root.close();
   if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
       reportError("Fail to mount SD card - SD card present?" );
       return false;
@@ -365,7 +364,8 @@ void File_Upload(){
 File32 UploadFile;
 boolean errorWhileUploading ; 
 void handleFileUpload(){ // upload a new file to the Filing system
-  if (checkSd() ) {
+  //if (checkSd() ) {
+  //if ( true ) {
       HTTPUpload& uploadfile = server.upload(); // See https://github.com/esp8266/Arduino/tree/master/libraries/ESP8266WebServer/srcv
                                                 // For further information on 'status' structure, there are other reasons such as a failed transfer that could be used
       if(uploadfile.status == UPLOAD_FILE_START) {
@@ -373,21 +373,23 @@ void handleFileUpload(){ // upload a new file to the Filing system
         String filename = uploadfile.filename;
         sd.remove(filename.c_str());                  // Remove a previous version, otherwise data is appended the file again
         UploadFile.close() ;
-        //UploadFile = sd.open(filename.c_str() , MS_WRITE);  // Open the file for writing in SPIFFS (create it, if doesn't exist)
-        UploadFile = sd.open(filename.c_str() , O_WRITE | O_CREAT);  // Open the file for writing (create it, if doesn't exist)
-        if ( ! UploadFile ) errorWhileUploading = true ;
-      }
-      else if (uploadfile.status == UPLOAD_FILE_WRITE)
-      {
+        //UploadFile = sd.open(filename.c_str() , 0X11);  // Open the file for writing in SPIFFS (create it, if doesn't exist)
+        //UploadFile = sd.open(filename.c_str() , O_WRITE | O_CREAT);  // Open the file for writing (create it, if doesn't exist)
+        if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
+            reportError("Fail to mount SD card - SD card present?" );
+            errorWhileUploading = true ;
+        } else {     
+          UploadFile = sd.open(filename.c_str() , O_WRITE | O_CREAT);  // Open the file for writing (create it, if doesn't exist)
+          if ( ! UploadFile ) errorWhileUploading = true ;
+        }  
+      } else if (uploadfile.status == UPLOAD_FILE_WRITE)  {
         if(UploadFile) { 
           int32_t bytesWritten = UploadFile.write(uploadfile.buf, uploadfile.currentSize); // Write the received bytes to the file
           if ( bytesWritten == -1) errorWhileUploading = true ; 
         } else { 
           errorWhileUploading = true ;
         }
-      } 
-      else if (uploadfile.status == UPLOAD_FILE_END)
-      {
+      } else if (uploadfile.status == UPLOAD_FILE_END) {
         if(UploadFile && ( errorWhileUploading == false) )          // If the file was successfully created
         {                                    
           UploadFile.close();   // Close the file at the end
@@ -405,7 +407,7 @@ void handleFileUpload(){ // upload a new file to the Filing system
           reportError("<h3>Could Not Create Uploaded File (write-protected?)</h3>");
         }
       }
-  }      
+  //}      
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void sd_dir(){ 

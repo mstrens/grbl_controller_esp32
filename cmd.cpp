@@ -1,6 +1,7 @@
 #include "FS.h"
 #include "SPIFFS.h"
 #include "draw.h"
+#include "setupTxt.h"
 #include "config.h"
 #include "language.h"
 
@@ -53,7 +54,7 @@ void deleteFileLike (const char * path) {       // path does not start with "/")
     const char * pchar; 
     File root = SPIFFS.open("/");
     if(!root){
-        fillMsg(__SPIFFS_FAIL_TO_OPEN );
+        fillMsg(_SPIFFS_FAIL_TO_OPEN );
         root.close() ;
         return;
     }
@@ -76,7 +77,7 @@ boolean createFileCmd( const char * fileName){
     createdFile.close() ;
     createdFile = SPIFFS.open( fileNamePlus, FILE_WRITE);
     if(!createdFile){
-        fillMsg(__FAILED_TO_CREATE_CMD );
+        fillMsg(_FAILED_TO_CREATE_CMD );
         createdFile.close() ;
         return false;
     }

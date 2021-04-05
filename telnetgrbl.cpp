@@ -3,10 +3,12 @@
 #include "telnetgrbl.h"
 #include "com.h"  // to knwo the GRBL_LINK_SERIAL ...
 #include "draw.h"
+#include "setupTxt.h"
 
 WiFiClient grblClient;
 extern uint8_t grblLink ;
 extern IPAddress grbl_Telnet_IP; // create IP adress with 4 values = 0; will be filled in init
+extern M_pLabel mText[_MAX_TEXT];
 
 
 //IPAddress grblIp(192,168,1,5);
@@ -47,22 +49,22 @@ bool telnetGrblInit(){
   telnetConnected = false ;
   if (WiFi.status() != WL_CONNECTED) {
         telnetConnected = false ;
-        drawMsgOnTft("Unable to connect to GRBL with Telnet", "Wifi not connected" );
-        fillMsg("Fail to connect to GRBL Telnet");
+        drawMsgOnTft(mText[_UNABLE_TO_CONNECT_TO_GRBL_TELNET].pLabel, mText[_WIFI_NOT_CONNECTED].pLabel  );
+        fillMsg(_UNABLE_TO_CONNECT_TO_GRBL_TELNET);
         //Serial.println("[MSG: fail to connect to GRBL Telnet; WiFi not connected]");
     };
-  drawMsgOnTft("Trying to connect to GRBL using Telnet", "It can take several sec; please wait" );
+  drawMsgOnTft( mText[_TRY_TO_CONNECT_WITH_TELNET].pLabel , mText[_WAIT_1_MIN].pLabel );
   if (grblClient.connect("192.168.1.11", 23,1000)) {
     grblClient.setNoDelay(true);
     telnetConnected = true ;
-    drawMsgOnTft("Connected to GRBL with Telnet", " " );
-    fillMsg("Connected to GRBL with Telnet");
+    drawMsgOnTft(mText[_TELNET_CONNECTED_WITH_GRBL].pLabel, " " );
+    fillMsg(_TELNET_CONNECTED_WITH_GRBL, SCREEN_NORMAL_TEXT);
     //Serial.println("[MSG: Connected to grbl using Telnet]");
   } else {
     telnetConnected = false ;
-    drawMsgOnTft("Unable to connect to GRBL with Telnet", "Wifi is connected" );
+    drawMsgOnTft(mText[_UNABLE_TO_CONNECT_TO_GRBL_TELNET].pLabel , mText[_WIFI_CONNECTED].pLabel );
     //Serial.println("Unable to connect to GRBL Telnet; Wifi is connected");
-    fillMsg("Unable to connect to GRBL Telnet");
+    fillMsg(_UNABLE_TO_CONNECT_TO_GRBL_TELNET);
   } 
   return telnetConnected ;
 }

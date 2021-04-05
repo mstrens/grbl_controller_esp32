@@ -1,6 +1,7 @@
 #include "config.h"
 #include "language.h"
 #include "draw.h"
+#include "setupTxt.h"
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 #include "FS.h"
 #include "actions.h"
@@ -82,7 +83,7 @@ void fGoToPage(uint8_t param) {
 }
 
 void fGoToPageAndClearMsg(uint8_t param) {
-  fillMsg(" ") ;
+  clearMsg() ;
   grblLastMessage[0] = 0 ; // clear grbl last message ([....]
   grblLastMessageChanged = true ;
   prevPage = currentPage ;
@@ -111,7 +112,7 @@ void fHome(uint8_t param) {
     toGrbl(HOME_CMD);toGrbl("\n\r");
     //Serial2.println(HOME_CMD) ;  
   } else {
-    fillMsg(__INVALID_BTN_HOME ) ;
+    fillMsg(_INVALID_BTN_HOME ) ;
   }
   waitReleased = true ;          // discard "pressed" until a release 
 }
@@ -130,7 +131,7 @@ void fReset(uint8_t param) {
   toGrbl((char) SOFT_RESET) ;
   //Serial2.print( (char) SOFT_RESET) ;
   waitReleased = true ;          // discard "pressed" until a release
-  fillMsg( " " );
+  clearMsg( );
   
 }
 
@@ -387,7 +388,7 @@ void fSetXYZ(uint8_t param) {     // param contient le n° de la commande
 void sendStringToGrbl() {
   //Serial.print("calibration = ") ; Serial.println( pStringToSend ) ;
   if ( statusPrinting != PRINTING_STOPPED ) {
-    fillErrorMsg(__NOT_IDLE ) ; 
+    fillMsg(_NOT_IDLE ) ; 
   } else {
     //Serial.println("Start sending string") ; // to debug
     statusPrinting = PRINTING_STRING ;
@@ -407,7 +408,7 @@ void fCmd(uint8_t param) {     // param contient le n° de la commande (valeur =
   }
   strcat( spiffsCmdName , cmdName[param - _CMD1]) ; // add the cmd name to the first part 
   if ( ! spiffsOpenCmdFile( spiffsCmdName ) ) {
-      fillMsg(__CMD_NOT_RETRIEVED ) ;
+      fillMsg(_CMD_NOT_RETRIEVED ) ;
       currentPage = _P_INFO ;
       updateFullPage = true ;
       waitReleased = true ;          // discard "pressed" until a release
@@ -440,7 +441,7 @@ void fStartTelnet(uint8_t param){
       statusPrinting = PRINTING_FROM_TELNET ;
       //fillMsg( "Connected to telnet" );
     } else { 
-      fillMsg( __NO_TELNET_CONNECTION  );   
+      fillMsg(_NO_TELNET_CONNECTION  );   
     }
   }
   currentPage = _P_INFO ;  // go to page Info

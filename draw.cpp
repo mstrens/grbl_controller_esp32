@@ -1,5 +1,6 @@
 #include "config.h"
 #include "draw.h"
+#include "setupTxt.h"
 #include "language.h"
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 #include "FS.h"
@@ -11,6 +12,7 @@
 #include "log.h"
 #include "touch.h"
 #include "grbl_file.h"
+
 
 #define LABELS9_FONT &FreeSans9pt7b    // Key label font 2
 #define LABELS12_FONT &FreeSans12pt7b
@@ -29,9 +31,12 @@ TFT_eSPI tft = TFT_eSPI();
 TOUCH touchscreen =  TOUCH();
 SPIClass spiTouch = SPIClass(VSPI);
 
+extern M_Button mButton[_MAX_BTN] ;
+extern M_Page mPages[_P_MAX_PAGES];
+extern M_pLabel mText[_MAX_TEXT];
+extern M_pLabel mGrblErrors[_MAX_GRBL_ERRORS] ;
+extern M_pLabel mAlarms[_MAX_ALARMS]; 
 
-M_Button mButton[_MAX_BTN] ;
-M_Page mPages[_P_MAX_PAGES];
 
 extern uint8_t prevPage , currentPage ;
 extern boolean updateFullPage ;
@@ -48,7 +53,7 @@ extern uint32_t sdNumberOfCharSent ;
 
 extern char fileNames[4][23] ; // 22 car per line + "\0"
 extern uint16_t firstFileToDisplay ;   // 0 = first file in the directory
-extern SdFat sd;  // is created in ino file
+extern SdFat32 sd;  // is created in ino file
 extern SdBaseFile aDir[DIR_LEVEL_MAX] ;
 
 extern char cmdName[11][17] ;          // contains the names of the commands
@@ -166,250 +171,6 @@ uint16_t btnDefFiles[12][4] = {{ FXB , FXE , FYB0 , FYE0 } ,  // each line conta
                                 { B3 , E3 , B2 , E2 } ,
                                 { 0 , 0 , 0 , 0 } ,
                                 { 0 , 0 , 0 , 0 }    } ;
-
-
-// rempli le paramétrage des boutons de chaque page 
-void fillMPage (uint8_t _page , uint8_t _btnPos , uint8_t _boutons, uint8_t _actions , void (*_pfNext)(uint8_t) , uint8_t _parameters ) {
-  mPages[_page].boutons[_btnPos] =  _boutons ;
-  mPages[_page].actions[_btnPos] =  _actions ;
-  mPages[_page].pfNext[_btnPos] =  _pfNext ;
-  mPages[_page].parameters[_btnPos] =  _parameters ;
-}
-
-void initButtons() {  
-mButton[_SETUP].pLabel = __SETUP  ;
-mButton[_PRINT].pLabel = __PRINT  ;
-mButton[_HOME].pLabel = __HOME  ;
-mButton[_UNLOCK].pLabel = __UNLOCK  ;
-mButton[_RESET].pLabel = __RESET  ;
-mButton[_SD].pLabel = __SD  ;
-mButton[_USB_GRBL].pLabel = __USB_GRBL  ;
-mButton[_TELNET_GRBL].pLabel = __TELNET_GRBL  ;
-mButton[_PAUSE].pLabel = __PAUSE  ;
-mButton[_CANCEL].pLabel = __CANCEL  ;
-mButton[_INFO].pLabel = __INFO  ;
-mButton[_CMD].pLabel = __CMD  ;
-mButton[_MOVE].pLabel = __MOVE  ;
-mButton[_RESUME].pLabel = __RESUME  ;
-mButton[_STOP_PC_GRBL].pLabel = __STOP_PC_GRBL ;
-mButton[_XP].pLabel = "X+" ;
-mButton[_XM].pLabel = "X-" ;
-mButton[_YP].pLabel = "Y+" ;
-mButton[_YM].pLabel = "Y-" ;
-mButton[_ZP].pLabel = "Z+" ;
-mButton[_ZM].pLabel = "Z-" ;
-mButton[_AP].pLabel = "A+" ;
-mButton[_AM].pLabel = "A-" ;
-mButton[_D_AUTO].pLabel = __D_AUTO  ;
-mButton[_D0_01].pLabel = "0.01" ;
-mButton[_D0_1].pLabel = "0.1" ;
-mButton[_D1].pLabel = "1" ;
-mButton[_D10].pLabel = "10" ;
-mButton[_SET_WCS].pLabel = __SET_WCS  ;
-mButton[_SETX].pLabel = __SETX  ;
-mButton[_SETY].pLabel = __SETY  ;
-mButton[_SETZ].pLabel = __SETZ  ;
-mButton[_SETA].pLabel = __SETA  ;
-mButton[_SETXYZ].pLabel = __SETXYZ  ;
-mButton[_SETXYZA].pLabel = __SETXYZA  ;
-mButton[_TOOL].pLabel = __TOOL  ;
-mButton[_SET_CHANGE].pLabel = __SET_CHANGE  ;
-mButton[_SET_PROBE].pLabel = __SET_PROBE  ;
-mButton[_SET_CAL].pLabel = __SET_CAL  ;
-mButton[_GO_CHANGE].pLabel = __GO_CHANGE ; 
-mButton[_GO_PROBE].pLabel = __GO_PROBE ;
-mButton[_BACK].pLabel = __BACK  ;
-mButton[_LEFT].pLabel = __LEFT  ;
-mButton[_RIGHT].pLabel = __RIGHT  ;
-mButton[_UP].pLabel = __UP  ;
-mButton[_CMD1].pLabel = &cmdName[0][0] ;
-mButton[_CMD2].pLabel = &cmdName[1][0] ;
-mButton[_CMD3].pLabel = &cmdName[2][0] ;
-mButton[_CMD4].pLabel = &cmdName[3][0] ;
-mButton[_CMD5].pLabel = &cmdName[4][0] ;
-mButton[_CMD6].pLabel = &cmdName[5][0] ;
-mButton[_CMD7].pLabel = &cmdName[6][0] ;
-mButton[_CMD8].pLabel = &cmdName[7][0] ;
-mButton[_CMD9].pLabel = &cmdName[8][0] ;
-mButton[_CMD10].pLabel = &cmdName[9][0] ;
-mButton[_CMD11].pLabel = &cmdName[10][0] ;
-mButton[_MORE_PAUSE].pLabel = __MORE_PAUSE ;
-mButton[_FILE0].pLabel = fileNames[0] ;  // labels are defined during execution in a table
-mButton[_FILE1].pLabel = fileNames[1] ;
-mButton[_FILE2].pLabel = fileNames[2] ;
-mButton[_FILE3].pLabel = fileNames[3] ;
-mButton[_MASKED1].pLabel = "" ; // this is a hidden button; so must be empty
-mButton[_PG_PREV].pLabel = __PREV ;
-mButton[_PG_NEXT].pLabel = __NEXT ;
-mButton[_SD_SHOW].pLabel = __SD_SHOW ; 
-mButton[_OVERWRITE].pLabel = "" ; // this is a hidden button; so must be empty
-mButton[_OVER_SWITCH_TO_FEEDRATE].pLabel = __OVER_SWITCH_TO_FEEDRATE ;
-mButton[_OVER_SWITCH_TO_SPINDLE].pLabel = __OVER_SWITCH_TO_SPINDLE ;
-mButton[_OVER_10P].pLabel = __OVER_10P ;
-mButton[_OVER_10M].pLabel = __OVER_10M ;
-mButton[_OVER_1P].pLabel = __OVER_1P ;
-mButton[_OVER_1M].pLabel = __OVER_1M ;
-mButton[_OVER_100].pLabel = __OVER_100 ;
-mButton[_COMMUNICATION].pLabel = __COMMUNICATION ;
-mButton[_SERIAL].pLabel = __SERIAL ;
-mButton[_BLUETOOTH].pLabel = __BLUETOOTH ;
-mButton[_TELNET].pLabel = __TELNET ;
-mButton[_SD_GRBL].pLabel = __SD_GRBL ;
-mButton[_FILE0_GRBL].pLabel = grblFileNamesTft[0] ;
-mButton[_FILE1_GRBL].pLabel = grblFileNamesTft[1] ;
-mButton[_FILE2_GRBL].pLabel = grblFileNamesTft[2] ;
-mButton[_FILE3_GRBL].pLabel = grblFileNamesTft[3] ; 
-
-
-mPages[_P_INFO].titel = "" ;
-mPages[_P_INFO].pfBase = fInfoBase ;
-fillMPage (_P_INFO , 0 , _MASKED1 , _JUST_PRESSED , fGoToPage , _P_LOG ) ; // this button is masked but clicking on the zone call another screen
-fillMPage (_P_INFO , 3 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; // this button is masked but clicking on the zone call another screen
-fillMPage (_P_INFO , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;   // those buttons are changed dynamically based on status (no print, ...)
-fillMPage (_P_INFO , 11 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;   // those buttons are changed dynamically based on status (no print, ...)
-
-mPages[_P_SETUP].titel = "" ;
-mPages[_P_SETUP].pfBase = fSetupBase ;
-fillMPage (_P_SETUP , 0 , _COMMUNICATION , _JUST_PRESSED , fGoToPage , _P_COMMUNICATION ) ;
-fillMPage (_P_SETUP , 4 , _HOME , _JUST_PRESSED , fHome , 0) ;
-fillMPage (_P_SETUP , 5 , _UNLOCK , _JUST_PRESSED , fUnlock , 0) ;
-fillMPage (_P_SETUP , 6 , _RESET , _JUST_PRESSED , fReset , 0) ;
-fillMPage (_P_SETUP , 7 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;
-fillMPage (_P_SETUP , 8 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE ) ;
-fillMPage (_P_SETUP , 9 , _SET_WCS , _JUST_PRESSED , fGoToPage , _P_SETXYZ ) ;
-fillMPage (_P_SETUP , 10 , _TOOL , _JUST_PRESSED , fGoToPage , _P_TOOL ) ;
-fillMPage (_P_SETUP , 11 , _INFO , _JUST_PRESSED , fGoToPageAndClearMsg ,  _P_INFO) ;
-
-mPages[_P_PRINT].titel = "" ;
-mPages[_P_PRINT].pfBase = fNoBase ;
-fillMPage (_P_PRINT , 4 , _SD , _JUST_PRESSED , fGoToPage , _P_SD) ;
-fillMPage (_P_PRINT , 5 , _USB_GRBL , _JUST_PRESSED , fStartUsb , 0) ;
-fillMPage (_P_PRINT , 6 , _TELNET_GRBL , _JUST_PRESSED , fStartTelnet , 0) ;
-fillMPage (_P_PRINT , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
-fillMPage (_P_PRINT , 8 , _SD_GRBL , _JUST_PRESSED , fGoToPage , _P_SD_GRBL_WAIT) ;
-fillMPage (_P_PRINT , 10 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;
-fillMPage (_P_PRINT , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
-
-mPages[_P_PAUSE].titel = "" ;
-mPages[_P_PAUSE].pfBase = fNoBase ;
-fillMPage (_P_PAUSE , 4 , _CANCEL , _JUST_PRESSED , fCancel , 0) ;
-fillMPage (_P_PAUSE , 5 , _RESUME , _JUST_PRESSED , fResume , 0) ;
-fillMPage (_P_PAUSE , 6 , _SD_SHOW , _JUST_PRESSED , fGoToPage , _P_SD_SHOW ) ;
-fillMPage (_P_PAUSE , 7 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE) ;
-fillMPage (_P_PAUSE , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
-
-mPages[_P_MOVE].titel = "" ;
-mPages[_P_MOVE].pfBase = fMoveBase ;
-#ifdef AA_AXIS
-fillMPage (_P_MOVE , 0 , _XM , _JUST_LONG_PRESSED_RELEASED , fMove , _XM) ;
-fillMPage (_P_MOVE , 1 , _YP , _JUST_LONG_PRESSED_RELEASED , fMove , _YP) ;
-fillMPage (_P_MOVE , 2 , _XP , _JUST_LONG_PRESSED_RELEASED , fMove , _XP) ;
-fillMPage (_P_MOVE , 3 , _ZP , _JUST_LONG_PRESSED_RELEASED , fMove , _ZP) ;
-fillMPage (_P_MOVE , 4 , _AM , _JUST_LONG_PRESSED_RELEASED , fMove , _AM) ;
-fillMPage (_P_MOVE , 5 , _YM , _JUST_LONG_PRESSED_RELEASED , fMove , _YM) ;
-fillMPage (_P_MOVE , 6 , _AP , _JUST_LONG_PRESSED_RELEASED , fMove , _AP) ;
-fillMPage (_P_MOVE , 7 , _ZM , _JUST_LONG_PRESSED_RELEASED , fMove , _ZM) ;
-#else
-fillMPage (_P_MOVE , 1 , _YP , _JUST_LONG_PRESSED_RELEASED , fMove , _YP) ;
-fillMPage (_P_MOVE , 3 , _ZP , _JUST_LONG_PRESSED_RELEASED , fMove , _ZP) ;
-fillMPage (_P_MOVE , 5 , _YM , _JUST_LONG_PRESSED_RELEASED , fMove , _YM) ;
-fillMPage (_P_MOVE , 7 , _ZM , _JUST_LONG_PRESSED_RELEASED , fMove , _ZM) ;
-fillMPage (_P_MOVE , 8 , _XM , _JUST_LONG_PRESSED_RELEASED , fMove , _XM) ;
-fillMPage (_P_MOVE , 10 , _XP , _JUST_LONG_PRESSED_RELEASED , fMove , _XP) ;
-#endif
-fillMPage (_P_MOVE , POS_OF_MOVE_D_AUTO , _D_AUTO , _JUST_PRESSED , fDist, _D_AUTO) ;  // -1 because range here is 0...11 
-fillMPage (_P_MOVE , 11 , _BACK , _JUST_PRESSED , fGoBack , 0) ;
-
-mPages[_P_SETXYZ].titel = "" ;  
-mPages[_P_SETXYZ].pfBase = fSetXYZBase ;
-fillMPage (_P_SETXYZ , 4 , _SETX , _JUST_PRESSED , fSetXYZ , _SETX) ;
-fillMPage (_P_SETXYZ , 5 , _SETY , _JUST_PRESSED , fSetXYZ , _SETY) ;
-fillMPage (_P_SETXYZ , 6 , _SETZ, _JUST_PRESSED , fSetXYZ , _SETZ) ;
-#ifdef AA_AXIS
-fillMPage (_P_SETXYZ , 7 , _SETA, _JUST_PRESSED , fSetXYZ , _SETA) ;
-fillMPage (_P_SETXYZ , 8 , _SETXYZ , _JUST_PRESSED , fSetXYZ , _SETXYZ) ;
-fillMPage (_P_SETXYZ , 9 , _SETXYZA , _JUST_PRESSED , fSetXYZ , _SETXYZA) ;
-#else
-fillMPage (_P_SETXYZ , 8 , _SETXYZ , _JUST_PRESSED , fSetXYZ , _SETXYZ) ;
-#endif
-fillMPage (_P_SETXYZ , 10 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP ) ;
-fillMPage (_P_SETXYZ , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
-
-mPages[_P_SD].titel = "" ;  // this screen has only 10 buttons instead of 12
-mPages[_P_SD].pfBase = fSdBase ;   // cette fonction doit remplir les 4 premiers boutons en fonction des fichiers disponibles
-fillMPage (_P_SD , 6 , _PG_PREV , _JUST_PRESSED , fSdMove , _PG_PREV ) ;
-fillMPage (_P_SD , 7 , _UP , _JUST_PRESSED , fSdMove , _UP ) ;
-fillMPage (_P_SD , 8 , _PG_NEXT , _JUST_PRESSED , fSdMove , _PG_NEXT) ;
-fillMPage (_P_SD , 9 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
-
-mPages[_P_CMD].titel = "" ;
-mPages[_P_CMD].pfBase = fCmdBase ; // 
-if (cmdName[0][0] ) fillMPage (_P_CMD , 0 , _CMD1 , _JUST_PRESSED , fCmd , _CMD1) ; // le paramètre contient le n° du bouton
-if (cmdName[1][0] ) fillMPage (_P_CMD , 1 , _CMD2 , _JUST_PRESSED , fCmd , _CMD2) ; // le paramètre contient le n° du bouton
-if (cmdName[2][0] ) fillMPage (_P_CMD , 2 , _CMD3 , _JUST_PRESSED , fCmd , _CMD3) ; // le paramètre contient le n° du bouton
-if (cmdName[3][0] ) fillMPage (_P_CMD , 3 , _CMD4 , _JUST_PRESSED , fCmd , _CMD4) ; // le paramètre contient le n° du bouton
-if (cmdName[4][0] ) fillMPage (_P_CMD , 4 , _CMD5 , _JUST_PRESSED , fCmd , _CMD5) ; // le paramètre contient le n° du bouton
-if (cmdName[5][0] ) fillMPage (_P_CMD , 5 , _CMD6 , _JUST_PRESSED , fCmd , _CMD6) ; // le paramètre contient le n° du bouton
-if (cmdName[6][0] ) fillMPage (_P_CMD , 6 , _CMD7 , _JUST_PRESSED , fCmd , _CMD7) ; // le paramètre contient le n° du bouton
-if (cmdName[7][0] ) fillMPage (_P_CMD , 7 , _CMD8 , _JUST_PRESSED , fCmd , _CMD8) ; // le paramètre contient le n° du bouton
-if (cmdName[8][0] ) fillMPage (_P_CMD , 8 , _CMD9 , _JUST_PRESSED , fCmd , _CMD9) ; // le paramètre contient le n° du bouton
-if (cmdName[9][0] ) fillMPage (_P_CMD , 9 , _CMD10 , _JUST_PRESSED , fCmd , _CMD10) ; // le paramètre contient le n° du bouton
-if (cmdName[10][0] ) fillMPage (_P_CMD , 10 , _CMD11 , _JUST_PRESSED , fCmd , _CMD11) ; // le paramètre contient le n° du bouton
-fillMPage (_P_CMD , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
-
-mPages[_P_LOG].titel = "" ;
-mPages[_P_LOG].pfBase = fLogBase ;
-fillMPage (_P_LOG , POS_OF_LOG_PG_PREV , _PG_PREV , _JUST_PRESSED , fLogPrev , 0) ;
-fillMPage (_P_LOG , POS_OF_LOG_PG_NEXT , _PG_NEXT , _JUST_PRESSED , fLogNext , 0) ;
-fillMPage (_P_LOG , 11 , _BACK , _JUST_PRESSED , fGoBack , 0) ;
-
-mPages[_P_TOOL].titel = "" ;
-mPages[_P_TOOL].pfBase = fToolBase ;
-fillMPage (_P_TOOL , 4 , _SETXYZ , _JUST_PRESSED , fSetXYZ , _SETXYZ) ;
-fillMPage (_P_TOOL , 5 , _SET_CAL , _JUST_PRESSED , fSetXYZ , _SET_CAL) ;
-fillMPage (_P_TOOL , 6 , _GO_CHANGE , _JUST_PRESSED , fSetXYZ , _GO_CHANGE) ;
-fillMPage (_P_TOOL , 7 , _GO_PROBE , _JUST_PRESSED , fSetXYZ , _GO_PROBE) ;
-fillMPage (_P_TOOL , 8 , _SET_CHANGE , _JUST_PRESSED , fSetXYZ , _SET_CHANGE ) ;
-fillMPage (_P_TOOL , 9 , _SET_PROBE , _JUST_PRESSED , fSetXYZ , _SET_PROBE) ;
-fillMPage (_P_TOOL , 10 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP ) ;
-fillMPage (_P_TOOL , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
-
-mPages[_P_SD_SHOW].titel = "" ;
-mPages[_P_SD_SHOW].pfBase = fSdShowBase ;
-fillMPage (_P_SD_SHOW , POS_OF_SD_SHOW_PG_PREV , _PG_PREV , _JUST_PRESSED , fSdShowPrev , 0) ;
-fillMPage (_P_SD_SHOW , POS_OF_SD_SHOW_PG_NEXT , _PG_NEXT , _JUST_PRESSED , fSdShowNext , 0) ;
-fillMPage (_P_SD_SHOW , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
-
-
-mPages[_P_OVERWRITE].titel = "" ;
-mPages[_P_OVERWRITE].pfBase = fOverBase ;
-fillMPage (_P_OVERWRITE , POS_OF_OVERWRITE_OVERWRITE , _OVER_SWITCH_TO_SPINDLE , _JUST_PRESSED , fOverSwitch , _OVER_SWITCH_TO_SPINDLE ) ;
-fillMPage (_P_OVERWRITE , 4 , _OVER_10M , _JUST_PRESSED , fOverModify , _OVER_10M) ;
-fillMPage (_P_OVERWRITE , 5 , _OVER_1M , _JUST_PRESSED , fOverModify , _OVER_1M) ;
-fillMPage (_P_OVERWRITE , 6 , _OVER_1P , _JUST_PRESSED , fOverModify , _OVER_1P) ;
-fillMPage (_P_OVERWRITE , 7 , _OVER_10P , _JUST_PRESSED , fOverModify , _OVER_10P) ;
-fillMPage (_P_OVERWRITE , 10 , _OVER_100 , _JUST_PRESSED , fOverModify , _OVER_100) ;
-fillMPage (_P_OVERWRITE , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
-
-mPages[_P_COMMUNICATION].titel = "" ;
-mPages[_P_COMMUNICATION].pfBase = fCommunicationBase ;
-fillMPage (_P_COMMUNICATION , 8 , _SERIAL , _JUST_PRESSED , fSerial , 0) ;
-fillMPage (_P_COMMUNICATION , 9 , _BLUETOOTH , _JUST_PRESSED , fBluetooth , 0) ;
-fillMPage (_P_COMMUNICATION , 10 , _TELNET , _JUST_PRESSED , fTelnet , 0) ;
-fillMPage (_P_COMMUNICATION , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
-
-mPages[_P_SD_GRBL_WAIT].titel = "" ;  // this screen has only 10 buttons instead of 12
-mPages[_P_SD_GRBL_WAIT].pfBase = fSdGrblWaitBase ;   // cette fonction doit provoque l'envoi d'une commande à GRBL
-
-mPages[_P_SD_GRBL].titel = "" ;  // this screen has only 10 buttons instead of 12
-mPages[_P_SD_GRBL].pfBase = fSdGrblBase ;   // cette fonction doit remplir les 4 premiers boutons en fonction des fichiers disponibles
-fillMPage (_P_SD_GRBL , 6 , _PG_PREV , _JUST_PRESSED , fSdGrblMove , _PG_PREV ) ;
-fillMPage (_P_SD_GRBL , 7 , _UP , _JUST_PRESSED , fSdGrblMove , _UP ) ;
-fillMPage (_P_SD_GRBL , 8 , _PG_NEXT , _JUST_PRESSED , fSdGrblMove , _PG_NEXT) ;
-fillMPage (_P_SD_GRBL , 9 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
-
-
-}  // end of init
 
 
 
@@ -709,7 +470,7 @@ void executeMainActionBtn( ) {   // find and execute main action for ONE button 
 
 
 // Basis functions
-void blankTft(char * titel, uint16_t x , uint16_t y) {    // blank screen and display one titel
+void blankTft( const char * titel, uint16_t x , uint16_t y) {    // blank screen and display one titel
   clearScreen() ;
   if ( strlen(titel) > 0) {
     //tft.fillScreen( SCREEN_BACKGROUND ) ;
@@ -727,7 +488,7 @@ void clearScreen() {
   tft.fillScreen( SCREEN_BACKGROUND ) ;
 }
 
-void printTft(char * text ) {     // print a text on screen
+void printTft(const char * text ) {     // print a text on screen
   tft.print( text ) ;
 }
 
@@ -900,8 +661,8 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
     tft.setTextFont( 2 );
     tft.setTextSize(1) ;           
     tft.setTextPadding (0) ;      // expect to clear 70 pixel when drawing text or 
-    tft.drawString( __WPOS , 70 , line ) ;     // affiche un texte
-    tft.drawString( __MPOS , 190 , line ) ;     // affiche un texte
+    tft.drawString( mText[_WPOS].pLabel , 70 , line ) ;     // affiche un texte
+    tft.drawString( mText[_MPOS].pLabel , 190 , line ) ;     // affiche un texte
     newInfoPage = false ;
   }
   //tft.setTextSize(2) ;
@@ -927,7 +688,7 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   tft.setTextPadding (0) ;
   tft.setTextDatum( TL_DATUM ) ;
   tft.setTextColor(SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND) ; 
-  line += lineSpacing1 ; tft.drawString(__FEED , 90 , line)  ; tft.drawString(__RPM , 205 , line) ;
+  line += lineSpacing1 ; tft.drawString(mText[_FEED].pLabel , 90 , line)  ; tft.drawString(mText[_RPM].pLabel , 205 , line) ;
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND) ;
   tft.setTextPadding (80) ;
   tft.setTextDatum( TR_DATUM ) ;
@@ -1023,14 +784,13 @@ void drawWposOnSetXYZPage() {
   tft.setTextPadding (80) ;      // expect to clear 70 pixel when drawing text or   
   uint8_t line = 60 ; // was 60 ;
   uint8_t col = 60 ;
-  tft.drawString( __WPOS , col , line);
+  tft.drawString( mText[_WPOS].pLabel , col , line);
   tft.drawFloat( wposXYZA[0] , 2 , col , line ); // affiche la valeur avec 3 décimales 
   tft.drawFloat( wposXYZA[1] , 2 , col + 80 , line );
   tft.drawFloat( wposXYZA[2] , 2 , col + 160 , line );
 #ifdef AA_AXIS  
   tft.drawFloat( wposXYZA[3] , 2 , col + 240 , line );
 #endif  
-  //tft.drawString( __WPOS , col + 240 , line);
 }
 
 
@@ -1066,7 +826,7 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
     tft.setTextDatum( TR_DATUM ) ;
     char dirName[23] ;
     if ( ! aDir[dirLevel].getName( dirName , 16 ) ) { 
-      fillMsg (__DIR_NAME_NOT_FOUND );
+      fillMsg (_DIR_NAME_NOT_FOUND );
       currentPage = _P_INFO ;      // in case of error, go back to Info
       dirLevel = -1 ;              // force a reload of sd data next time we goes to SD card menu
       fInfoBase () ;               // fill info page with basis data (affiche les data et redétermine les boutons à afficher sans les afficher)
@@ -1075,7 +835,7 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
     tft.drawString( dirName , 310 , 40 );
     if ( ! updateFilesBtn() ) {             // met à jour les boutons à afficher; conserve le premier fichier affiché si possible ; retourne false en cas d'erreur
       //Serial.println( "updateFilesBtn retuns false"); 
-      fillMsg( __BUG_UPDATE_FILE_BTN  );
+      fillMsg(_BUG_UPDATE_FILE_BTN  );
       currentPage = _P_INFO ;      // in case of error, go back to Info
       dirLevel = -1 ;              // force a reload of sd data next time we goes to SD card menu
       fInfoBase () ;               // fill info page with basis data (affiche les data et redétermine les boutons à afficher sans les afficher)
@@ -1159,8 +919,8 @@ void drawWposOnMovePage() {
   uint8_t line = 160 ;
   uint8_t col1 = 75 ;
   uint8_t col2 = 75 + 80 ;
-  tft.drawString( __WPOS , col1  , line );
-  tft.drawString( __MOVE , col2  , line  );
+  tft.drawString( mText[_WPOS].pLabel , col1  , line );
+  tft.drawString( mText[_MOVE].pLabel , col2  , line  );
   line +=16 ;
   //tft.drawString( "  X  " , col  , line + 80 );
   tft.drawFloat( wposXYZA[0] , 2 , col1 , line ); // affiche la valeur avec 2 décimales 
@@ -1195,8 +955,8 @@ void drawWposOnMovePage() {
   
   uint8_t line = 10 ;
   uint8_t col = 70 ;
-  tft.drawString( __WPOS , col  , line + 20);
-  tft.drawString( __MOVE , col  , line + 40 );
+  tft.drawString( mText[_WPOS].pLabel , col  , line + 20);
+  tft.drawString( mText[_MOVE].pLabel , col  , line + 40 );
   
   tft.drawString( "  X  " , col  , line + 80 );
   tft.drawFloat( wposXYZA[0] , 2 , col , line + 100 ); // affiche la valeur avec 2 décimales 
@@ -1387,13 +1147,13 @@ void drawDataOnOverwritePage() {                                // to do : text 
   uint8_t line = 15 ;
   uint8_t col = 2 ;
   if ( mPages[_P_OVERWRITE].boutons[POS_OF_OVERWRITE_OVERWRITE] == _OVER_SWITCH_TO_SPINDLE ) {
-    tft.drawString( __CHANGING_FEEDRATE1 , col  , line );
+    tft.drawString( mText[_CHANGING_FEEDRATE1].pLabel , col  , line );
     tft.setTextDatum( TR_DATUM ) ; // align rigth 
-    tft.drawString( __CHANGING_FEEDRATE2 , col  + 230 , line + 30 );  
+    tft.drawString( mText[_CHANGING_FEEDRATE2].pLabel , col  + 230 , line + 30 );  
   } else {
-    tft.drawString( __CHANGING_SPINDLE1 , col  , line );
+    tft.drawString( mText[_CHANGING_SPINDLE1].pLabel , col  , line );
     tft.setTextDatum( TR_DATUM ) ; // align rigth 
-    tft.drawString( __CHANGING_SPINDLE2 , col + 230 , line + 30 );
+    tft.drawString( mText[_CHANGING_SPINDLE2].pLabel , col + 230 , line + 30 );
   }
 
   tft.setTextFont( 2 );
@@ -1402,8 +1162,8 @@ void drawDataOnOverwritePage() {                                // to do : text 
   tft.setTextDatum( TL_DATUM ) ;
   tft.setTextColor(SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND) ; 
   line = 180 ;
-  tft.drawString(__FEED , 5 , line )  ;
-  tft.drawString(__RPM , 5 , line + 20 ) ;
+  tft.drawString(mText[_FEED].pLabel , 5 , line )  ;
+  tft.drawString(mText[_RPM].pLabel , 5 , line + 20 ) ;
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND) ;
   tft.setTextPadding (70) ;
   tft.setTextDatum( TR_DATUM ) ;
@@ -1439,7 +1199,7 @@ void fCommunicationBase(void) { // fonction pour l'affichage de l'écran communi
       tft.drawString( "IP=" , col + 50 , line );
       tft.drawString( ipBuffer , col + 80 , line ); // affiche la valeur avec 3 décimales 
     } else {
-      tft.drawString( "No IP assigned" , col + 50  , line ); 
+      tft.drawString( mText[_NO_IP_ASSIGNED].pLabel , col + 50  , line ); 
     }
   }  
 }
@@ -1448,7 +1208,7 @@ void drawDataOnCommunicationPage() {
   // Show:  the IP adress (already done in Sbase); wifi mode (no wifi, Station, access point)
   //  
   drawMachineStatus() ;       // draw machine status in the upper right corner
-  drawLastMsg() ;
+  drawLastMsg() ;             // draw text on line 32
   tft.setFreeFont (LABELS9_FONT) ;
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
@@ -1456,16 +1216,17 @@ void drawDataOnCommunicationPage() {
   uint8_t line = 100 ;
   uint8_t col = 1 ;
   if ( grblLink == GRBL_LINK_SERIAL) {
-    tft.drawString( "GRBL connection uses wires" , col , line );
+    tft.drawString( mText[_GRBL_SERIAL_CONNECTED].pLabel , col , line );
   } else if ( grblLink == GRBL_LINK_BT) {
       if (btConnected) {
-        tft.drawString( "GRBL connection uses bluetooth" , col , line );
+        tft.drawString( mText[_USES_BT_TO_GRBL].pLabel , col , line );
       } else {
-        tft.drawString("Not connected in bluetooth; please retry" , col , line );
+        tft.drawString(mText[_UNABLE_TO_CONNECT_IN_BT].pLabel  , col , line );
       }
   } else if ( grblLink == GRBL_LINK_TELNET) {
-    tft.drawString( "GRBL connection uses Telnet" , col , line );
-  }  
+    tft.drawString( mText[_USES_TELNET_TO_GRBL].pLabel , col , line );
+  }
+  tft.drawString( " " , col , line+20 ); // clear the second line used to say "please wait"  
 }
 
 void drawMsgOnTft(const char * msg1 , const char * msg2){
@@ -1528,11 +1289,11 @@ void fSdGrblWaitBase(void) {                // cette fonction doit vérifier que
     tft.setTextSize(1) ;
     tft.setTextDatum( TL_DATUM ) ;
     tft.setCursor(0 , 20 ) ; // x, y, font
-    tft.println( "Current directory:");
+    tft.println( mText[_CURRENT_GRBL_DIR].pLabel );
     tft.println(grblDirFilter) ;
     tft.println(" ") ;
-    tft.println("Reading files on Grbl");
-    tft.println("please wait");
+    tft.println(mText[_READING_FILES_ON_GRBL].pLabel);
+    tft.println(mText[_PLEASE_WAIT].pLabel);
 }
 
 void executeGrblEndOfFileReading(){
@@ -1648,20 +1409,20 @@ void touch_calibrate() {
     tft.setTextFont(2);
     tft.setTextSize(1);
     tft.setTextColor(SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND);
-    tft.println(__TOUCH_CORNER );
+    tft.println(mText[_TOUCH_CORNER].pLabel );
     tft.setTextFont(1);
     tft.println();
 
     if (repeatCal) {
       tft.setTextColor(SCREEN_ALERT_TEXT ,  SCREEN_BACKGROUND);
-      tft.println(__SET_REPEAT_CAL );
+      tft.println(mText[_SET_REPEAT_CAL].pLabel );
     }
 
     perform_calibration(calData, SCREEN_ALERT_TEXT, SCREEN_BACKGROUND , 15 , TFT_HEIGHT, TFT_WIDTH);  // we invert height and width because we use rotation 1 (= landscape) 
     //tft.getTouchCalibration(calData , 15) ; // added by ms for touch_ms_V1 instead of previous
     //tft.setTouch(calData);  // added by ms ; not needed with original because data are already loaded with original version
     tft.setTextColor(SCREEN_NORMAL_TEXT , SCREEN_BACKGROUND );
-    tft.println(__CAL_COMPLETED );
+    tft.println(mText[_CAL_COMPLETED].pLabel );
 
     // store data
     fs::File f = SPIFFS.open(CALIBRATION_FILE, "w");
@@ -1795,16 +1556,16 @@ boolean checkCalibrateOnSD(void){
       // return true if a file calibrate.txt exist on the SD card; if so it means that new calibration is requested
       SdBaseFile calibrateFile ;  
       if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
-          Serial.print("[MSG:");Serial.print( __CARD_MOUNT_FAILED  ) ;Serial.println("]");
+          Serial.print("[MSG:");Serial.print( mText[_CARD_MOUNT_FAILED].pLabel  ) ;Serial.println("]");
           return false;       
       }
       //if ( ! SD.exists( "/" ) ) { // check if root exist
       if ( ! sd.exists( "/" ) ) { // check if root exist   
-          Serial.print("[MSG:");Serial.println( __ROOT_NOT_FOUND  ) ;Serial.println("]");
+          Serial.print("[MSG:");Serial.println( mText[_ROOT_NOT_FOUND].pLabel  ) ;Serial.println("]");
           return false;  
       }
       if ( ! sd.chdir( "/" ) ) {
-          Serial.print("[MSG:");Serial.println( __CHDIR_ERROR  ) ;Serial.println("]");
+          Serial.print("[MSG:");Serial.println( mText[_CHDIR_ERROR].pLabel  ) ;Serial.println("]");
           return false;  
       }
       if ( ! calibrateFile.open("/calibrate.txt" ) ) { // try to open calibrate.txt 
@@ -1819,7 +1580,19 @@ boolean checkCalibrateOnSD(void){
 
 
 
-void fillMsg( const char * msg, uint16_t color) {
+void fillMsg(uint8_t msgIdx , uint16_t color) {
+  memccpy ( lastMsg , mText[msgIdx].pLabel , '\0' , 79);
+  lastMsgColor = color ;
+  lastMsgChanged = true ;
+}
+
+void clearMsg(uint16_t color ){
+  memccpy ( lastMsg , " " , '\0' , 79);
+  lastMsgColor = color ;
+  lastMsgChanged = true ;
+}
+
+void fillStringMsg( char * msg, uint16_t color) {
   memccpy ( lastMsg , msg , '\0' , 79);
   lastMsgColor = color ;
   lastMsgChanged = true ;

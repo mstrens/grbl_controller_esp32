@@ -4,6 +4,7 @@
 //#include "SD.h"
 #include "SdFat.h"
 #include "draw.h"
+#include "setupTxt.h"
 #include "nunchuk.h"
 #include <WiFi.h> 
 #include "telnet.h"
@@ -80,6 +81,10 @@ extern volatile uint8_t statusPrinting  ;
 extern char machineStatus[9];
 extern char lastMsg[80] ;        // last message to display
 extern uint16_t lastMsgColor ;        // last message color
+extern boolean lastMsgChanged ;
+extern M_pLabel mGrblErrors[_MAX_GRBL_ERRORS] ;
+extern M_pLabel mAlarms[_MAX_ALARMS]; 
+
 
 extern boolean updateFullPage ;
 
@@ -106,74 +111,6 @@ uint32_t millisLastGetGBL = 0 ;
 extern int8_t errorGrblFileReading ; // store the error while reading grbl files (0 = no error)
 float decodedFloat[4] ; // used to convert 4 floats comma delimited when parsing a status line
 float runningPercent ; // contains the percentage of char being sent to GRBL from SD card on GRBL_ESP32; to check if it is valid
-  
-const char * errorArrayMsg[] = { __UNKNOWN_ERROR  , 
-              __EXPECTED_CMD_LETTER ,
-              __BAD_NUMBER_FORMAT ,
-              __INVALID_$_SYSTEM_CMD ,
-              __NEGATIVE_VALUE ,
-              __HOMING_NOT_ENABLED ,
-              __STEP_PULSE_LESS_3_USEC ,
-              __EEPROM_READ_FAIL ,
-              __$_WHILE_NOT_IDLE ,
-              __LOCKED_ALARM_OR_JOG ,
-              __SOFT_LIMIT_NO_HOMING ,
-              __LINE_OVERFLOW ,
-              __STEP_RATE_TO_HIGH ,
-              __SAFETY_DOOR_DETECTED ,
-              __LINE_LENGHT_EXCEEDED ,
-              __JOG_TRAVEL_EXCEEDED ,
-              __INVALID_JOG_COMMANF ,
-              __LASER_REQUIRES_PWM ,
-              __UNKNOWN_ERROR  ,
-              __UNKNOWN_ERROR ,
-              __UNSUPPORTED_COMMAND ,
-              __MODAL_GROUP_VIOLATION ,
-              __UNDEF_FEED_RATE ,
-              __CMD_REQUIRES_INTEGER ,
-              __SEVERAL_AXIS_GCODE ,
-              __REPEATED_GCODE ,
-              __AXIS_MISSING_IN_GCODE ,
-              __INVALID_LINE_NUMBER ,
-              __VALUE_MISSING_IN_GCODE ,
-              __G59_WCS_NOT_SUPPORTED ,
-              __G53_WITHOUT_G01_AND_G1 ,
-              __AXIS_NOT_ALLOWED ,
-              __G2_G3_REQUIRE_A_PLANE ,
-              __INVALID_MOTION_TARGET ,
-              __INVALID_ARC_RADIUS ,
-              __G2_G3_REQUIRE_OFFSET ,
-              __UNSUSED_VALUE ,
-              __G431_TOOL_LENGTH ,
-              __TOOL_NUMBER_EXCEED_MAX 
-};
-
-const char * alarmArrayMsg[] = { __UNKNOWN_ALARM  , 
-              __HARD_LIMIT_REACHED ,
-              __MOTION_EXCEED_CNC ,
-              __RESET_IN_MOTION ,
-              __PROBE_INIT_FAIL ,
-              __PROBE_TRAVEL_FAIL  ,
-              __RESET_DURING_HOMING ,
-              __DOOR_OPEN_HOMING ,
-              __LIMIT_ON_HOMING ,
-              __LIMIT_MISSING_HOMING 
-}; 
-
-const char * stringExecuteMsg[] = { __SETX_EXECUTED  ,  // messages must be defined here in the same sequence as the buttons used to call the string commands 
-                              __SETY_EXECUTED  ,
-                              __SETZ_EXECUTED  ,
-                              __SETA_EXECUTED  ,
-                              __SETXYZ_EXECUTED ,
-                              __SETXYZA_EXECUTED ,
-                              __SET_CHANGE_EXECUTED ,
-                              __SET_PROBE_EXECUTED  ,
-                              __SET_CAL_EXECUTED    ,
-                              __GO_CHANGE_EXECUTED  ,
-                              __GO_PROBE_EXECUTED ,
-                              __UNKNOWN_BTN_EXECUTED
-                              
-};
 
 
 // ----------------- fonctions pour lire de GRBL -----------------------------
@@ -258,28 +195,31 @@ void decodeGrblLine(char * line){  // decode a full line when CR or LF is receiv
 
 void parseErrorLine(const char * line){ // extract error code, convert it in txt
   int errorNum = atoi( &line[6]) ;
-  if (errorNum < 1 || errorNum > 38 ) errorNum = 0 ;
-  char errorTxt[80] ;
-  int lenLine = strlen(line) ;
-  memcpy(errorTxt, line , lenLine);
-  strncpy(errorTxt + lenLine , errorArrayMsg[errorNum] , 79-lenLine) ;
-  errorTxt[79] = 0 ; // for safety we add a end of string  
-  fillMsg( errorTxt ) ;
+  int errorNumCorr;
+  errorNumCorr = errorNum ;
+  if (errorNum < 1 || errorNum > 70 ) errorNumCorr = 0 ;
+  if (errorNum >=40 && errorNum <= 59 ) errorNumCorr = 0 ; //there are no num in range 40/59
+  if (errorNum >=60) errorNumCorr -= 20;  // there are no num in range 40/59; so we avoided those in the 
+  memccpy ( lastMsg , mGrblErrors[errorNumCorr].pLabel , '\0' , 79); // fill Message ; note: it is also added to Log
+  lastMsgColor = SCREEN_ALERT_TEXT ;
+  lastMsgChanged = true ;
   if ( errorNum >= 60 && errorNum <= 69 ) {
-    errorGrblFileReading = errorNum ; // save the grbl error
+    errorGrblFileReading = errorNum +20; // save the grbl error (original value)
     parseGrblFilesStatus = PARSING_FILE_NAMES_DONE ; // inform main loop that callback function must be executed
   }
 }
 
 void parseAlarmLine(const char * line){
-  int alarmNum = atoi( &line[6]) ;
-   if (alarmNum < 1 || alarmNum > 9 ) alarmNum = 0 ;
-   char alarmTxt[80] ;
-  int lenLine = strlen(line) ;
-  memcpy(alarmTxt, line , lenLine);
-  strncpy(alarmTxt + lenLine , alarmArrayMsg[alarmNum] , 79-lenLine) ;
-  alarmTxt[79] = 0 ; // for safety we add a end of string  
-  fillMsg( alarmTxt ) ;  
+  int alarmNum = atoi( &line[6]) ; // search from pos 6 
+  if (alarmNum < 1 || alarmNum > 9 ) alarmNum = 0 ;
+  // char alarmTxt[80] ;
+  //int lenLine = strlen(line) ;
+  //memcpy(alarmTxt, line , lenLine);
+  //strncpy(alarmTxt + lenLine , alarmArrayMsg[alarmNum] , 79-lenLine) ;
+  //alarmTxt[79] = 0 ; // for safety we add a end of string  
+  memccpy ( lastMsg , mAlarms[alarmNum].pLabel , '\0' , 79); // fill Message ; note: it is also added to Log
+  lastMsgColor = SCREEN_ALERT_TEXT ;
+  lastMsgChanged = true ;
 }
 
 void parseMsgLine(char * line) {  // parse Msg line from GRBL
@@ -476,6 +416,7 @@ void decodeFloat(char * pSection) { // decode up to 4 float numbers comma delimi
   }    
 }
 
+/*
 void getFromGrblAndForward2( void ) {   //get char from GRBL, forward them if statusprinting = PRINTING_FROM_PC and decode the data (look for "OK", for <xxxxxx> sentence
                                        // fill machineStatus[] and wposXYZA[]
   static uint8_t c;
@@ -660,7 +601,8 @@ void getFromGrblAndForward2( void ) {   //get char from GRBL, forward them if st
     newGrblStatusReceived = true ;                            // force a redraw if on info screen  
   }
 }
-
+*/
+/*
 void parseToLog(uint8_t c , uint8_t lastC) {   // do not store in log the OK and the status message.
   //Serial.print("To Parse "); Serial.print( (char) c , HEX) ; Serial.print(" , "); Serial.println( (char) c) ;
   if ( getGrblPosState == GET_GRBL_STATUS_CLOSED ) {
@@ -690,7 +632,8 @@ void parseToLog(uint8_t c , uint8_t lastC) {   // do not store in log the OK and
     logBufferWrite( c) ;
   } 
 }
-
+*/
+/*
 void handleLastNumericField(void) { // decode last numeric field
   float temp = atof (&strGrblBuf[0]) ;
   if (  getGrblPosState == GET_GRBL_STATUS_WPOS_DATA && wposIdx < 4) {
@@ -724,7 +667,8 @@ void handleLastNumericField(void) { // decode last numeric field
           strGrblIdx = 0 ; 
   } 
 }
-
+*/
+/*
 void storeGrblState(void) { // search for some char in message
   char * pBuf =  strGrblBuf + 5 ;
   char * pSearch ;
@@ -753,6 +697,7 @@ void storeGrblState(void) { // search for some char in message
     }  
   }
 }
+*/
 
 void resetWaitOkWhenSdMillis() {    // after a resume (after a pause), we reset this time to avoid wrong warning
   waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // wait for 2 min before generating the message again
@@ -769,7 +714,7 @@ void sendToGrbl( void ) {
   uint32_t currSendMillis  ;
   if ( waitOk && ( statusPrinting == PRINTING_FROM_SD || statusPrinting == PRINTING_CMD || statusPrinting == PRINTING_STRING ) ) {
       if ( millis() > waitOkWhenSdMillis ) {
-        fillMsg(__MISSING_OK_WHEN_SENDING_FROM_SD ) ;   // give an error if we have to wait to much to get an OK from grbl
+        fillMsg(_MISSING_OK_WHEN_SENDING_FROM_SD ) ;   // give an error if we have to wait to much to get an OK from grbl
         waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // wait for 2 min before generating the message again
       }
   } else {
@@ -954,7 +899,7 @@ void sendJogCancelAndJog(void) {
             jog_status = JOG_NO ; // reset all parameters related to jog .
             jogCancelFlag = false ;
             jogCmdFlag = false ;
-            //if(lastMsg[0] || (lastMsg[0] == 32) ) fillMsg( __CAN_JOG_MISSING_OK  ) ; // put a message if there was no message (e.g. alarm:)
+            //if(lastMsg[0] || (lastMsg[0] == 32) ) fillMsg(_CAN_JOG_MISSING_OK  ) ; // put a message if there was no message (e.g. alarm:)
           }
         }
       } 
@@ -981,7 +926,7 @@ void sendJogCancelAndJog(void) {
             jog_status = JOG_NO ; // reset all parameters related to jog .
             jogCancelFlag = false ;
             jogCmdFlag = false ;
-            if(lastMsg[0] || (lastMsg[0] == 32) ) fillMsg( __CMD_JOG_MISSING_OK  ) ; // put a message if there was no message (e.g. alarm:)
+            if(lastMsg[0] || (lastMsg[0] == 32) ) fillMsg(_CMD_JOG_MISSING_OK  ) ; // put a message if there was no message (e.g. alarm:)
           }
         }
       } 
@@ -1092,7 +1037,7 @@ boolean sendJogCmd(uint32_t startTime) {
         return true ; // true means that cmd has been sent
 }
 
-
+/*
 void fillErrorMsg( const char * errorMsg ) {   // errorMsg contains "Error:xx"
    int errorNum = atoi( &errorMsg[6]) ;
    if (errorNum < 1 || errorNum > 38 ) errorNum = 0 ;
@@ -1103,15 +1048,17 @@ void fillAlarmMsg( const char * alarmMsg ) {   //alarmMsg contains "ALARM:xx"
    if (alarmNum < 1 || alarmNum > 9 ) alarmNum = 0 ;
    fillMsg( alarmArrayMsg[alarmNum] ) ;
 }
-
+*/
 void fillStringExecuteMsg( uint8_t buttonMessageIdx ) {   // buttonMessageIdx contains the number of the button
    //Serial.print("param= ") ; Serial.println(buttonMessageIdx ) ;  // to debug
    if ( buttonMessageIdx >= _SETX || buttonMessageIdx <= _GO_PROBE) {
       buttonMessageIdx -= _SETX ;
-      fillMsg( stringExecuteMsg[buttonMessageIdx] , BUTTON_TEXT ) ;
+      //fillMsg( stringExecuteMsg[buttonMessageIdx] , BUTTON_TEXT ) ;
+      fillMsg( buttonMessageIdx - _SETX +  _SETX_EXECUTED , SCREEN_NORMAL_TEXT ) ;
    } else {
-      buttonMessageIdx = _GO_PROBE - _SETX + 1 ;
-      fillMsg( stringExecuteMsg[buttonMessageIdx] ) ;
+      //buttonMessageIdx = _GO_PROBE - _SETX + 1 ;
+      //fillMsg( stringExecuteMsg[buttonMessageIdx] ) ;
+      fillMsg( _UNKNOWN_BTN_EXECUTED , SCREEN_NORMAL_TEXT ) ;
    }
    //Serial.print("index of table= ") ; Serial.println(buttonMessageIdx ) ;  // to debug
    //Serial.print("message= ") ; Serial.println( stringExecuteMsg[buttonMessageIdx] ) ; // to debug
@@ -1184,19 +1131,26 @@ void bufferise2Grbl(const char * data , char beginEnd){  // group data in a buff
 int fromGrblAvailable(){    // return the number of char in the read buffer
   switch (grblLink) {
     case GRBL_LINK_SERIAL:
+      //Serial.print("serial2 Avail="); Serial.println(Serial2.available());
       return Serial2.available();
+      break;
     case GRBL_LINK_BT :
+      Serial.println("BT available?");
       return SerialBT.available();
+      break;
     case GRBL_LINK_TELNET :
       return fromTelnetAvailable();
+      break;
   } 
 }
 
 int fromGrblRead(){       // return the first character in the read buffer
   switch (grblLink) {
     case GRBL_LINK_SERIAL:
+      
       return Serial2.read();
     case GRBL_LINK_BT :
+      Serial.println("read BT"); 
       return SerialBT.read();
     case GRBL_LINK_TELNET :
       return fromTelnetRead();
@@ -1208,16 +1162,22 @@ void startGrblCom(uint8_t comMode){
   preferences.putChar("grblLink", comMode) ;
   // First stop BT or Telnet
   if (grblLink == GRBL_LINK_BT){
+    //Serial.println("in startGrblCom we will stop bt");
+    //delay(200);
     btGrblStop();
+    //Serial.println("in startGrblCom bt has been stopped");
+    //delay(200); 
   } else if (grblLink == GRBL_LINK_TELNET) {
     telnetGrblStop();
   }
   if (comMode == GRBL_LINK_SERIAL) {
     grblLink = GRBL_LINK_SERIAL ;
     while (Serial2.available()>0) Serial2.read() ; // clear the serial2 buffer
-    fillMsg("GRBL connected with wires (serial)");  
+    //fillMsg(_GRBL_SERIAL_CONNECTED);  
   } else if (comMode == GRBL_LINK_BT) {
     grblLink = GRBL_LINK_BT ;
+    //Serial.println("in startGrblCom we call btgrblInit");
+    //delay(200);
     btGrblInit();
   } else if (comMode == GRBL_LINK_TELNET) {
     grblLink = GRBL_LINK_TELNET ;

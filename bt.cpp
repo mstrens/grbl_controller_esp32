@@ -24,6 +24,7 @@
 #    include "com.h"
 #include "config.h"
 #include "draw.h"
+#include "setupTxt.h"
     BluetoothSerial SerialBT;
 #    ifdef __cplusplus
     extern "C" {
@@ -33,9 +34,11 @@
     }
 #    endif
 
-    extern uint8_t grblLink ;
-    bool btConnected;
-    uint32_t btLastUnsuccefullMillis = millis() ;
+extern uint8_t grblLink ;
+extern M_pLabel mText[_MAX_TEXT];
+
+bool btConnected;
+//uint32_t btLastUnsuccefullMillis = millis() ;
 
 
 
@@ -47,14 +50,13 @@ void my_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
             //uint8_t* addr = param->srv_open.rem_bda;
             //sprintf(str, "%02X:%02X:%02X:%02X:%02X:%02X", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
             //BT::_btclient = str;
-            //Serial.println("[MSG:BT Connected with GRBL]");
+            Serial.println("[MSG:BT Connected with GRBL reported by an event]");
             //btLastUnsuccefullMillis = millis(); 
-            //fillMsg("BT Connected with GRBL");
-            //btConnected = true ; 
+            btConnected = true ; 
             break;
         case ESP_SPP_CLOSE_EVT:  //Client connection closed
             Serial.print("[MSG:BT Disconnected]\r\n");
-            fillMsg("BT Disconnected");
+            fillMsg(_BT_DISCONNECTED);
             btConnected = false; 
             //BTg::_btclient = "";
             break;
@@ -66,28 +68,31 @@ void my_spp_cb(esp_spp_cb_event_t event, esp_spp_cb_param_t* param) {
 void btGrblInit() {
     btConnected = false;
     grblLink = GRBL_LINK_BT ;
-    SerialBT.end();                    //stop active services
-    SerialBT.begin("ESP32Ctrl", true);
+    //SerialBT.end();     //stop active services has a bug and force ESP32 to restart
     SerialBT.register_callback(&my_spp_cb);
-    //Serial.println("[MSG: trying to connect to GRBL using BT]");
-    drawMsgOnTft("Trying to connect to GRBL using BT", "It can take 1 min; please wait" );
+    if (!SerialBT.begin("ESP32Ctrl", true)) {
+      Serial.println("[MSG: An error occurred initializing Bluetooth]");
+    }
+    drawMsgOnTft(mText[_TRY_TO_CONNECT_WITH_BT].pLabel , mText[_WAIT_1_MIN].pLabel ); // affiche sur ligne 100 et 120
     SerialBT.connect(GRBL_BT_NAME);
-    if( SerialBT.connected(0)) {
-      drawMsgOnTft("Successfully connected in BT", " ");
-      fillMsg("BT Connected with GRBL");
+    delay(100); // we wait for the caalback function to change the flag btConnected because SerialBT.connect() always return true even when not connected
+    //if( SerialBT.connected(0)) {    // bug in this function: always return true
+    if( btConnected ){
+      drawMsgOnTft(mText[_BT_CONNECTED_WITH_GRBL].pLabel, " ");
+      fillMsg(_BT_CONNECTED_WITH_GRBL , SCREEN_NORMAL_TEXT );
       Serial.println("[MSG:Successfully connected in BT]");
-      btLastUnsuccefullMillis = millis() ;
+      //btLastUnsuccefullMillis = millis() ;  // not sure it is used anymore; foreseen to make auto restart of connexion
       btConnected = true; 
     } else {
-      drawMsgOnTft("Unable to connect in BT", " ");
+      drawMsgOnTft(mText[_UNABLE_TO_CONNECT_IN_BT].pLabel, " ");
       Serial.print("[MSG:Unable to connect in BT to "); Serial.print(GRBL_BT_NAME); Serial.println("]");
-      fillMsg("Unable to connect to GRBL in BT");
+      fillMsg(_UNABLE_TO_CONNECT_IN_BT);
       btConnected = false;
     }
 }        
 
 void btGrblStop() {
-  SerialBT.end();
+  //SerialBT.end();
   btConnected = false;
 }
 

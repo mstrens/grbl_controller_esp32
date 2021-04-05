@@ -14,11 +14,12 @@
 #include "config.h"
 #include "language.h"
 #include "draw.h"
+#include "setupTxt.h"
 #include "actions.h"
 #include "cmd.h"
 
 
-extern SdFat sd;
+extern SdFat32 sd;
 //extern File root ;
 //extern File workDir ;
 //extern File workDirParents[DIR_LEVEL_MAX] ;
@@ -73,17 +74,17 @@ boolean sdStart( void ) {  // this function is called when we enter the sd scree
                            // keep currentDir open (so it can be used by other steps)
     if (dirLevel != -1) {
         if ( ! sd.exists( "/" ) ) { // check if root exist       // first check if root exists 
-            fillMsg( __ROOT_NOT_FOUND ) ;
+            fillMsg(_ROOT_NOT_FOUND ) ;
             dirLevel = -1; 
             return false;  
         }  
         if ( dirLevel == 0 && ( ! aDir[0].isDir() )  ) {
-            fillMsg( __FIRST_DIR_IS_NOT_ROOT ) ;
+            fillMsg(_FIRST_DIR_IS_NOT_ROOT ) ;
             dirLevel = -1; 
             return false;  
         }
         if ( dirLevel > 0 && ( ! aDir[dirLevel].isDir()  ) ){
-            fillMsg(  __CURRENT_DIR_IS_NOT_A_SUB_DIR  ) ;
+            fillMsg( _CURRENT_DIR_IS_NOT_A_SUB_DIR  ) ;
             dirLevel = -1; 
             return false;  
         }
@@ -98,20 +99,20 @@ boolean sdStart( void ) {  // this function is called when we enter the sd scree
       //p("begin sdstart"); 
       //if ( ! SD.begin(SD_CHIPSELECT_PIN) ) {
       if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
-          fillMsg( __CARD_MOUNT_FAILED  ) ;
+          fillMsg(_CARD_MOUNT_FAILED  ) ;
           return false;       
       }
       //if ( ! SD.exists( "/" ) ) { // check if root exist
       if ( ! sd.exists( "/" ) ) { // check if root exist   
-          fillMsg( __ROOT_NOT_FOUND  ) ;
+          fillMsg(_ROOT_NOT_FOUND  ) ;
           return false;  
       }
       if ( ! sd.chdir( "/" ) ) {
-          fillMsg( __CHDIR_ERROR  ) ;
+          fillMsg(_CHDIR_ERROR  ) ;
           return false;  
       }
       if ( ! aDir[0].open("/" ) ) { // open root 
-          fillMsg(__FAILED_TO_OPEN_ROOT ) ;
+          fillMsg(_FAILED_TO_OPEN_ROOT ) ;
           return false;  
       }
       //char nameTest[23] ;
@@ -167,7 +168,7 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
   
   while ( ( cnt ) < firstFileToDisplay ) {
     if ( ! file.openNext( &aDir[dirLevel] ) ) {       // ouvre le prochain fichier dans le répertoire courant ; en cas d'erreur, retour à la page info avec un message d'erreur 
-      fillMsg( __FILES_MISSING  ) ;
+      fillMsg(_FILES_MISSING  ) ;
       file.close() ;
       return false ; 
     }
@@ -181,7 +182,7 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
   while ( (cnt <=  sdFileDirCnt ) && (cnt < ( firstFileToDisplay + 4) ) ) {
     //Serial.println("in while") ;
     if ( ! file.openNext( &aDir[dirLevel] ) ) {
-      fillMsg( __FAILED_TO_OPEN_A_FILE ) ;
+      fillMsg(_FAILED_TO_OPEN_A_FILE ) ;
       file.close() ;
       return false ;  
     }
@@ -192,7 +193,7 @@ boolean updateFilesBtn ( void ) {  // fill an array with max 4 files names and u
       pfileNames++ ;  
     }
     if ( ! file.getName( pfileNames , 21 ) ) {   // Rempli fileNames avec le nom du fichier
-      fillMsg( __NO_FILE_NAME  ) ;
+      fillMsg(_NO_FILE_NAME  ) ;
       file.close() ;
       return false ;  
     }
@@ -239,7 +240,7 @@ boolean setFileToRead ( uint8_t fileIdx ) { // fileIdx is a number from 0...3 re
 //      Serial.print("cnt= ") ; Serial.println(cnt) ; 
       aDir[dirLevel+1].close() ;
       if (  ! aDir[dirLevel+1].openNext( &aDir[dirLevel] ) ) {       
-        fillMsg( __SELECTED_FILE_MISSING  ) ;
+        fillMsg(_SELECTED_FILE_MISSING  ) ;
         aDir[dirLevel+1].close() ;
         dirLevel = -1 ;                         // in case of error, force a reset of SD card
         return false ; 
@@ -277,14 +278,15 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
   char * pchar ;
   int sdChar = 0 ;
   if (! aDir[dirLevel+1].getName(fileName , 31) ) {   // fill fileName
-    fillMsg( __FILE_NAME_NOT_FOUND  ); 
+    fillMsg(_FILE_NAME_NOT_FOUND  ); 
     return false ;
   }
   if ( ! ( strlen(fileName) >= 6 && fileName[0] == 'C' && fileName[1] == 'm' && fileName[2] == 'd' &&  
             ( ( fileName[3] >= '1' && fileName[3] <= '9' ) || fileName[3] == 'A' || fileName[3] == 'B' ) &&  
             fileName[4] == '_' && isalpha(fileName[5]) ) ){
   //  if ( strlen(fileName) < 6 || fileName[0] != 'C' || fileName[1] != 'm' || fileName[2] != 'd' || fileName[3] < '1' || fileName[3] > '7' || fileName[4] != '_' || (!isalpha(fileName[5]) )  ){
-    fillMsg( fileName , BUTTON_TEXT );
+    
+    fillStringMsg( fileName , BUTTON_TEXT );
     return false ;
   }
   // here we assume that the file name identifies a command; so we can store it on SPIFFS
@@ -295,23 +297,23 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
   }
   deleteFileLike( fileName ) ;    // then look in SPIFFS for files beginning by Cmdx_ and if found, delete them
   if ( strlen(fileName) == 11 && fileName[5] == 'd' && fileName[6] == 'e' && fileName[7] == 'l' && fileName[8] == 'e' && fileName[9] == 't' && fileName[10] == 'e' ){
-      fillMsg( __CMD_DELETED , BUTTON_TEXT ) ;
+      fillMsg(_CMD_DELETED , SCREEN_NORMAL_TEXT ) ;
       aDir[dirLevel+1].close() ; // close the file from SD card
       return true ;
   }  
   if ( ! createFileCmd(fileName ) ) {      // then create the new file name
-       fillMsg(__CMD_NOT_CREATED ) ;
+       fillMsg(_CMD_NOT_CREATED ) ;
        aDir[dirLevel+1].close() ; // close the file from SD card
        return true ;
   }
-  fillMsg(__CMD_CREATED , BUTTON_TEXT ) ;
+  fillMsg(_CMD_CREATED , SCREEN_NORMAL_TEXT ) ;
   while ( aDir[dirLevel+1].available() > 0 ) {
       sdChar = aDir[dirLevel+1].read() ;
       if ( sdChar < 0 ) {
-        fillMsg(__CMD_PART_NOT_READ ) ;
+        fillMsg(_CMD_PART_NOT_READ ) ;
         break ;
       } else if ( ! writeFileCmd( (char) sdChar) ) {  // write the char in SPIFFS; on error, break
-        fillMsg(__CMD_COULD_NOT_SAVE ) ;
+        fillMsg(_CMD_COULD_NOT_SAVE ) ;
         break ; 
       }
   } // end while

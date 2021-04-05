@@ -12,7 +12,7 @@
 #include "com.h"
 #include "nunchuk.h"
 #include "draw.h"
-
+#include "setupTxt.h"
 
 // Calibration joystick values
 #define NUNCHUK_JOYSTICK_X_ZERO 127
@@ -69,7 +69,7 @@ void nunchuk_init() {
     Wire.beginTransmission(NUNCHUK_ADDRESS);
     if ( Wire.endTransmission()  ) {    // return 0 if the I2C device replies without error
       nunchukOK = false ;
-      fillMsg( __NO_NUNCHUK  ) ;
+      fillMsg(_NO_NUNCHUK  ) ;
     } else {
        nunchukOK = true ;
        disableEncription() ;

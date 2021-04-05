@@ -18,12 +18,13 @@
 // quel statut appliquer pendant l'exécution d'un print via sd grbl? Quel blocage implémenter. Commennt reconnaître la fin. Voir si le % donné dans la ligne de statut est valable 
 // ajouter des libellés de code d'erreur dans langage. Attention: il y a plus d'erreur et pas mal de trous. Il faut peut être changer le système par exemple en les stockant dans preference.
 // voir les modifs faites par bradley pour éviter certains warnings; voir ce qu'il a fait pour éviter la perte du telnet au démarrage suite au reset
-// fusionner telnet et Bt dans un seul fichier
+// fusionner telnet et Bt dans un seul fichier pour réduire le nombre de tab
 // bouger le caracère telnet dans l'écran COM et y dire s'il a wifi ou pas: Wifi mode: None, STA , AP ; Wifi connected/Wifi not connected
 // afficher le % d'avancement dans l'exécution d'un Gcode si on reçoit la donnée de Grbl_esp32
-// changer la couleur des textes (Msg et grblMsg) selon que ce sont des erreurs/alarmes ou juste une info; ajouter en 1ere position le code couleur
 // vérifier que les messages de grbl sont stockés dans LastgrblMsg et non dans Msg.
-// essayer de charger les langages avec la carte SD et les stocker dans preferences ou dans spifss 
+// mesurer le delai entre le send d'une commande et le OK
+// modifier GRBL_ESP32 pour voir s'il y a des pertes de caractères via Serial
+
 
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.
@@ -69,6 +70,7 @@ Sur l'écran de base, prévoir l'affichage des infos
 #include "TFT_eSPI_ms/TFT_eSPI.cpp"   // setup file has to be edited for some parameters like screen device, pins
 #include "language.h"
 #include "draw.h"
+#include "setupTxt.h"
 #include "FS.h"
 #include "nunchuk.h"
 #include "com.h"
@@ -85,6 +87,7 @@ Sur l'écran de base, prévoir l'affichage des infos
 #include "touch.h"
 #include "telnetgrbl.h"
 #include "bt.h"
+
 
 //uart_dev_t * dev = (volatile uart_dev_t *)(DR_REG_UART_BASE) ;
 //
@@ -118,13 +121,13 @@ boolean grblLastMessageChanged;
 //         SD variables  
 int8_t dirLevel ; //-1 means that card has to be (re)loaded
 char fileNames[MAX_FILES][23] ; // 22 car per line + "\0"; utilisé dans la construction de la liste des fichiers
-//SdFat sd;
+
 //File root ;
 //File workDir ;
 //File fileToRead ; // file being printed
 //File workDirParents[DIR_LEVEL_MAX] ;
 //File aDir[DIR_LEVEL_MAX] ;
-SdFat sd;
+SdFat32 sd;
 SdBaseFile aDir[DIR_LEVEL_MAX] ; 
 //SdBaseFile fileToRead ; // file being printed
 
@@ -160,12 +163,12 @@ boolean statusTelnetIsConnected = false ;
 extern uint8_t grblFileReadingStatus;
 extern uint8_t parseGrblFilesStatus ;  // status to know if we are reading [FILES: lines from GRBL or if it is just done 
 
+extern M_Button mButton[] ;
 
 /***************   Prototypes of function to avoid forward references*********************************************************************/
 //uint16_t fileCnt( level ) ;  // prototype
 void initMenuOptions( void) ;     //prototype
 //void sendGrblMove( int8_t dir , struct menustate* ms) ; 
- 
 /**************************************************************************************************/
  
 void setup() {
@@ -189,21 +192,22 @@ void setup() {
     // initialise le port série vers grbl
   Serial2.begin(115200, SERIAL_8N1, SERIAL2_RXPIN, SERIAL2_TXPIN); // initialise le port série vers grbl
   Serial2.setRxBufferSize(1024);
+  pinMode (SERIAL2_RXPIN, INPUT_PULLUP ); // added to force a level when serial wire is not connected
   pinMode(TFT_LED_PIN , OUTPUT) ;
   digitalWrite(TFT_LED_PIN , HIGH) ;
+  initButtons() ; //initialise les noms des boutons et les boutons pour chaque page.
   tftInit() ; // init screen and touchscreen, set rotation and calibrate
   if (! spiffsInit() ) {   // try to load the cmd in memory when the files exist in spiffs 
-    fillMsg(__SPIFFS_FORMATTED , BUTTON_TEXT ) ;
+    fillMsg(_SPIFFS_FORMATTED , SCREEN_NORMAL_TEXT ) ;
   } else {
     if (! cmdNameInit() ) {
-      fillMsg( __CMD_NOT_LOADED ) ;
+      fillMsg(_CMD_NOT_LOADED ) ;
     }
   }
   
 //  listSpiffsDir( "/", 0 );   // uncomment to see the SPIFFS content
   preferences.begin("savedData") ; //define the namespace for saving preferences (used for saving WIFI parameters, and z coord for change tool)
   grblLink = preferences.getChar("grblLink", GRBL_LINK_SERIAL) ; // retrieve the last used way of communication with GRBL
-  initButtons() ; //initialise les noms des boutons, les boutons pour chaque page.
   dirLevel = -1 ;   // negative value means that SD card has to be uploaded
 
   nunchuk_init() ; 
@@ -256,7 +260,7 @@ void loop() {
     boolean tempTelnetIsConnected = telnetIsConnected() ;
     if ( statusPrinting == PRINTING_FROM_TELNET && !tempTelnetIsConnected ){
       statusPrinting = PRINTING_STOPPED ;
-      fillMsg(__TELENET_DISCONNECTED "Telnet disconnected" );
+      fillMsg(_TELENET_DISCONNECTED );
     }
     statusTelnetIsConnected = tempTelnetIsConnected ;
   } 
@@ -313,4 +317,5 @@ void loop() {
   //}
   yield();
 }
+
 

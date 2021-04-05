@@ -2,7 +2,7 @@
 #define _config_h
 
 
-#define ESP32_VERSION "vers.2.0.a"
+#define ESP32_VERSION "vers.2.0.b"
 
 // decide if you will use Wifi or not (and how)
 #define WIFI ESP32_ACT_AS_STATION              // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
@@ -16,14 +16,15 @@
 
 // if you use Wifi, you can (optional) define a fix IP address. Then you have to define 3 parameters
 // If one of next 3 parameters is "", it means that you do not want to use a fix local IP address.
-#define LOCAL_IP ""   // fix IP address
-//#define LOCAL_IP "192.168.1.10"   // fix IP address
+//#define LOCAL_IP ""   // fix IP address
+#define LOCAL_IP "192.168.1.10"   // fix IP address
 #define SUBNET "255.255.255.0"    // subnet mask of your local network
 #define GATEWAY "192.168.1.1"     // gateway that have to check the IP address
 
 // if you use GRBL_ESP32 board, you can connect to this board with Serial, telnet and/or Bluetooth
 // to connect via telnet to GRBL_ESP32 board, you have to define here the IP adress of the GRBL_ESP32 board
-#define GRBL_TELNET_IP "192.168.1.11" // IP address of GRBL_ESP32 telnet server  (as defined in GRBL_ESP32) 
+#define GRBL_TELNET_IP "192.168.1.11" // IP address of GRBL_ESP32 telnet server  (as defined in GRBL_ESP32)
+
 // to connect via Bluetooth, you have to define the Bluetooth name of the GRBL_ESP32 board
 #define GRBL_BT_NAME "ESP32_BT"   // name of GRBL_ESP32 bluetooth device (as defined in GRBL_ESP32)
 
@@ -36,10 +37,6 @@
 #define TFT_CARD_VERSION 1 // define the version of the TFT board being used ; it can be 1 or 2 (1 uses 4 pins header to connect to GRbl; 2 use RJ45 connector)               
 
 #define TFT_SIZE 3   // define size of display : must be 3 (for 3.5) or 4     
-
-// This is the file name used to store the touch coordinate in the SPIFFS from ESP32 (in es32 flash memory)
-// calibration data. Cahnge the name to start a new calibration.
-#define CALIBRATION_FILE "/TouchCalData3"
 
 // Set REPEAT_CAL to true instead of false to run calibration
 // again, otherwise it will only be done once.
@@ -105,7 +102,7 @@
 //#define SCREEN_NORMAL_TEXT        TFT_GREEN
 //#define SCREEN_ALERT_TEXT         TFT_RED
 //#define SCREEN_HEADER_TEXT        TFT_WHITE
-
+//#define SCREEN_TO_SEND_TEXT       TFT_WHITE  
 
 // ************************************ Commands for change tools
 // This suppose that we can use G28 and G30 and that milling use G54 WCS.
@@ -143,14 +140,6 @@
 #define _GO_PROBE_STRING "G4P0.0\n $#\n $G\n M5\n G4P0.5\n G53 G21 G90 G00 Z-2\n G53 G21 G90 G00 X%X Y%Y\n G30\n G21 G91\n G38.2 Z-70 F100\n G00 Z2\n G38.2 Z-3 F10\n G10 L20 P1 Z%Z\n G53 G21 G90 G00 Z-2\n %M\n"
 #define _SET_CHANGE_STRING "G28.1\n G4P0.0\n $#\n $G\n" 
 #define _SET_PROBE_STRING "G30.1\n G4P0.0\n $#\n $G\n" 
-
-// here a few other GCODE being used; it set offset for W54 (=P1)
-#define _SETX_STRING "G10 L20 P1 X0\n"
-#define _SETY_STRING "G10 L20 P1 Y0\n"
-#define _SETZ_STRING "G10 L20 P1 Z0\n"
-#define _SETA_STRING "G10 L20 P1 Z0\n"
-#define _SETXYZ_STRING "G10 L20 P1 X0 Y0 Z0\n"
-#define _SETXYZA_STRING "G10 L20 P1 X0 Y0 Z0 A0\n"
 
 
 
@@ -225,6 +214,20 @@
 #define NO_WIFI 0               // code used to identify the wifi mode
 #define ESP32_ACT_AS_STATION 1
 #define ESP32_ACT_AS_AP 2
+
+// This is the file name used to store the touch coordinate in the SPIFFS from ESP32 (in es32 flash memory)
+// calibration data. Cahnge the name to start a new calibration.
+#define CALIBRATION_FILE "/TouchCalData3"
+
+// here a few other GCODE being used; it set offset for W54 (=P1)
+#define _SETX_STRING "G10 L20 P1 X0\n"
+#define _SETY_STRING "G10 L20 P1 Y0\n"
+#define _SETZ_STRING "G10 L20 P1 Z0\n"
+#define _SETA_STRING "G10 L20 P1 Z0\n"
+#define _SETXYZ_STRING "G10 L20 P1 X0 Y0 Z0\n"
+#define _SETXYZA_STRING "G10 L20 P1 X0 Y0 Z0 A0\n"
+
+
 
 #include "TFT_eSPI_ms/TFT_eSPI.h"
 
