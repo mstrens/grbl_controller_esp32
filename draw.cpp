@@ -78,7 +78,8 @@ extern uint8_t * pGet ; // position of the last char to be read for display
   
 
 //char sdStatusText[][20]  = { "No Sd card" , "Sd card to check" , "Sd card OK" , "Sd card error"} ;  // pour affichage en clair sur le lcd;
-char printingStatusText[][20] = { " " , "SD-->Grbl" , "Error SD-->Grbl" , "Pause SD-->Grbl" , "Usb-->Grbl" ,  "CMD" , "Telnet-->Grbl" , "Set cmd"} ; 
+char printingStatusText[][20] = { " " , "SD-->Grbl" , "Error SD-->Grbl" , "Pause SD-->Grbl" , "Usb-->Grbl" ,  "CMD" , "Telnet-->Grbl" , "Set cmd", 
+                                "SD in Grbl" , "Pause SD in Grbl" } ; 
 
 //extern int8_t prevMoveX ;
 //extern int8_t prevMoveY ;
@@ -124,6 +125,10 @@ extern char grblDirFilter[100] ; // contains the name of the directory to be fil
 extern char grblFileNames[GRBLFILEMAX][40]; // contain max n filename or directory name with max 40 char.
 extern char grblFileNamesTft[4][40]; // contains only the 4 names to be displayed on TFT (needed because name is altered during btn drawing 
 extern uint8_t firstGrblFileToDisplay ;   // 0 = first file in the directory
+
+extern float runningPercent ; // contains the percentage of char being sent to GRBL from SD card on GRBL_ESP32; to check if it is valid
+extern boolean runningFromGrblSd  ; // indicator saying that we are running a job from the GRBL Sd card ; is set to true when status line contains SD:
+
 
 //**************** normal screen definition.
 #define But0 3 // was B0 but B0 is already defined in some ESP32 library; so rename B0 to But0
@@ -576,6 +581,14 @@ void updateButtonsInfoPage (void) { // met à jour le set up de la page en fonct
       fillMPage (_P_INFO , 7 , _NO_BUTTON , _NO_ACTION , fPause , 0 ) ;
       fillMPage (_P_INFO , 11 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
       break ;  
+    case PRINTING_FROM_GRBL :
+      fillMPage (_P_INFO , 7 , _PAUSE , _JUST_PRESSED , fPause , 0 ) ;
+      fillMPage (_P_INFO , 11 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
+      break ;
+    case PRINTING_FROM_GRBL_PAUSED :
+      fillMPage (_P_INFO , 7 , _RESUME , _JUST_PRESSED , fResume , 0 ) ;
+      fillMPage (_P_INFO , 11 , _MORE_PAUSE , _JUST_PRESSED , fGoToPage , _P_PAUSE) ;
+      break ;
   }
 }
 
@@ -614,6 +627,19 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
       tft.drawString( "%" , 190 , 0 ) ;
       // Serial.print( sdNumberOfCharSent ); Serial.print(  " / ") ; Serial.println( sdFileSize ); 
   }
+
+  if ( statusPrinting == PRINTING_FROM_GRBL ) {
+      tft.setFreeFont (LABELS12_FONT) ;
+      tft.setTextSize(1) ;           // char is 2 X magnified => 
+      tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when only 1 parameter, background = fond);
+      tft.setTextDatum( TR_DATUM ) ;
+      tft.setTextPadding (40) ;
+      tft.drawNumber( runningPercent, 170 , 0 ) ;
+      tft.setTextPadding (1) ;
+      tft.drawString( "%" , 190 , 0 ) ;
+      // Serial.print( sdNumberOfCharSent ); Serial.print(  " / ") ; Serial.println( sdFileSize ); 
+  }
+
 
   if ( machineStatus0Prev != machineStatus[0] || machineStatus[0] == 'A' || machineStatus[0] == 'H') {
       drawMachineStatus() ;

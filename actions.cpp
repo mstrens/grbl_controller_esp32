@@ -136,12 +136,12 @@ void fReset(uint8_t param) {
 }
 
 void fCancel(uint8_t param) {
-  if( statusPrinting == PRINTING_FROM_SD || statusPrinting == PRINTING_PAUSED  ) {
+  if( statusPrinting == PRINTING_FROM_SD || statusPrinting == PRINTING_PAUSED   ) {
     statusPrinting = PRINTING_STOPPED ;
     closeFileToRead() ;    
     toGrbl( (char) SOFT_RESET) ;
     //Serial2.print( (char) SOFT_RESET) ;
-  }  else if ( statusPrinting == PRINTING_STRING ) {
+  }  else if ( statusPrinting == PRINTING_STRING  || statusPrinting == PRINTING_FROM_GRBL || statusPrinting == PRINTING_FROM_GRBL_PAUSED) {
     statusPrinting = PRINTING_STOPPED ;
     toGrbl( (char) SOFT_RESET) ;
     //Serial2.print( (char) SOFT_RESET) ;
@@ -152,24 +152,26 @@ void fCancel(uint8_t param) {
 }
 
 void fPause(uint8_t param) {
-  if( statusPrinting == PRINTING_FROM_SD  && ( machineStatus[0] == 'R' || machineStatus[0] == 'J' ) ) { // test on J added mainly for test purpose
+  if( (statusPrinting == PRINTING_FROM_SD || statusPrinting == PRINTING_FROM_GRBL ) && ( machineStatus[0] == 'R' || machineStatus[0] == 'J' ) ) { // test on J added mainly for test purpose
   #define PAUSE_CMD "!" 
     toGrbl(  PAUSE_CMD) ;
     //Serial2.print(PAUSE_CMD) ;
     statusPrinting = PRINTING_PAUSED ;
     updateFullPage = true ;  // 
+    //Serial.println("Pause is sent to grbl");
   }
   waitReleased = true ;          // discard "pressed" until a release   
 }
 
 void fResume(uint8_t param) {
-  if( statusPrinting == PRINTING_PAUSED && machineStatus[0] == 'H') {
+  if( ( statusPrinting == PRINTING_PAUSED || statusPrinting == PRINTING_FROM_GRBL_PAUSED ) && machineStatus[0] == 'H') {
   #define RESUME_CMD "~" 
     toGrbl( RESUME_CMD) ;
     //Serial2.print(RESUME_CMD) ;
     resetWaitOkWhenSdMillis() ; // we reset the time we sent the last cmd otherwise, we can get a wrong warning saying that we are missing an OK (because it seems that GRBL suspends OK while in pause)
     statusPrinting = PRINTING_FROM_SD ;
     updateFullPage = true ;      // we have to redraw the buttons because Resume should become Pause
+    //Serial.println("Resume is done");
   }
   waitReleased = true ;          // discard "pressed" until a release 
 }

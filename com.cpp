@@ -111,6 +111,7 @@ uint32_t millisLastGetGBL = 0 ;
 extern int8_t errorGrblFileReading ; // store the error while reading grbl files (0 = no error)
 float decodedFloat[4] ; // used to convert 4 floats comma delimited when parsing a status line
 float runningPercent ; // contains the percentage of char being sent to GRBL from SD card on GRBL_ESP32; to check if it is valid
+boolean runningFromGrblSd = false ; // indicator saying that we are running a job from the GRBL Sd card ; is set to true when status line contains SD:
 
 
 // ----------------- fonctions pour lire de GRBL -----------------------------
@@ -341,6 +342,7 @@ void parseSatusLine(char * line) {
       memccpy( machineStatus , pBegin , '\0', 9);  // copy the status
       pBegin = strchr(pBegin , '\0') + 1 ;  // point to first Char after the status
       char MPosOrWPos = ' ' ;
+      runningFromGrblSd = false ; // reset the indicator saying we are printing from Grbl Sd card
       while ( true ) {                     // handle each section up to the end of line
           pEndType = strchr(pBegin , ':') ;
           if (pEndType ) {
@@ -381,6 +383,7 @@ void parseSatusLine(char * line) {
                   overwritePercent[2] = decodedFloat[2] ;
               } else if ( strncmp( pBegin, "SD:" , strlen("SD:") ) == 0 ){
                   runningPercent = decodedFloat[0] ;
+                  runningFromGrblSd = true; 
               } // end testing different fields} // end testing different fields
               // now, update pBegin to nextField
               pBegin = strchr(pBegin , '|' ) ; //search begin of next section
@@ -1135,7 +1138,7 @@ int fromGrblAvailable(){    // return the number of char in the read buffer
       return Serial2.available();
       break;
     case GRBL_LINK_BT :
-      Serial.println("BT available?");
+      //Serial.println("BT available?");
       return SerialBT.available();
       break;
     case GRBL_LINK_TELNET :
@@ -1150,7 +1153,7 @@ int fromGrblRead(){       // return the first character in the read buffer
       
       return Serial2.read();
     case GRBL_LINK_BT :
-      Serial.println("read BT"); 
+      //Serial.println("read BT"); 
       return SerialBT.read();
     case GRBL_LINK_TELNET :
       return fromTelnetRead();

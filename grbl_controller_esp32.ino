@@ -23,7 +23,7 @@
 // afficher le % d'avancement dans l'exécution d'un Gcode si on reçoit la donnée de Grbl_esp32
 // vérifier que les messages de grbl sont stockés dans LastgrblMsg et non dans Msg.
 // mesurer le delai entre le send d'une commande et le OK
-// modifier GRBL_ESP32 pour voir s'il y a des pertes de caractères via Serial
+// vérifier si le soft reset provoque la perte de la liaison bluetooth ou telnet (car comment canceler un job lancer de GRBL SD card sinon); changer fCancel dans le tab actions
 
 
 /*
@@ -163,6 +163,9 @@ boolean statusTelnetIsConnected = false ;
 extern uint8_t grblFileReadingStatus;
 extern uint8_t parseGrblFilesStatus ;  // status to know if we are reading [FILES: lines from GRBL or if it is just done 
 
+extern float runningPercent ; // contains the percentage of char being sent to GRBL from SD card on GRBL_ESP32; to check if it is valid
+extern boolean runningFromGrblSd  ; // indicator saying that we are running a job from the GRBL Sd card ; is set to true when status line contains SD:
+
 extern M_Button mButton[] ;
 
 /***************   Prototypes of function to avoid forward references*********************************************************************/
@@ -285,9 +288,22 @@ void loop() {
   }
 
   if (newGrblStatusReceived == true) {
-    if( statusPrinting == PRINTING_FROM_SD  && machineStatus[0] == 'H' ) { // If printing from SD and GRBL is paused
+    if ( ( runningFromGrblSd ) && (machineStatus[0] == 'H' ) && ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_FROM_GRBL ) ){
+      statusPrinting = PRINTING_FROM_GRBL_PAUSED ;
+      updateFullPage = true ; // We want to update the buttons
+    } else if ( ( runningFromGrblSd ) && (machineStatus[0] != 'H' ) && ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_FROM_GRBL_PAUSED ) ){
+      statusPrinting = PRINTING_FROM_GRBL ;
+      updateFullPage = true ; // We want to update the buttons
+    } else if ( ( runningFromGrblSd == false ) && ( statusPrinting == PRINTING_FROM_GRBL || statusPrinting == PRINTING_FROM_GRBL_PAUSED)){
+     statusPrinting = PRINTING_STOPPED ;
+     updateFullPage = true ; // We want to update the buttons 
+    } else if( statusPrinting == PRINTING_FROM_SD  && machineStatus[0] == 'H' ) { // If printing from SD and GRBL is paused
       // set PRINTING_PAUSED
       statusPrinting = PRINTING_PAUSED ;
+      updateFullPage = true ; // We want to get the resume button 
+    } else if( statusPrinting == PRINTING_PAUSED  && machineStatus[0] != 'H' ) { // If printing from SD and GRBL is paused
+      // set PRINTING_PAUSED
+      statusPrinting = PRINTING_STOPPED ;
       updateFullPage = true ; // We want to get the resume button 
     } else if ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP || currentPage == _P_TOOL 
               || currentPage == _P_OVERWRITE || currentPage == _P_COMMUNICATION) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
