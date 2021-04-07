@@ -24,7 +24,8 @@
 // vérifier que les messages de grbl sont stockés dans LastgrblMsg et non dans Msg.
 // mesurer le delai entre le send d'une commande et le OK
 // vérifier si le soft reset provoque la perte de la liaison bluetooth ou telnet (car comment canceler un job lancer de GRBL SD card sinon); changer fCancel dans le tab actions
-
+// pourquoi l'exécution du fichier test5.gcode donne une série de messages avec OK
+// pourquoi avoir parfois des messages "error 120"
 
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.

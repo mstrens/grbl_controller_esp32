@@ -747,7 +747,7 @@ void sendToGrbl( void ) {
             break ;
       } // end switch
   } // end else if  
-  if ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_PAUSED ) {   // process nunchuk cancel and commands
+  if ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_PAUSED || statusPrinting == PRINTING_FROM_GRBL_PAUSED) {   // process nunchuk cancel and commands
      sendJogCancelAndJog() ;
   }  // end of nunchuk process
   if ( statusPrinting != PRINTING_FROM_USB && statusPrinting != PRINTING_FROM_TELNET) {     // when PC is master, it is the PC that asks for GRBL status
@@ -911,7 +911,7 @@ void sendJogCancelAndJog(void) {
     if ( jogCmdFlag ) {
       //Serial.print("jog_status"); Serial.println(jog_status);
       if ( jog_status == JOG_NO ) {
-          Serial.println( bufferAvailable[0] ) ;
+        //Serial.print("bufferAvailable=");Serial.println( bufferAvailable[0] ) ;
         if (bufferAvailable[0] > 5) {    // tests shows that GRBL gives errors when we fill to much the block buffer  
           if ( sendJogCmd(startMoveMillis) ) { // if command has been sent
             waitOk = true ;
@@ -929,6 +929,7 @@ void sendJogCancelAndJog(void) {
             jog_status = JOG_NO ; // reset all parameters related to jog .
             jogCancelFlag = false ;
             jogCmdFlag = false ;
+            //Serial.println("no OK received within 500msec for Jog");
             if(lastMsg[0] || (lastMsg[0] == 32) ) fillMsg(_CMD_JOG_MISSING_OK  ) ; // put a message if there was no message (e.g. alarm:)
           }
         }
@@ -953,14 +954,14 @@ boolean sendJogCmd(uint32_t startTime) {
         uint32_t speedMove ;
         char sspeedMove[20];
         int32_t counter = millis() - startTime ;
-        Serial.print("counter=") ; Serial.println(counter);
+        //Serial.print("counter=") ; Serial.println(counter);
         if ( counter < 10 ) {
           distanceMove = MINDIST ;
           speedMove = MINSPEED ;
         } else {
           counter = counter - DELAY_BEFORE_REPEAT_MOVE ;
           if (counter < 0) {
-            Serial.println("counter neg");
+            //Serial.println("counter neg");
             return false ;              // do not send a move; // false means that cmd has not been sent
           }
           if ( counter > (  DELAY_TO_REACH_MAX_SPEED - DELAY_BEFORE_REPEAT_MOVE) ) {
@@ -979,7 +980,7 @@ boolean sendJogCmd(uint32_t startTime) {
         }
         sprintf(sdistanceMove, "%.2f" , distanceMove); // convert to string
         //
-        Serial.println("send a jog") ;  
+        //Serial.println("send a jog") ;  
         bufferise2Grbl("$J=G91 G21" , 'b');
         //Serial2.print("$J=G91 G21") ;
         if (jogDistX > 0) {
@@ -1122,10 +1123,7 @@ void bufferise2Grbl(const char * data , char beginEnd){  // group data in a buff
   //Serial.print("buffer=") ; Serial.println(buffer);
   //delay(100);
   if (beginEnd == 's') {
-    Serial.println("sending");
-    Serial.print(buffer);
-    Serial.println("EndOfText");
-    //delay(100);
+    //Serial.print("sending buf="); Serial.print(buffer); Serial.println("EndOfText");
     toGrbl(buffer) ;
   }
 }
