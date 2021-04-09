@@ -178,7 +178,7 @@ void fResume(uint8_t param) {
 void fDist( uint8_t param ) {
   uint8_t newDist =  mPages[_P_MOVE].boutons[POS_OF_MOVE_D_AUTO ] ;       // convertit la position du bouton en type de bouton 
   //Serial.print("newDist=") ; Serial.println(newDist) ;
-  if ( ++newDist > _D10 ) newDist = _D_AUTO ; // increase and reset to min value if to big
+  if ( ++newDist > _D0_01 ) newDist = _D_AUTO ; // increase and reset to min value if to big
   mPages[_P_MOVE].boutons[POS_OF_MOVE_D_AUTO ] = newDist ;   // update the button to display
   mButtonDraw( POS_OF_MOVE_D_AUTO + 1 , newDist ) ;  // draw  at position (from 1 to 12) a button (newDist)
   //updateFullPage = true ;                     // force a redraw of buttons

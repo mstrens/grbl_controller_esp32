@@ -292,7 +292,7 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
   // here we assume that the file name identifies a command; so we can store it on SPIFFS
   // first we remove the extension
   pchar = strchr(fileName , '.' );   // replace the first '.' by 0 (= skip the file extension)
-  if ( ! pchar == NULL ) {
+  if ( pchar ) {  // if pchar is not NULL
     *pchar = 0 ;
   }
   deleteFileLike( fileName ) ;    // then look in SPIFFS for files beginning by Cmdx_ and if found, delete them

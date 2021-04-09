@@ -20,12 +20,14 @@
 // voir les modifs faites par bradley pour éviter certains warnings; voir ce qu'il a fait pour éviter la perte du telnet au démarrage suite au reset
 // fusionner telnet et Bt dans un seul fichier pour réduire le nombre de tab
 // bouger le caracère telnet dans l'écran COM et y dire s'il a wifi ou pas: Wifi mode: None, STA , AP ; Wifi connected/Wifi not connected
-// afficher le % d'avancement dans l'exécution d'un Gcode si on reçoit la donnée de Grbl_esp32
 // vérifier que les messages de grbl sont stockés dans LastgrblMsg et non dans Msg.
-// mesurer le delai entre le send d'une commande et le OK
+// mesurer le delai entre le send d'une commande et le OK (via telnet cela semble aller, à voir via serial)
 // vérifier si le soft reset provoque la perte de la liaison bluetooth ou telnet (car comment canceler un job lancer de GRBL SD card sinon); changer fCancel dans le tab actions
-// pourquoi l'exécution du fichier test5.gcode donne une série de messages avec OK
 // pourquoi avoir parfois des messages "error 120"
+// afficher le nom du fichier en cas d'usinage via la carte GRBL SD
+// Mettre en pause si on lance le fichier via GRBL SD????
+// sur l'écran Move, on trouve le texte Wpos et puis ???? not found
+// le move au clavier ne marche pas toujours : grbl retourne une erreur 8 
 
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.
@@ -199,6 +201,7 @@ void setup() {
   pinMode (SERIAL2_RXPIN, INPUT_PULLUP ); // added to force a level when serial wire is not connected
   pinMode(TFT_LED_PIN , OUTPUT) ;
   digitalWrite(TFT_LED_PIN , HIGH) ;
+  
   initButtons() ; //initialise les noms des boutons et les boutons pour chaque page.
   tftInit() ; // init screen and touchscreen, set rotation and calibrate
   if (! spiffsInit() ) {   // try to load the cmd in memory when the files exist in spiffs 

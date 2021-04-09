@@ -420,7 +420,7 @@ void loadLanguage(void){
   char line[200];  // line being read
   int lineIdx = 0;
   char c ;
-  copyLanguage() ; // try to copy language.txt from SD to SPIFSS 
+  copyLanguage() ; // try to copy language.txt from SD to SPIFSS  // to do TODO
   fs::File language;
   if(!SPIFFS.begin( false)){
         Serial.println("[MSG: SPIFFS Mount Failed for loading language");

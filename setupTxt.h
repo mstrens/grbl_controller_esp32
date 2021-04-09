@@ -42,7 +42,7 @@ struct M_Page {            // defini une page
 // Liste des boutons disponibles
 enum { _NO_BUTTON = 0 , _SETUP , _PRINT , _HOME, _UNLOCK , _RESET , _SD , _USB_GRBL , _TELNET_GRBL, _PAUSE ,
     _CANCEL , _INFO , _CMD ,_MOVE , _RESUME , _STOP_PC_GRBL , _XP , _XM , _YP ,_YM ,
-    _ZP , _ZM, _AP, _AM, _D_AUTO , _D0_01 , _D0_1 , _D1, _D10 , _SET_WCS ,
+    _ZP , _ZM, _AP, _AM, _D_AUTO , _D10 ,  _D1, _D0_1 ,  _D0_01 , _SET_WCS ,
     _SETX , _SETY , _SETZ, _SETA , _SETXYZ , _SETXYZA ,_SET_CHANGE,  _SET_PROBE, _SET_CAL , _GO_CHANGE,
     _GO_PROBE , _TOOL , _BACK , _LEFT, _RIGHT , _UP , _CMD1 ,_CMD2 ,_CMD3 ,_CMD4 ,
     _CMD5 ,_CMD6 ,_CMD7 , _CMD8 , _CMD9 , _CMD10 , _CMD11 , _MORE_PAUSE , _FILE0 , _FILE1 ,

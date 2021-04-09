@@ -1087,7 +1087,7 @@ void toGrbl(const char * data){ // send one string to GRBL on Serial, Bluetooth 
  switch (grblLink) {
     case GRBL_LINK_SERIAL:
       Serial2.print(data);
-      //Serial.print("send buffer="); Serial.println(data);
+      Serial.print("send buffer="); Serial.println(data);
       break;
     case GRBL_LINK_BT :
       toBt(data);
@@ -1123,7 +1123,7 @@ void bufferise2Grbl(const char * data , char beginEnd){  // group data in a buff
   //Serial.print("buffer=") ; Serial.println(buffer);
   //delay(100);
   if (beginEnd == 's') {
-    //Serial.print("sending buf="); Serial.print(buffer); Serial.println("EndOfText");
+    Serial.print("sending buf="); Serial.print(buffer); Serial.println("EndOfText");
     toGrbl(buffer) ;
   }
 }

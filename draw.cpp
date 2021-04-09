@@ -29,7 +29,7 @@
 // create tft and touchscreeen
 TFT_eSPI tft = TFT_eSPI();
 TOUCH touchscreen =  TOUCH();
-SPIClass spiTouch = SPIClass(VSPI);
+SPIClass spiTouch(VSPI);
 
 extern M_Button mButton[_MAX_BTN] ;
 extern M_Page mPages[_P_MAX_PAGES];
@@ -192,8 +192,8 @@ void tftInit() {
   // Set the rotation before we calibrate
   tft.setRotation(1); // normally, this is already done in tft.int() but it is not clear how is rotation set (probably 0); so it can be usefull to change it here
   
-  
-  touchscreen.begin(SPI , TOUCH_CS_PIN ) ; // specify the SPI being used (SPI = default = VSPI) and the pin used for touchscreen Chip select 
+  //spiTouch.begin( TOUCH_SCLK , TOUCH_MISO ,TOUCH_MOSI , TOUCH_CS_PIN );
+  touchscreen.begin(spiTouch , TOUCH_CS_PIN ) ; // specify the SPI being used (we do not use "SPI" = default from Arduino = HVSPI) and the pin used for touchscreen Chip select 
   
   touch_calibrate(); // call screen calibration
   //tft.printCalibration() ;  // print calibration data (print on Serial port the calibration data ; only for debug
@@ -982,7 +982,7 @@ void drawWposOnMovePage() {
   uint8_t line = 10 ;
   uint8_t col = 70 ;
   tft.drawString( mText[_WPOS].pLabel , col  , line + 20);
-  tft.drawString( mText[_MOVE].pLabel , col  , line + 40 );
+  tft.drawString( mButton[_MOVE].pLabel , col  , line + 40 );
   
   tft.drawString( "  X  " , col  , line + 80 );
   tft.drawFloat( wposXYZA[0] , 2 , col , line + 100 ); // affiche la valeur avec 2 décimales 
@@ -1380,7 +1380,7 @@ void touch_calibrate() {
   uint16_t calData[5]; // contains calibration parameters 
   uint8_t calDataOK = 0;
   bool repeatCal = REPEAT_CAL;  // parameter in the config.h file (true when calibration is requested)
-  if (checkCalibrateOnSD()) {
+  if (checkCalibrateOnSD()) { // to do todo MS to remove
     repeatCal = true ; // force a recalibration if a file "calibrate.txt" exist on SD card
   }
   // check file system exists

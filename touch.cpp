@@ -30,11 +30,10 @@ TOUCH::TOUCH(void){
 
 void TOUCH::begin(SPIClass &wspi ,uint8_t cspin){
   _pspi = &wspi;
-  _pspi->begin();
+  _pspi->begin(); // use default set up of SPI class = values defined in board (9/23/18 for lolin32) if VSPI; use 12/13/14 for a HSPI class) 
   csPin = cspin;
   pinMode(csPin, OUTPUT);
   digitalWrite(csPin, HIGH);
-  //Serial.println("touchscreen begin done");
 }
 
 /***************************************************************************************

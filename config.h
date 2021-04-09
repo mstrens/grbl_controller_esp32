@@ -34,12 +34,11 @@
 
 //#define AA_AXIS    // uncomment if you want that the firmware handles 4 axes instead of 3 ;(The GRBL STM32 firmware has to be compiled/flashed with the same option)
 
-#define TFT_CARD_VERSION 1 // define the version of the TFT board being used ; it can be 1 or 2 (1 uses 4 pins header to connect to GRbl; 2 use RJ45 connector)               
+#define TFT_CARD_VERSION 2 // define the version of the TFT board being used ; it can be 1 or 2 (1 uses 4 pins header to connect to GRbl; 2 use RJ45 connector)               
 
 #define TFT_SIZE 3   // define size of display : must be 3 (for 3.5) or 4     
 
-// Set REPEAT_CAL to true instead of false to run calibration
-// again, otherwise it will only be done once.
+// Set REPEAT_CAL to true instead of false to run calibration again, otherwise it will only be done once.
 // Repeat calibration if you change the screen rotation.
 #define REPEAT_CAL false
 
@@ -166,6 +165,9 @@
 //#define TFT_MISO 19
 //#define TFT_MOSI 23
 //#define TFT_SCLK 18
+//#define TOUCH_MISO 19
+//#define TOUCH_MOSI 23
+//#define TOUCH_SCLK 18
 
 // furthermore, TFT uses also following pins defined in User_Setup.h file
 //#define TFT_CS   13  // Chip select control pin
@@ -188,12 +190,12 @@
 //#define TFT_DC   27  // Data Command control pin
 //#define TFT_RST  33  // Reset pin (could connect to RST pin)
 
-//Touchscreen and SD card uses the same SPI bus (VSPI) with folowing pins defined as default for "SPI" in arduino :
-// VSPI MISO 19
-// VSPI MOSI 23
-// VSPI SCLK 18
+//Touchscreen and SD card uses the same SPI bus (VSPI) with folowing pins:
+#define TOUCH_MISO 19
+#define TOUCH_MOSI 23
+#define TOUCH_SCLK 18
   
-#endif
+#endif  // end of type of board
 
 // pins for Serial to GRBL (it uses Serial2 UART)
 #define SERIAL2_RXPIN 16
