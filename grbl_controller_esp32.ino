@@ -26,7 +26,6 @@
 // pourquoi avoir parfois des messages "error 120"
 // afficher le nom du fichier en cas d'usinage via la carte GRBL SD
 // Mettre en pause si on lance le fichier via GRBL SD????
-// sur l'écran Move, on trouve le texte Wpos et puis ???? not found
 // le move au clavier ne marche pas toujours : grbl retourne une erreur 8 
 
 /*
