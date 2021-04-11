@@ -2,7 +2,8 @@
 #define _config_h
 
 
-#define ESP32_VERSION "vers.2.0.e"
+#define ESP32_VERSION "vers.2.0.f
+
 
 // decide if you will use Wifi or not (and how)
 #define WIFI ESP32_ACT_AS_STATION              // select between NO_WIFI, ESP32_ACT_AS_STATION, ESP32_ACT_AS_AP 
