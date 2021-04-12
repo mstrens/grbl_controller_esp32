@@ -25,7 +25,7 @@ Au premier démarrage, il faudra faire un calibrage de l'écran tactile (en pres
 Au besoin cette étape peut être faite à nouveau soit en reflashant le firmware avec l'option REPEAT_CAL mise à true dans le fichier config.h ou en plaçant un fichier calibrate.txt sur la carte SD
 Il est possible de changer les paramètres wifi sans reflasher en plaçant sur la carte SD un fichier wifi.cfg (voir modèle sur github).
 Il est aussi possible de changer le langage sans reflasher en plaçant sur la carte SD un fichier language.txt (voir 3 modèles sur github; changer le nom en language.txt)
-
+Il est possible de créer jusquà 11 boutons de commande personalisés en plaçant sur la carte SD des fichiers (un par bouton) et en les exécutant comme s'il s'agissait d'un fichier de gcode (voir la section read me) 
 
 
  
