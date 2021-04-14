@@ -179,6 +179,7 @@ uint16_t btnDefFiles[12][4] = {{ FXB , FXE , FYB0 , FYE0 } ,  // each line conta
                                 { 0 , 0 , 0 , 0 }    } ;
 
 
+#define RADIUS_ROUND_RECTANGLE 4
 
 void tftInit() {
   tft.init() ; // Initialise l'écran avec les pins définies dans setup (par exemple)
@@ -301,9 +302,10 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
         tft.setTextColor(text);
         tft.setTextSize(1);
         //tft.setTextFont(2);
-        uint8_t r = min(_w, _h) / 4; // Corner radius
-        tft.fillRoundRect( _xl , _yl , _w, _h, r, fill);
-        tft.drawRoundRect( _xl, _yl , _w, _h, r, outline);
+        //uint8_t r = min(_w, _h) / 4; // Corner radius
+        //uint8_t r = RADIUS_ROUND_RECTANGLE;
+        tft.fillRoundRect( _xl , _yl , _w, _h, RADIUS_ROUND_RECTANGLE, fill);
+        //tft.drawRoundRect( _xl, _yl , _w, _h, RADIUS_ROUND_RECTANGLE, outline);
         uint8_t tempdatum = tft.getTextDatum(); 
         tft.setTextDatum(MC_DATUM);
         
@@ -377,8 +379,12 @@ void mButtonBorder(uint8_t pos , uint16_t outline) {  // draw the border of a bu
   } else {
     convertPosToXY( pos , &_xl, &_yl , btnDefNormal) ;
   }
-  uint8_t r = min(_w, _h) / 4; // Corner radius
-  tft.drawRoundRect( _xl, _yl , _w, _h, r, outline);
+  //uint8_t r = min(_w, _h) / 4; // Corner radius
+  //uint8_t r = RADIUS_ROUND_RECTANGLE ;
+  //tft.drawRoundRect( _xl, _yl , _w, _h, RADIUS_ROUND_RECTANGLE, outline);
+  tft.drawRoundRect( _xl-1, _yl-1 , _w+2, _h+2, RADIUS_ROUND_RECTANGLE+1, outline);
+  tft.drawRoundRect( _xl-2, _yl-2 , _w+4, _h+4, RADIUS_ROUND_RECTANGLE+2, outline);
+  tft.drawRoundRect( _xl-3, _yl-3 , _w+6, _h+6, RADIUS_ROUND_RECTANGLE+3, outline);
 }
  
 uint8_t getButton( int16_t x, int16_t y  , uint16_t btnDef[12][4]) {    // convert x y into a button if possible
@@ -454,7 +460,7 @@ void updateBtnState( void) {
 void drawUpdatedBtn( ) {   // update the color of the buttons on a page (based on currentPage, justPressedBtn , justReleasedBtn, longPressedBtn)
   if ( justReleasedBtn && mPages[currentPage].boutons[justReleasedBtn - 1] && 
                       (  mButton[mPages[currentPage].boutons[justReleasedBtn - 1]].pLabel[0] != 0 ) ) {  // si justReleased contient un bouton et que ce bouton est affiché sur la page
-    mButtonBorder( justReleasedBtn , BUTTON_BORDER_NOT_PRESSED ) ; // affiche le bord du bouton dans sa couleur normale
+    mButtonBorder( justReleasedBtn , SCREEN_BACKGROUND ) ; // affiche le bord du bouton dans sa couleur normale // first it was BUTTON_BORDER_NOT_PRESSED
   }
   if ( justPressedBtn && mPages[currentPage].boutons[justPressedBtn - 1] && ( mButton[mPages[currentPage].boutons[justPressedBtn - 1]].pLabel[0] != 0 ) ) {  // si justPressed contient un bouton et que ce bouton est affiché sur la page
     mButtonBorder( justPressedBtn , BUTTON_BORDER_PRESSED ) ; // affiche le bord du bouton dans la couleur de sélection
