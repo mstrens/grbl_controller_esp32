@@ -47,6 +47,8 @@
 // it seems that 5000 (mm/min) is a good value for RS-CNC32
 #define MAX_XY_SPEED_FOR_JOGGING 5000 
 
+#define USE_ICONS // comment this line if you want that the buttons uses text instead of icons.
+
 // note: this project allows to define up to 11 GRBL set of commands (macros) that can be called from setup screen.
 // Those are defined by the user on a sd card and loaded on request into the ESP32 flash memory system (SPIFFS)
 // So, once uploaded, they can be called without SD card.
@@ -157,7 +159,7 @@
 
 // Here some pins (GPIO) being used
 //************************************
-#if TFT_CARD_VERSION ==1
+#if TFT_CARD_VERSION == 1
 #define TOUCH_CS_PIN  27
 #define TFT_LED_PIN 25        // pin connected to led of lcd; pin has to be high to set led ON
 #define SD_CHIPSELECT_PIN 26  // pin for SD card selection

@@ -14,7 +14,8 @@ bool copyLanguage(void) ; // copy file from SD to SPIFSS
 // créer un array de structure de bouton
 struct M_Button {
   //uint8_t  textsize ;  // To use if we want different text size.
-  const char  * pLabel ;
+  const char  * pLabel ; // when text is empty, then it is a hidden button (not displayed but can be pressed)
+  const uint8_t * pIcon  = 0 ; // when 0 it means there is no icon; then use the text
 };
 
 struct M_pLabel {

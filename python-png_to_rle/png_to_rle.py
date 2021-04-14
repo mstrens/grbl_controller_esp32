@@ -177,7 +177,7 @@ class RLEBitmap:
 #open up a PNG and write it to a RLE document
 rb = RLEBitmap()
 #rb.open_png('input\golfcourse.png')
-rb.open_png('more1_button.png')
+rb.open_png('reset1_button.png')
 #fs = open('output\more1_button.rle','w')
 #fs = open('output\golfcourse.rle','w')
 rb.write_rle_tostream()

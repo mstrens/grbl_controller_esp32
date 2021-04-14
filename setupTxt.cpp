@@ -6,6 +6,7 @@
 #include "FS.h"
 #include "draw.h"
 #include "actions.h"
+#include "icons.h"
 
 M_Button mButton[_MAX_BTN] ;
 M_Page mPages[_P_MAX_PAGES];
@@ -110,6 +111,92 @@ mButton[_FILE0_GRBL].pLabel = grblFileNamesTft[0] ;
 mButton[_FILE1_GRBL].pLabel = grblFileNamesTft[1] ;
 mButton[_FILE2_GRBL].pLabel = grblFileNamesTft[2] ;
 mButton[_FILE3_GRBL].pLabel = grblFileNamesTft[3] ; 
+
+#ifdef USE_ICONS
+mButton[_SETUP].pIcon = setupIcon  ;
+mButton[_PRINT].pIcon = printIcon  ;
+mButton[_HOME].pIcon = homeIcon  ;
+mButton[_UNLOCK].pIcon = unlockIcon  ;
+mButton[_RESET].pIcon = resetIcon ;
+mButton[_SD].pIcon = sdIcon  ;
+mButton[_USB_GRBL].pIcon = usbIcon  ;
+mButton[_TELNET_GRBL].pIcon = telnetIcon  ;
+mButton[_PAUSE].pIcon = pauseIcon  ;
+mButton[_CANCEL].pIcon = cancelIcon  ;
+mButton[_INFO].pIcon = infoIcon  ;
+mButton[_CMD].pIcon = cmdIcon  ;
+mButton[_MOVE].pIcon = moveIcon  ;
+mButton[_RESUME].pIcon = resumeIcon  ;
+mButton[_STOP_PC_GRBL].pIcon = stopIcon ;
+mButton[_XP].pIcon = xpIcon ;
+mButton[_XM].pIcon = xmIcon ;
+mButton[_YP].pIcon = ypIcon ;
+mButton[_YM].pIcon = ymIcon ;
+mButton[_ZP].pIcon = zpIcon ;
+mButton[_ZM].pIcon = zmIcon ;
+//mButton[_AP].pIcon = "A+" ;
+//mButton[_AM].pIcon = "A-" ;
+mButton[_D_AUTO].pIcon = dAutoIcon  ;
+mButton[_D0_01].pIcon = d0_01Icon ;
+mButton[_D0_1].pIcon = d0_1Icon ;
+mButton[_D1].pIcon = d1Icon ;
+mButton[_D10].pIcon = d10Icon ;
+mButton[_SET_WCS].pIcon = setWCSIcon  ;
+mButton[_SETX].pIcon = setXIcon ;
+mButton[_SETY].pIcon = setYIcon ;
+mButton[_SETZ].pIcon = setZIcon ;
+//mButton[_SETA].pIcon = __SETA  ;
+mButton[_SETXYZ].pIcon = setXYZIcon  ;
+//mButton[_SETXYZA].pIcon = __SETXYZA  ;
+mButton[_TOOL].pIcon = toolIcon  ;
+//mButton[_SET_CHANGE].pIcon = __SET_CHANGE  ;
+//mButton[_SET_PROBE].pIcon = __SET_PROBE  ;
+//mButton[_SET_CAL].pIcon = __SET_CAL  ;
+//mButton[_GO_CHANGE].pIcon = __GO_CHANGE ; 
+//mButton[_GO_PROBE].pIcon = __GO_PROBE ;
+mButton[_BACK].pIcon = backIcon  ;
+//mButton[_LEFT].pIcon = leftIcon  ;
+//mButton[_RIGHT].pIcon = rightIcon  ;
+mButton[_UP].pIcon = upIcon  ;
+//mButton[_CMD1].pLabel = &cmdName[0][0] ;
+//mButton[_CMD2].pLabel = &cmdName[1][0] ;
+//mButton[_CMD3].pLabel = &cmdName[2][0] ;
+//mButton[_CMD4].pLabel = &cmdName[3][0] ;
+//mButton[_CMD5].pLabel = &cmdName[4][0] ;
+//mButton[_CMD6].pLabel = &cmdName[5][0] ;
+//mButton[_CMD7].pLabel = &cmdName[6][0] ;
+//mButton[_CMD8].pLabel = &cmdName[7][0] ;
+//mButton[_CMD9].pLabel = &cmdName[8][0] ;
+//mButton[_CMD10].pLabel = &cmdName[9][0] ;
+//mButton[_CMD11].pLabel = &cmdName[10][0] ;
+mButton[_MORE_PAUSE].pIcon = morePauseIcon ;
+//mButton[_FILE0].pLabel = fileNames[0] ;  // labels are defined during execution in a table
+//mButton[_FILE1].pLabel = fileNames[1] ;
+//mButton[_FILE2].pLabel = fileNames[2] ;
+//mButton[_FILE3].pLabel = fileNames[3] ;
+//mButton[_MASKED1].pLabel = "" ; // this is a hidden button; so must be empty
+mButton[_PG_PREV].pIcon = pgPrevIcon ;
+mButton[_PG_NEXT].pIcon = pgNextIcon ;
+mButton[_SD_SHOW].pIcon = sdShowIcon ; 
+//mButton[_OVERWRITE].pLabel = "" ; // this is a hidden button; so must be empty
+//mButton[_OVER_SWITCH_TO_FEEDRATE].pLabel = __OVER_SWITCH_TO_FEEDRATE ;
+//mButton[_OVER_SWITCH_TO_SPINDLE].pLabel = __OVER_SWITCH_TO_SPINDLE ;
+//mButton[_OVER_10P].pLabel = __OVER_10P ;
+//mButton[_OVER_10M].pLabel = __OVER_10M ;
+//mButton[_OVER_1P].pLabel = __OVER_1P ;
+//mButton[_OVER_1M].pLabel = __OVER_1M ;
+//mButton[_OVER_100].pLabel = __OVER_100 ;
+//mButton[_COMMUNICATION].pLabel = __COMMUNICATION ;
+//mButton[_SERIAL].pLabel = __SERIAL ;
+//mButton[_BLUETOOTH].pLabel = __BLUETOOTH ;
+//mButton[_TELNET].pLabel = __TELNET ;
+//mButton[_SD_GRBL].pLabel = __SD_GRBL ;
+//mButton[_FILE0_GRBL].pLabel = grblFileNamesTft[0] ;
+//mButton[_FILE1_GRBL].pLabel = grblFileNamesTft[1] ;
+//mButton[_FILE2_GRBL].pLabel = grblFileNamesTft[2] ;
+//mButton[_FILE3_GRBL].pLabel = grblFileNamesTft[3] ; 
+#endif //end of USE_ICONS
+
 
 
 // ************** fill the parameters to declare the buttons for each pages

@@ -12,6 +12,7 @@
 #include "log.h"
 #include "touch.h"
 #include "grbl_file.h"
+#include "icons.h"
 
 
 #define LABELS9_FONT &FreeSans9pt7b    // Key label font 2
@@ -131,9 +132,9 @@ extern boolean runningFromGrblSd  ; // indicator saying that we are running a jo
 
 
 //**************** normal screen definition.
-#define But0 3 // was B0 but B0 is already defined in some ESP32 library; so rename B0 to But0
+#define But0 3 // B is for begin, E is for end; it was B0 but B0 is already defined in some ESP32 library; so  I renamed B0 to But0
 #define E0 3+74
-#define But1 3+80 // was B1 but B1 is already defined in some ESP32 library; so rename B1 to But1
+#define But1 3+80 // was B1 but B1 is already defined in some ESP32 library; so  I renamed B1 to But1
 #define E1 3+80+74
 #define B2 3+160
 #define E2 3+160+74
@@ -165,7 +166,7 @@ uint16_t btnDefNormal[12][4] = {{ But0 , E0 , But0 , E0 } ,  // each line contai
                                 { B3 , E3 , B2 , E2 } } ;
 
 uint16_t btnDefFiles[12][4] = {{ FXB , FXE , FYB0 , FYE0 } ,  // each line contains the Xmin, Xmax, Ymin , Ymax of one button for the menu File.
-                                { FXB , FXE , FYB1 , FYE1 } , // currently they are only 10 btn
+                                { FXB , FXE , FYB1 , FYE1 } , // currently they are only 10 btn on this type of screen
                                 { FXB , FXE , FYB2 , FYE2 } ,
                                 { FXB , FXE , FYB3 , FYE3 } ,
                                 { B2 , E2 , But0 , E0 } ,
@@ -248,7 +249,8 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
   int32_t fill = BUTTON_BACKGROUND ;
   int32_t outline = BUTTON_BORDER_NOT_PRESSED ;
   int32_t text = BUTTON_TEXT ;
-  const char * pbtnLabel ; 
+  const char * pbtnLabel ;
+  const uint8_t * pbtnIcon ;  
   boolean isFileName = false ;
   //int32_t y1 ;
   //char tempText[9] ;              // keep max 8 char + /0
@@ -261,6 +263,7 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
   boolean convertPosIsTrue ;
     
   pbtnLabel = mButton[btnIdx].pLabel ;
+  pbtnIcon = mButton[btnIdx].pIcon ; // 0 means that there is no icon.
   if (  (currentPage == _P_SD && btnIdx >= _FILE0 && btnIdx <= _FILE3  ) ||
         ( currentPage == _P_SD_GRBL  && btnIdx >= _FILE0_GRBL && btnIdx <= _FILE3_GRBL)  ){ // if it is a button for a file name
     _w = 74+6+80 ;
@@ -292,68 +295,72 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
     convertPosIsTrue =  convertPosToXY( pos , &_xl, &_yl , btnDefNormal ) ;          //  Convert position index to colonne and line (top left corner) 
   }
   if ( convertPosIsTrue ) {
-    tft.setTextColor(text);
-    tft.setTextSize(1);
-    //tft.setTextFont(2);
-    uint8_t r = min(_w, _h) / 4; // Corner radius
-    tft.fillRoundRect( _xl , _yl , _w, _h, r, fill);
-    tft.drawRoundRect( _xl, _yl , _w, _h, r, outline);
-    uint8_t tempdatum = tft.getTextDatum(); 
-    tft.setTextDatum(MC_DATUM);
-    
-    if (isFileName ) {                // print filename in a special way (larger button)
-      tft.setTextDatum(BC_DATUM);
-      tft.setFreeFont(LABELS9_FONT);
-      tft.drawString( fileNameReduced , _xl + (_w/2), _yl + (_h/2));
-      tft.setTextDatum(TC_DATUM);
-      tft.drawString( fileExtension , _xl + (_w/2), _yl + (_h/2)); 
-      tft.setTextDatum(tempdatum);
-      return ;
-    }
-    memccpy( tempLabel , pbtnLabel , '\0' , 16); // copy max 16 char
-    pch = strchr(tempLabel , '*') ; //check for a separator in the name in order to split on 2 lines   
-    if  ( pch!=NULL ) {
-      numbChar = pch - tempLabel ;
-      if (numbChar <= 8 ) {
-        tempLabel[numbChar] = 0 ;               // replace * by end of string
+    if (pbtnIcon) {   // when it is an icon, draw it
+      tft.drawBitmap( _xl, _yl , pbtnIcon , 74 , 74 , fill ); 
+    } else { // when it is a text, draw the button, the border and the text (can be splitted on 2 lines)
+        tft.setTextColor(text);
+        tft.setTextSize(1);
+        //tft.setTextFont(2);
+        uint8_t r = min(_w, _h) / 4; // Corner radius
+        tft.fillRoundRect( _xl , _yl , _w, _h, r, fill);
+        tft.drawRoundRect( _xl, _yl , _w, _h, r, outline);
+        uint8_t tempdatum = tft.getTextDatum(); 
+        tft.setTextDatum(MC_DATUM);
+        
+        if (isFileName ) {                // print filename in a special way (larger button)
+          tft.setTextDatum(BC_DATUM);
+          tft.setFreeFont(LABELS9_FONT);
+          tft.drawString( fileNameReduced , _xl + (_w/2), _yl + (_h/2));
+          tft.setTextDatum(TC_DATUM);
+          tft.drawString( fileExtension , _xl + (_w/2), _yl + (_h/2)); 
+          tft.setTextDatum(tempdatum);
+          return ;
+        }
+        memccpy( tempLabel , pbtnLabel , '\0' , 16); // copy max 16 char
+        pch = strchr(tempLabel , '*') ; //check for a separator in the name in order to split on 2 lines   
+        if  ( pch!=NULL ) {
+          numbChar = pch - tempLabel ;
+          if (numbChar <= 8 ) {
+            tempLabel[numbChar] = 0 ;               // replace * by end of string
+            tft.setFreeFont(LABELS9_FONT);
+            //tft.setTextFont(2); 
+            tft.drawString( &tempLabel[0] , _xl + (_w/2), _yl + (_h/3)); // affiche max 8 char sur la première ligne
+            tempLabel[numbChar + 9] = 0 ;           // set a 0 to avoid that second part of name exceed 8 char 
+            tft.drawString( &tempLabel[numbChar + 1]  , _xl + (_w/2), _yl + 2 * (_h/3)); // affiche la seconde ligne avec max 8 char
+            return;
+          }
+        }
+        // here it is asked to split in 2 lines (or the split was asked after the 8th char)
+        // we can still split if there is more than 8 char; if there is less than 4, we use another font 
         tft.setFreeFont(LABELS9_FONT);
-        //tft.setTextFont(2); 
-        tft.drawString( &tempLabel[0] , _xl + (_w/2), _yl + (_h/3)); // affiche max 8 char sur la première ligne
-        tempLabel[numbChar + 9] = 0 ;           // set a 0 to avoid that second part of name exceed 8 char 
-        tft.drawString( &tempLabel[numbChar + 1]  , _xl + (_w/2), _yl + 2 * (_h/3)); // affiche la seconde ligne avec max 8 char
-        return;
-      }
-    }
-    // here it is asked to split in 2 lines (or the split was asked after the 8th char)
-    // we can still split if there is more than 8 char; if there is less than 4, we use another font 
-    tft.setFreeFont(LABELS9_FONT);
-    uint8_t txtLength = strlen( pbtnLabel ) ;  // get the length of text to be displayed
-    if ( txtLength <= 4 ) {                                               // imprime 1 ligne au milieu en grand
-      tft.setFreeFont(LABELS12_FONT); 
-      tft.drawString( pbtnLabel , _xl + (_w/2), _yl + (_h/2));  
-    } else if ( txtLength <= 8 ) {                                        // imprime 1 ligne au milieu  
-        tft.drawString( pbtnLabel , _xl + (_w/2), _yl + (_h/2));  
-    } else { 
-      if( memccpy( tempLabel , pbtnLabel , '\0' , 16) == NULL ) tempLabel[16] = 0 ; // copy the label in tmp
-      pch = strchr(tempLabel , '.') ;
-      
-      if  ( pch!=NULL ) {
-        numbChar = pch - tempLabel ;
-        if (numbChar >= 8 ) numbChar = 8 ;
-      }
-      uint8_t tempChar =  tempLabel[numbChar] ; // sauvegarde le charactère '.' ou un autre
-//      Serial.print("numChar="); Serial.print(numbChar) ;
-//      Serial.print("txtLenth="); Serial.print(txtLength) ;
-//      Serial.print("tempChar="); Serial.print(tempChar) ; Serial.print(" , "); Serial.print(tempChar , HEX) ;
-      tempLabel[numbChar] = 0 ;            // put a 0 instead 
-      tft.drawString( tempLabel , _xl + (_w/2), _yl + (_h/3)); // affiche max 7 char sur la première ligne (ou la partie avant .)
-      tempLabel[numbChar] = tempChar ;    // restore the char
-      if ( (txtLength - numbChar) >= 8 ) {
-        tempLabel[numbChar + numbChar + 9 ] = 0 ;     // put a 0 to avoid a too long string 
-      }  
-      tft.drawString( &tempLabel[numbChar]  , _xl + (_w/2), _yl + 2 * (_h/3)); // affiche la seconde ligne avec max 8 char
+        uint8_t txtLength = strlen( pbtnLabel ) ;  // get the length of text to be displayed
+        if ( txtLength <= 4 ) {                                               // imprime 1 ligne au milieu en grand
+          tft.setFreeFont(LABELS12_FONT); 
+          tft.drawString( pbtnLabel , _xl + (_w/2), _yl + (_h/2));  
+        } else if ( txtLength <= 8 ) {                                        // imprime 1 ligne au milieu  
+            tft.drawString( pbtnLabel , _xl + (_w/2), _yl + (_h/2));  
+        } else { 
+          if( memccpy( tempLabel , pbtnLabel , '\0' , 16) == NULL ) tempLabel[16] = 0 ; // copy the label in tmp
+          pch = strchr(tempLabel , '.') ;
+          
+          if  ( pch!=NULL ) {
+            numbChar = pch - tempLabel ;
+            if (numbChar >= 8 ) numbChar = 8 ;
+          }
+          uint8_t tempChar =  tempLabel[numbChar] ; // sauvegarde le charactère '.' ou un autre
+    //      Serial.print("numChar="); Serial.print(numbChar) ;
+    //      Serial.print("txtLenth="); Serial.print(txtLength) ;
+    //      Serial.print("tempChar="); Serial.print(tempChar) ; Serial.print(" , "); Serial.print(tempChar , HEX) ;
+          tempLabel[numbChar] = 0 ;            // put a 0 instead 
+          tft.drawString( tempLabel , _xl + (_w/2), _yl + (_h/3)); // affiche max 7 char sur la première ligne (ou la partie avant .)
+          tempLabel[numbChar] = tempChar ;    // restore the char
+          if ( (txtLength - numbChar) >= 8 ) {
+            tempLabel[numbChar + numbChar + 9 ] = 0 ;     // put a 0 to avoid a too long string 
+          }  
+          tft.drawString( &tempLabel[numbChar]  , _xl + (_w/2), _yl + 2 * (_h/3)); // affiche la seconde ligne avec max 8 char
+        }   
+        tft.setTextDatum(tempdatum);
     }   
-    tft.setTextDatum(tempdatum);
   }  
 }
 
@@ -720,7 +727,7 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   tft.setTextDatum( TR_DATUM ) ;
   tft.drawNumber( (long) feedSpindle[0] , 80 , line) ; // here we could add the Feed rate and the spindle rpm
   tft.drawNumber( (long) feedSpindle[1] , 200 , line) ; // here we could add the Feed rate and the spindle rpm
-
+  //tft.drawBitmap(100, 100, resetIcon , 74, 74, SCREEN_HEADER_TEXT );
 }
 
 void fNoBase(void) {
