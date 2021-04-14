@@ -68,16 +68,16 @@ const uint8_t dAutoIcon[] = {
 #include "icons/bmp/auto1_button.h "  
 };
 const uint8_t d0_01Icon[] = {
-#include "icons/bmp/0.01_1_button.h "  
+#include "icons/bmp/d0.01_1_button.h "  
 };
 const uint8_t d0_1Icon[] = {
-#include "icons/bmp/0.1_1_button.h "  
+#include "icons/bmp/d0.1_1_button.h "  
 };
 const uint8_t d1Icon[] = {
-#include "icons/bmp/1_1_button.h "  
+#include "icons/bmp/d1_1_button.h "  
 };
 const uint8_t d10Icon[] = {
-#include "icons/bmp/10_1_button.h "  
+#include "icons/bmp/d10_1_button.h "  
 };
 const uint8_t setWCSIcon[] = {
 #include "icons/bmp/set_WCS1_button.h "  

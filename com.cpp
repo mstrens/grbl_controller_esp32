@@ -125,7 +125,7 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
   static uint16_t lineToDecodeIdx = 0 ; // position where to write the next char received
   while (fromGrblAvailable() ) { // check if there are some char from grbl (Serial or Telnet or Bluetooth)
       c=fromGrblRead() ; // get the char from grbl (Serial or Telnet or Bluetooth)
-#define DEBUG_RECEIVED_CHAR
+//#define DEBUG_RECEIVED_CHAR
 #ifdef DEBUG_RECEIVED_CHAR      
       Serial.print( (char) c) ;
       //if  (c == 0x0A || c == 0x0C ) Serial.println(millis()) ;

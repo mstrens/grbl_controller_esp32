@@ -35,6 +35,7 @@ void drawPartPage() ;          // update only the data on creen (not the button)
 void drawAllButtons() ;        // draw all buttons defined on the page (except the one that are _MASKED)
 void mButtonDraw(uint8_t pos , uint8_t btnIdx) ;  // draw one button at position (from 1 to 12) 
 void mButtonBorder(uint8_t pos , uint16_t outline) ; // draw the border of a button at position (from 1 to 12)
+void mButtonClear(uint8_t pos , uint8_t btnIdx) ;  // clear one button at position (from 1 to 12)
 
 // fonctions quand on active un bouton
 void fInfoBase(void) ; // fonction pour l'affichage de base de la page info

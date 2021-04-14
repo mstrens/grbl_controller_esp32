@@ -386,6 +386,28 @@ void mButtonBorder(uint8_t pos , uint16_t outline) {  // draw the border of a bu
   tft.drawRoundRect( _xl-2, _yl-2 , _w+4, _h+4, RADIUS_ROUND_RECTANGLE+2, outline);
   tft.drawRoundRect( _xl-3, _yl-3 , _w+6, _h+6, RADIUS_ROUND_RECTANGLE+3, outline);
 }
+
+void mButtonClear(uint8_t pos , uint8_t btnIdx) {  // clear one button at position (from 1 to 12)
+  int32_t _xl , _yl ;
+  int32_t _w = 74 ;  // dimensions are changed here below when it is a button for a file name
+  int32_t _h = 74 ;
+  boolean isFileName = false ;
+  boolean convertPosIsTrue ;
+  if (  (currentPage == _P_SD && btnIdx >= _FILE0 && btnIdx <= _FILE3  ) ||
+        ( currentPage == _P_SD_GRBL  && btnIdx >= _FILE0_GRBL && btnIdx <= _FILE3_GRBL)  ){ // if it is a button for a file name
+    _w = 74+6+80 ;
+    _h = 56 ;
+    isFileName = true ;      
+  }  
+  if (  currentPage == _P_SD || currentPage == _P_SD_GRBL) {
+    convertPosIsTrue =  convertPosToXY( pos , &_xl, &_yl , btnDefFiles ) ;          //  Convert position index to colonne and line (top left corner) 
+  } else {
+    convertPosIsTrue =  convertPosToXY( pos , &_xl, &_yl , btnDefNormal ) ;          //  Convert position index to colonne and line (top left corner) 
+  }
+  if ( convertPosIsTrue ) {
+    tft.fillRoundRect( _xl , _yl , _w, _h, RADIUS_ROUND_RECTANGLE, SCREEN_BACKGROUND);
+  }
+}
  
 uint8_t getButton( int16_t x, int16_t y  , uint16_t btnDef[12][4]) {    // convert x y into a button if possible
                                                  // return 1 à 12 suivant le bouton; return 0 if no button
