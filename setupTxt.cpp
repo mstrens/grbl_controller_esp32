@@ -111,6 +111,8 @@ mButton[_FILE0_GRBL].pLabel = grblFileNamesTft[0] ;
 mButton[_FILE1_GRBL].pLabel = grblFileNamesTft[1] ;
 mButton[_FILE2_GRBL].pLabel = grblFileNamesTft[2] ;
 mButton[_FILE3_GRBL].pLabel = grblFileNamesTft[3] ; 
+mButton[_YES_BTN].pLabel = __YES ;
+mButton[_NO_BTN].pLabel = __NO ;
 
 #ifdef USE_ICONS
 mButton[_SETUP].pIcon = setupIcon  ;
@@ -347,6 +349,19 @@ fillMPage (_P_SD_GRBL , 7 , _UP , _JUST_PRESSED , fSdGrblMove , _UP ) ;
 fillMPage (_P_SD_GRBL , 8 , _PG_NEXT , _JUST_PRESSED , fSdGrblMove , _PG_NEXT) ;
 fillMPage (_P_SD_GRBL , 9 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
+mPages[_P_SD_CONFIRM].titel = "" ;  // this screen has only 2 buttons 9 and 10
+mPages[_P_SD_CONFIRM].pfBase = fConfirmYesNoBase ;   // cette fonction doit afficher le texte (et idéalement le nom du message)
+fillMPage (_P_SD_CONFIRM , 9 , _YES_BTN , _JUST_PRESSED , fConfirmedYes , 0 ) ;
+fillMPage (_P_SD_CONFIRM , 10 , _NO_BTN , _JUST_PRESSED , fConfirmedNo , 0 ) ;
+
+mPages[_P_PAUSE_GRBL].titel = "" ;
+mPages[_P_PAUSE_GRBL].pfBase = fNoBase ;
+fillMPage (_P_PAUSE_GRBL , 4 , _CANCEL , _JUST_PRESSED , fCancelGrbl , 0) ;
+fillMPage (_P_PAUSE_GRBL , 5 , _RESUME , _JUST_PRESSED , fResumeGrbl , 0) ;
+fillMPage (_P_PAUSE_GRBL , 7 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE) ;
+fillMPage (_P_PAUSE_GRBL , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
+
+
 // ************************** Fill the messages ****************************
 mText[_WPOS].pLabel = __WPOS ;
 mText[_MPOS].pLabel = __MPOS ;
@@ -420,6 +435,7 @@ mText[_WAIT_1_MIN].pLabel = __WAIT_1_MIN ;
 mText[_WIFI_NOT_CONNECTED].pLabel = __WIFI_NOT_CONNECTED ;
 mText[_TRY_TO_CONNECT_WITH_TELNET].pLabel = __TRY_TO_CONNECT_WITH_TELNET ;
 mText[_WIFI_CONNECTED].pLabel = __WIFI_CONNECTED ;
+mText[_CONFIRM_SD_FILE].pLabel = __CONFIRM_SD_FILE ;
 //mText[].pLabel = _ ;
 
 

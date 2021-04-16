@@ -91,8 +91,8 @@ FILE0_GRBL    ""
 FILE1_GRBL    ""
 FILE2_GRBL    ""
 FILE3_GRBL    ""
-
-
+YES           "Oui"
+NO            "Non"
 
 
 
@@ -154,23 +154,22 @@ GO_PROBE_EXECUTED    "WCS Z sauvé en G54"
 UNKNOWN_BTN_EXECUTED "Index boutton erronné"
 UNABLE_TO_CONNECT_IN_BT         "Pas de connexion Bluetooth"
 BT_DISCONNECTED                 "BT Déconnecté"
-BT_CONNECTED_WITH_GRBL          "Grbl connecté par BT"
-GRBL_SERIAL_CONNECTED           "Connection GRBL: fil(série)"
+BT_CONNECTED_WITH_GRBL          "GRBL connecté par BT"
+GRBL_SERIAL_CONNECTED           "Connexion GRBL: fil(série)"
 UNABLE_TO_CONNECT_TO_GRBL_TELNET "Pas de connexion Telnet"
 TELNET_CONNECTED_WITH_GRBL      "Grbl connecté par Telnet"
 CURRENT_GRBL_DIR                "Répertoire actuel"
-READING_FILES_ON_GRBL           "Lecture des fichiers Grbl"
+READING_FILES_ON_GRBL           "Lecture des fichiers GRBL"
 PLEASE_WAIT                     "Attendez"
 NO_IP_ASSIGNED                  "Pas d'adresse IP"
-USES_BT_TO_GRBL                  "Connection GRBL: Bluetooth"
-USES_TELNET_TO_GRBL              "Connection GRBL: Telnet"   
-TRY_TO_CONNECT_WITH_BT           "Connection GRBL via BT en cours"
+USES_BT_TO_GRBL                  "Connexion GRBL: Bluetooth"
+USES_TELNET_TO_GRBL              "Connexion GRBL: Telnet"   
+TRY_TO_CONNECT_WITH_BT           "Connexion GRBL via BT en cours"
 WAIT_1_MIN                       "Cela peut prendre 1 min; attendez"
 WIFI_NOT_CONNECTED               "Wifi non connecté"
 TRY_TO_CONNECT_WITH_TELNET       "Connexion GRBL via Telnet en cours"
 WIFI_CONNECTED                   "Wifi connecté"   
-
-
+CONFIRM_SD_FILE                  "Voulez vous exécuter ce fichier?"
 
 
 

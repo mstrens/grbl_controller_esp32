@@ -27,6 +27,9 @@
 // afficher le nom du fichier en cas d'usinage via la carte GRBL SD
 // Mettre en pause si on lance le fichier via GRBL SD????
 // le move au clavier ne marche pas toujours : grbl retourne une erreur 8 
+// avec l'impression via grbl SD, quand on fait pause, l'écran doit être adapté (ne pas montrer l'icone show gcode) et certaines fonctions aussi (sans doute Cancel et Resume)
+
+
 
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.

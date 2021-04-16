@@ -91,8 +91,8 @@ FILE0_GRBL    ""
 FILE1_GRBL    ""
 FILE2_GRBL    ""
 FILE3_GRBL    ""
-
-
+YES           "Yes"
+NO            "No"
 
 
 
@@ -169,8 +169,7 @@ WAIT_1_MIN                       "It can take 1 min; please wait"
 WIFI_NOT_CONNECTED               "Wifi not connected"
 TRY_TO_CONNECT_WITH_TELNET       "Trying to connect to GRBL using Telnet"
 WIFI_CONNECTED                   "Wifi is connected"   
-
-
+CONFIRM_SD_FILE                  "Are you sure to execute this file?"
 
 
 

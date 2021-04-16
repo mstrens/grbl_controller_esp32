@@ -33,7 +33,16 @@ void fTelnet(uint8_t param) ; // activate GRBL over Telnet
 void fSdGrblMove(uint8_t param) ;  // param contient _LEFT ou _RIGTH
 
 void fSdFilePrint(uint8_t param ) ;
+void fStartSdPrinting(uint8_t param ) ;
+void fStartSdGrblPrinting(uint8_t param ) ;
 void fSdGrblFilePrint(uint8_t param ) ;
+void fCancelGrbl(uint8_t param) ;
+void fResumeGrbl(uint8_t param) ;
+
+
+void fConfirmYesNo(uint8_t param ) ;
+void fConfirmedYes(uint8_t param ) ;
+void fConfirmedNo(uint8_t param ) ;
 
 void handleAutoMove( uint8_t param) ;
 

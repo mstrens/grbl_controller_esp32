@@ -67,7 +67,7 @@ extern uint8_t firstGrblFileToDisplay ;   // 0 = first file in the directory
 extern int grblFileIdx ; // index in the array where next file name being parse would be written
 
 
-
+uint8_t fileToExecuteIdx ; // save the idex (0...3) of the file to be executed after confimation; 0/3 = sd on tft, 10/3 = sd on GRBL card
 uint32_t prevAutoMoveMillis ;
 
 #define SOFT_RESET 0x18 
@@ -78,7 +78,6 @@ void fGoToPage(uint8_t param) {
   currentPage = param ;
   updateFullPage = true ; 
   waitReleased = true ;          // discard "pressed" until a release 
-//  delay(10000);
 }
 
 void fGoToPageAndClearMsg(uint8_t param) {
@@ -140,7 +139,14 @@ void fCancel(uint8_t param) {
     closeFileToRead() ;    
     toGrbl( (char) SOFT_RESET) ;
     //Serial2.print( (char) SOFT_RESET) ;
-  }  else if ( statusPrinting == PRINTING_STRING  || statusPrinting == PRINTING_FROM_GRBL || statusPrinting == PRINTING_FROM_GRBL_PAUSED) {
+  }  
+  currentPage = _P_INFO ;  // go to page Info
+  updateFullPage = true ;  // force a redraw even if current page does not change
+  waitReleased = true ;          // discard "pressed" until a release 
+}
+
+void fCancelGrbl(uint8_t param) {
+  if ( statusPrinting == PRINTING_FROM_GRBL || statusPrinting == PRINTING_FROM_GRBL_PAUSED) {
     statusPrinting = PRINTING_STOPPED ;
     toGrbl( (char) SOFT_RESET) ;
     //Serial2.print( (char) SOFT_RESET) ;
@@ -162,18 +168,30 @@ void fPause(uint8_t param) {
   waitReleased = true ;          // discard "pressed" until a release   
 }
 
+#define RESUME_CMD "~"
 void fResume(uint8_t param) {
-  if( ( statusPrinting == PRINTING_PAUSED || statusPrinting == PRINTING_FROM_GRBL_PAUSED ) && machineStatus[0] == 'H') {
-  #define RESUME_CMD "~" 
+  if(  statusPrinting == PRINTING_PAUSED && machineStatus[0] == 'H') {
     toGrbl( RESUME_CMD) ;
-    //Serial2.print(RESUME_CMD) ;
     resetWaitOkWhenSdMillis() ; // we reset the time we sent the last cmd otherwise, we can get a wrong warning saying that we are missing an OK (because it seems that GRBL suspends OK while in pause)
     statusPrinting = PRINTING_FROM_SD ;
+    
     updateFullPage = true ;      // we have to redraw the buttons because Resume should become Pause
-    //Serial.println("Resume is done");
   }
+  currentPage = _P_INFO ;  // go to page Info
   waitReleased = true ;          // discard "pressed" until a release 
 }
+
+void fResumeGrbl(uint8_t param) {
+  if( statusPrinting == PRINTING_FROM_GRBL_PAUSED && machineStatus[0] == 'H') {
+    toGrbl( RESUME_CMD) ;
+    resetWaitOkWhenSdMillis() ; // we reset the time we sent the last cmd otherwise, we can get a wrong warning saying that we are missing an OK (because it seems that GRBL suspends OK while in pause)
+    statusPrinting = PRINTING_FROM_GRBL ;
+    updateFullPage = true ;      // we have to redraw the buttons because Resume should become Pause
+  }
+  currentPage = _P_INFO ;  // go to page Info
+  waitReleased = true ;          // discard "pressed" until a release 
+}
+
 
 void fDist( uint8_t param ) {
   uint8_t newDist =  mPages[_P_MOVE].boutons[POS_OF_MOVE_D_AUTO] ;       // convertit la position du bouton en type de bouton 
@@ -331,19 +349,28 @@ void fSdFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param c
     waitReleased = true ;
     return ;
   } else {                    // file can be printed
-    waitOk = false ;
-    toGrbl(PAUSE_CMD) ;
-    //Serial2.print(PAUSE_CMD) ;
-    delay(10);
-    toGrbl("?") ;
-    //Serial2.print("?") ;
-    //waitOk = false ; // do not wait for OK before sending char.
-    statusPrinting = PRINTING_PAUSED ; // initially it was PRINTING_FROM_SD ; // change the status, so char will be read and sent in main loop
-    prevPage = currentPage ;            // go to INFO page
-    currentPage = _P_INFO ; 
+    fileToExecuteIdx = param ; // save index of file.
+    prevPage = currentPage ;            // go to confirm page
+    currentPage = _P_SD_CONFIRM ; 
     updateFullPage = true ;
     waitReleased = true ;          // discard "pressed" until a release
   }   
+}
+
+void fStartSdPrinting(uint8_t param){ // param is the index of the file button (0...3)
+    waitOk = false ;
+//    toGrbl(PAUSE_CMD) ;
+    //Serial2.print(PAUSE_CMD) ;
+//    delay(10);
+//    toGrbl("?") ;
+    //Serial2.print("?") ;
+    //waitOk = false ; // do not wait for OK before sending char.
+//    statusPrinting = PRINTING_PAUSED ; // initially it was PRINTING_FROM_SD ; // change the status, so char will be read and sent in main loop
+    statusPrinting = PRINTING_FROM_SD ; // change the status, so char will be read and sent in main loop
+//    prevPage = currentPage ;            // go to INFO page
+    currentPage = _P_INFO ; 
+    updateFullPage = true ;
+    waitReleased = true ;          // discard "pressed" until a release
 }
 
 void fSdMove(uint8_t param) {     // param contient _PG_PREV ou _PG_NEXT
@@ -583,7 +610,6 @@ void fSdGrblMove(uint8_t param) {     // param contient _PG_PREV ou _PG_NEXT
 
 
 void fSdGrblFilePrint(uint8_t param ){   // lance l'impression d'un fichier; param contains l'index (0 à 3) du fichier à ouvrir; pour trouver le nom, il faut ajouter cela à firstGrblFileToDisplay
-   char fullFileName[200] ;
    if ( (*grblFileNames[param + firstGrblFileToDisplay])  == '/' ) { // if first char = "/", it is a directory
       if ( ( strlen(grblFileNames[param + firstGrblFileToDisplay]) + strlen(grblDirFilter))  > 99 ){ // when the new filter name would be to big, just discard
          // discard  
@@ -598,14 +624,39 @@ void fSdGrblFilePrint(uint8_t param ){   // lance l'impression d'un fichier; par
       waitReleased = true ;          // discard "pressed" until a release       
       return ;
    } else {   // it is a file name; so send the command to Grbl (the command to send is "$SD/Run=/dir/dir/file.ext"
+      fileToExecuteIdx = param +10 ; // save index of file + 10 (to make the difference with SD from TFT) (to be used in fConfirmedYes for calling fStartSdGrblPrinting
+      prevPage = currentPage ;            // go to confirm page
+      currentPage = _P_SD_CONFIRM ; 
+      updateFullPage = true ;
+      waitReleased = true ;          // discard "pressed" until a release
+  }   
+}
+
+void fStartSdGrblPrinting(uint8_t param){ // param is the index of the file button (0...3)
+                                          // we have to send a command with the name like "$SD/Run=/dir/dir/file.ext" 
+      char fullFileName[200] ;
       strcpy(fullFileName , grblDirFilter ); // copy directory name
       strcpy(fullFileName + strlen(fullFileName) , grblFileNames[param + firstGrblFileToDisplay] )  ; // add the file name 
       toGrbl("$SD/run=");
       toGrbl(fullFileName);
       toGrbl("\r\n");
-      //prevPage = currentPage ;            // go to INFO page
-      currentPage = _P_INFO ; 
+      currentPage = _P_INFO ; // go to info page 
       updateFullPage = true ;
       waitReleased = true ;          // discard "pressed" until a release
-  }   
 }
+
+void fConfirmedYes(uint8_t param ) { // called when Yes btn is pressed; based on parameter call different function 
+  //Serial.print("fileToExecuteIdx="); Serial.println(fileToExecuteIdx);
+  if ( fileToExecuteIdx <=3) { // it is a file from sd card attached to tft
+    fStartSdPrinting(fileToExecuteIdx) ;
+  } else if ( fileToExecuteIdx >= 10 &&  fileToExecuteIdx <=13) {// it is a file from sd card attached to grbl
+    fStartSdGrblPrinting(fileToExecuteIdx - 10);
+  } else {
+    fGoToPage(_P_INFO); // this should not occurs
+  }
+}
+void fConfirmedNo(uint8_t param ) { // called when No btn is pressed; should do the same as back btn in principe
+  fGoBack(0);
+}
+
+

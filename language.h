@@ -70,6 +70,8 @@
 #define __BLUETOOTH "Blue*tooth"
 #define __TELNET "Telnet"
 #define __SD_GRBL "SD*Grbl"
+#define __YES "Oui"
+#define __NO "Non"
 
 #define __WPOS "Wpos"
 #define __MPOS "Mpos"
@@ -128,24 +130,24 @@
 #define __GO_CHANGE_EXECUTED "En position change tool"
 #define __GO_PROBE_EXECUTED "WCS Z sauv\x80" " en G54"
 #define __UNKNOWN_BTN_EXECUTED "Index boutton erronn\x80"
-#define __UNABLE_TO_CONNECT_IN_BT         "Fail to connect to GRBL in BT"
-#define __BT_DISCONNECTED                 "BT Disconnected"
-#define __BT_CONNECTED_WITH_GRBL          "GRBL connected with BT"
-#define __GRBL_SERIAL_CONNECTED           "GRBL connection : wires (serial)"
-#define __UNABLE_TO_CONNECT_TO_GRBL_TELNET "Fail to connect to GRBL with Telnet"
-#define __TELNET_CONNECTED_WITH_GRBL      "GRBL connected with Telnet"
-#define __CURRENT_GRBL_DIR                "Current directory"
-#define __READING_FILES_ON_GRBL           "Reading files on Grbl"
-#define __PLEASE_WAIT                     "Please wait"
-#define __NO_IP_ASSIGNED                  "No IP assigned"
-#define __USES_BT_TO_GRBL                  "GRBL connection : Bluetooth"
-#define __USES_TELNET_TO_GRBL              "GRBL connection : Telnet" 
-#define __TRY_TO_CONNECT_WITH_BT           "Trying to connect to GRBL using BT"
-#define __WAIT_1_MIN                       "It can take 1 min; please wait"
-#define __WIFI_NOT_CONNECTED               "Wifi not connected"
-#define __TRY_TO_CONNECT_WITH_TELNET       "Trying to connect to GRBL using Telnet"
-#define __WIFI_CONNECTED                   "Wifi is connected"   
-
+#define __UNABLE_TO_CONNECT_IN_BT         "Pas de connexion Bluetooth"
+#define __BT_DISCONNECTED                 "BT Déconnect\x80"
+#define __BT_CONNECTED_WITH_GRBL          "GRBL connect\x80" " par BT"
+#define __GRBL_SERIAL_CONNECTED           "Connexion GRBL: fil(s\x80" "rie)"
+#define __UNABLE_TO_CONNECT_TO_GRBL_TELNET "Pas de connexion Telnet"
+#define __TELNET_CONNECTED_WITH_GRBL      "GRBL connect\x80" " par Telnet"
+#define __CURRENT_GRBL_DIR                "R\x80" "pertoire actuel"
+#define __READING_FILES_ON_GRBL           "Lecture des fichiers GRBL"
+#define __PLEASE_WAIT                     "Attendez"
+#define __NO_IP_ASSIGNED                  "Pas d'adresse IP"
+#define __USES_BT_TO_GRBL                  "Connexion GRBL: Bluetooth"
+#define __USES_TELNET_TO_GRBL              "Connexion GRBL: Telnet" 
+#define __TRY_TO_CONNECT_WITH_BT           "Connection GRBL via BT en cours"
+#define __WAIT_1_MIN                       "Cela peut prendre 1 min; attendez"
+#define __WIFI_NOT_CONNECTED               "Wifi non connect\x80"
+#define __TRY_TO_CONNECT_WITH_TELNET       "Connexion GRBL via Telnet en cours"
+#define __WIFI_CONNECTED                   "Wifi connecté\x80"   
+#define __CONFIRM_SD_FILE                  "Voulez vous ex\x80" "cuter ce fichier?"
 
 #define __UNKNOWN_ERROR "Erreur inconnue"  
 #define __EXPECTED_CMD_LETTER "1.Lettre Cmd attendue"
@@ -263,6 +265,8 @@
 #define __BLUETOOTH "Blue*tooth"
 #define __TELNET "Telnet"
 #define __SD_GRBL "SD*Grbl"
+#define __YES "Ja"
+#define __NO "Nein"
 
 
 #define __WPOS "Wpos"
@@ -339,7 +343,7 @@
 #define __WIFI_NOT_CONNECTED               "Wifi not connected"
 #define __TRY_TO_CONNECT_WITH_TELNET       "Trying to connect to GRBL using Telnet"
 #define __WIFI_CONNECTED                   "Wifi is connected"   
-
+#define __CONFIRM_SD_FILE                  "Are you sure to execute this file?"
 
 #define __UNKNOWN_ERROR "Unbekannter Fehler"  
 #define __EXPECTED_CMD_LETTER "1.Erwarteter cmd Buchstabe"
@@ -460,6 +464,8 @@
 #define __BLUETOOTH "Blue*tooth"
 #define __TELNET "Telnet"
 #define __SD_GRBL "SD*Grbl"
+#define __YES "Yes"
+#define __NO "No"
 
 #define __WPOS "Wpos"
 #define __MPOS "Mpos"
@@ -535,7 +541,7 @@
 #define __WIFI_NOT_CONNECTED               "Wifi not connected"
 #define __TRY_TO_CONNECT_WITH_TELNET       "Trying to connect to GRBL using Telnet"
 #define __WIFI_CONNECTED                   "Wifi is connected"   
-
+#define __CONFIRM_SD_FILE                  "Are you sure to execute this file?"
 
 
 #define __UNKNOWN_ERROR "0.Unknown error"  

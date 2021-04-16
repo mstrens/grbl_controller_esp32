@@ -127,59 +127,102 @@ extern char grblFileNames[GRBLFILEMAX][40]; // contain max n filename or directo
 extern char grblFileNamesTft[4][40]; // contains only the 4 names to be displayed on TFT (needed because name is altered during btn drawing 
 extern uint8_t firstGrblFileToDisplay ;   // 0 = first file in the directory
 
+extern uint8_t fileToExecuteIdx ; // save the idex (0...3) of the file to be executed after confimation; 0/3 = sd on tft, 10/3 = sd on GRBL card
+
 extern float runningPercent ; // contains the percentage of char being sent to GRBL from SD card on GRBL_ESP32; to check if it is valid
 extern boolean runningFromGrblSd  ; // indicator saying that we are running a job from the GRBL Sd card ; is set to true when status line contains SD:
 
 
 //**************** normal screen definition.
-#define But0 3 // B is for begin, E is for end; it was B0 but B0 is already defined in some ESP32 library; so  I renamed B0 to But0
-#define E0 3+74
-#define But1 3+80 // was B1 but B1 is already defined in some ESP32 library; so  I renamed B1 to But1
-#define E1 3+80+74
-#define B2 3+160
-#define E2 3+160+74
-#define B3 3+240
-#define E3 3+240+74
-#define FXB 3
-#define FXE 3+80+74
-#define FYB0 2
-#define FYE0 2 + 56
-#define FYB1 2 + 56 + 4
-#define FYE1 2 + 56 + 4  + 56 
-#define FYB2 2 + 56 + 4  + 56 + 4 
-#define FYE2 2 + 56 + 4  + 56 + 4 + 56 
-#define FYB3 2 + 56 + 4  + 56 + 4 + 56 + 4
-#define FYE3 2 + 56 + 4  + 56 + 4 + 56 + 4 + 56 
+#if defined( TFT_SIZE) and (TFT_SIZE == 3)
+#define SCREEN_WIDTH 320
+#define SCREEN_HEIGHT 240
+#define BTN_SIZE 74
+#define ICON_SIZE 74
+#define BTN_H_MARGIN 3
+#define BTN_V_MARGIN 3
+#define BTN_FILE_HEIGHT 54
+#define TFT_H_RATIO 1
+#define TFT_V_RATIO 1
+#elif defined(TFT_SIZE) and (TFT_SIZE == 4)
+#define SCREEN_WIDTH 480
+#define SCREEN_HEIGHT 320
+#define BTN_SIZE 100
+#define ICON_SIZE 74
+#define BTN_H_MARGIN 10
+#define BTN_V_MARGIN 3
+#define BTN_FILE_HEIGHT 74
+#define TFT_H_RATIO 1.5
+#define TFT_V_RATIO 1.33333
+#else
+#error TFT_SIZE must be 3 or 4 (see config.h)
+#endif
+#define RADIUS_ROUND_RECTANGLE 4
+
+
+#define XB0 (BTN_H_MARGIN) // B is for begin, E is for end; it was B0 but B0 is already defined in some ESP32 library; so  I renamed B0 to XB0
+#define XE0 (BTN_H_MARGIN + BTN_SIZE )   // 3+74
+#define XB1 (3*BTN_H_MARGIN + BTN_SIZE ) // was B1 but B1 is already defined in some ESP32 library; so  I renamed B1 to But1
+#define XE1 (3*BTN_H_MARGIN + 2*BTN_SIZE ) //3+80+74
+#define XB2 (5*BTN_H_MARGIN + 2*BTN_SIZE ) // 3+160
+#define XE2 (5*BTN_H_MARGIN + 3*BTN_SIZE ) //3+160+74
+#define XB3 (7*BTN_H_MARGIN + 3*BTN_SIZE ) //3+240
+#define XE3 (7*BTN_H_MARGIN + 4*BTN_SIZE ) // 3+240+74
+#define YB0 (BTN_V_MARGIN) // B is for begin, E is for end; it was B0 but B0 is already defined in some ESP32 library; so  I renamed B0 to XB0
+#define YE0 (BTN_V_MARGIN + BTN_SIZE )   // 3+74
+#define YB1 (3*BTN_V_MARGIN + BTN_SIZE ) // was B1 but B1 is already defined in some ESP32 library; so  I renamed B1 to But1
+#define YE1 (3*BTN_V_MARGIN + 2*BTN_SIZE ) //3+80+74
+#define YB2 (5*BTN_V_MARGIN + 2*BTN_SIZE ) // 3+160
+#define YE2 (5*BTN_V_MARGIN + 3*BTN_SIZE ) //3+160+74
+#define YB3 (7*BTN_V_MARGIN + 3*BTN_SIZE ) //3+240
+#define YE3 (7*BTN_V_MARGIN + 4*BTN_SIZE ) // 3+240+74
+
+#define FXB (BTN_H_MARGIN) //3
+#define FXE (3*BTN_H_MARGIN + 2*BTN_SIZE ) //3+80+74
+#define FYB0 (BTN_V_MARGIN) //2
+#define FYE0 (BTN_V_MARGIN + BTN_FILE_HEIGHT ) //2 + 56
+#define FYB1 (3*BTN_V_MARGIN + BTN_FILE_HEIGHT ) //2 + 56 + 4
+#define FYE1 (3*BTN_V_MARGIN + 2*BTN_FILE_HEIGHT )//2 + 56 + 4  + 56 
+#define FYB2 (5*BTN_V_MARGIN + 2*BTN_FILE_HEIGHT ) //2 + 56 + 4  + 56 + 4 
+#define FYE2 (5*BTN_V_MARGIN + 3*BTN_FILE_HEIGHT ) //2 + 56 + 4  + 56 + 4 + 56 
+#define FYB3 (7*BTN_V_MARGIN + 3*BTN_FILE_HEIGHT ) //2 + 56 + 4  + 56 + 4 + 56 + 4
+#define FYE3 (7*BTN_V_MARGIN + 4*BTN_FILE_HEIGHT )//2 + 56 + 4  + 56 + 4 + 56 + 4 + 56 
  
 
-uint16_t btnDefNormal[12][4] = {{ But0 , E0 , But0 , E0 } ,  // each line contains the Xmin, Xmax, Ymin , Ymax of one button.
-                                { But1 , E1 , But0 , E0 } ,
-                                { B2 , E2 , But0 , E0 } ,
-                                { B3 , E3 , But0 , E0 } ,
-                                { But0 , E0 , But1 , E1 } ,
-                                { But1 , E1 , But1 , E1 } ,
-                                { B2 , E2 , But1 , E1 } ,
-                                { B3 , E3 , But1 , E1 } ,
-                                { But0 , E0 , B2 , E2 } ,
-                                { But1 , E1 , B2 , E2 } ,
-                                { B2 , E2 , B2 , E2 } ,
-                                { B3 , E3 , B2 , E2 } } ;
+uint16_t btnDefNormal[12][4] = {{ XB0 , XE0 , YB0 , YE0 } ,  // each line contains the Xmin, Xmax, Ymin , Ymax of one button.
+                                { XB1 , XE1 , YB0 , YE0 } ,
+                                { XB2 , XE2 , YB0 , YE0 } ,
+                                { XB3 , XE3 , YB0 , YE0 } ,
+                                { XB0 , XE0 , YB1 , YE1 } ,
+                                { XB1 , XE1 , YB1 , YE1 } ,
+                                { XB2 , XE2 , YB1 , YE1 } ,
+                                { XB3 , XE3 , YB1 , YE1 } ,
+                                { XB0 , XE0 , YB2 , YE2 } ,
+                                { XB1 , XE1 , YB2 , YE2 } ,
+                                { XB2 , XE2 , YB2 , YE2 } ,
+                                { XB3 , XE3 , YB2 , YE2 } } ;
 
 uint16_t btnDefFiles[12][4] = {{ FXB , FXE , FYB0 , FYE0 } ,  // each line contains the Xmin, Xmax, Ymin , Ymax of one button for the menu File.
                                 { FXB , FXE , FYB1 , FYE1 } , // currently they are only 10 btn on this type of screen
                                 { FXB , FXE , FYB2 , FYE2 } ,
                                 { FXB , FXE , FYB3 , FYE3 } ,
-                                { B2 , E2 , But0 , E0 } ,
-                                { B3 , E3 , But0 , E0 } ,
-                                { B2 , E2 , But1 , E1 } ,
-                                { B3 , E3 , But1 , E1 } ,
-                                { B2 , E2 , B2 , E2 } ,
-                                { B3 , E3 , B2 , E2 } ,
+                                { XB2 , XE2 , YB0 , YE0 } ,
+                                { XB3 , XE3 , YB0 , YE0 } ,
+                                { XB2 , XE2 , YB1 , YE1 } ,
+                                { XB3 , XE3 , YB1 , YE1 } ,
+                                { XB2 , XE2 , YB2 , YE2 } ,
+                                { XB3 , XE3 , YB2 , YE2 } ,
                                 { 0 , 0 , 0 , 0 } ,
                                 { 0 , 0 , 0 , 0 }    } ;
 
+uint16_t hCoord(uint16_t x){
+  return (uint16_t) ( x * TFT_H_RATIO );
+}
 
-#define RADIUS_ROUND_RECTANGLE 4
+uint16_t vCoord(uint16_t y){
+  return (uint16_t) ( y * TFT_V_RATIO );
+}
+
 
 void tftInit() {
   tft.init() ; // Initialise l'écran avec les pins définies dans setup (par exemple)
@@ -245,8 +288,8 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
 //                         17              2               1 ; le . sert de séparateur pour répartir les noms de fichier sur 2 lignes si possible 
 // si le btnIdx est un bouton masqué (ex _MASKED1), alors on n'affiche rien
   int32_t _xl , _yl ;
-  int32_t _w = 76 ;  // dimensions are changed here below when it is a button for a file name
-  int32_t _h = 76 ;
+  int32_t _w = BTN_SIZE ;  // dimensions are changed here below when it is a button for a file name
+  int32_t _h = BTN_SIZE ;
   int32_t fill = BUTTON_BACKGROUND ;
   int32_t outline = BUTTON_BORDER_NOT_PRESSED ;
   int32_t text = BUTTON_TEXT ;
@@ -267,8 +310,8 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
   pbtnIcon = mButton[btnIdx].pIcon ; // 0 means that there is no icon.
   if (  (currentPage == _P_SD && btnIdx >= _FILE0 && btnIdx <= _FILE3  ) ||
         ( currentPage == _P_SD_GRBL  && btnIdx >= _FILE0_GRBL && btnIdx <= _FILE3_GRBL)  ){ // if it is a button for a file name
-    _w = 74+6+80 ;
-    _h = 56 ;
+    _w = 2*BTN_H_MARGIN + 2*BTN_SIZE ;
+    _h = BTN_FILE_HEIGHT ;
     isFileName = true ;
     if ( *mButton[btnIdx].pLabel == '/' ) {    // when first char is "/", invert the color and skip the first char
       fill = BUTTON_BORDER_NOT_PRESSED ;
@@ -297,7 +340,7 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
   }
   if ( convertPosIsTrue ) {
     if (pbtnIcon) {   // when it is an icon, draw it
-      tft.drawBitmap( _xl, _yl , pbtnIcon , 74 , 74 , fill ); 
+      tft.drawBitmap( _xl, _yl , pbtnIcon , ICON_SIZE , ICON_SIZE , fill ); 
     } else { // when it is a text, draw the button, the border and the text (can be splitted on 2 lines)
         tft.setTextColor(text);
         tft.setTextSize(1);
@@ -368,13 +411,13 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
 
 void mButtonBorder(uint8_t pos , uint16_t outline) {  // draw the border of a button at position (from 1 to 12)
   int32_t _xl , _yl ;
-  int32_t _w = 76 ;
-  int32_t _h = 76 ;
+  int32_t _w = BTN_SIZE ;
+  int32_t _h = BTN_SIZE ;
   if (currentPage == _P_SD || currentPage == _P_SD_GRBL ) {
     convertPosToXY( pos , &_xl, &_yl , btnDefFiles) ;
     if ( pos <= 4) { // if it is a button for a file name
-      _w = 74+6+80 ;
-      _h = 56 ;
+      _w =2*BTN_H_MARGIN + 2*BTN_SIZE ;// 74+6+80 ;
+      _h = BTN_FILE_HEIGHT ;
     }  
   } else {
     convertPosToXY( pos , &_xl, &_yl , btnDefNormal) ;
@@ -389,14 +432,14 @@ void mButtonBorder(uint8_t pos , uint16_t outline) {  // draw the border of a bu
 
 void mButtonClear(uint8_t pos , uint8_t btnIdx) {  // clear one button at position (from 1 to 12)
   int32_t _xl , _yl ;
-  int32_t _w = 74 ;  // dimensions are changed here below when it is a button for a file name
-  int32_t _h = 74 ;
+  int32_t _w = BTN_SIZE ;  // dimensions are changed here below when it is a button for a file name
+  int32_t _h = BTN_SIZE ;
   boolean isFileName = false ;
   boolean convertPosIsTrue ;
   if (  (currentPage == _P_SD && btnIdx >= _FILE0 && btnIdx <= _FILE3  ) ||
         ( currentPage == _P_SD_GRBL  && btnIdx >= _FILE0_GRBL && btnIdx <= _FILE3_GRBL)  ){ // if it is a button for a file name
-    _w = 74+6+80 ;
-    _h = 56 ;
+    _w = 2*BTN_H_MARGIN + 2*BTN_SIZE ; //74+6+80 ;
+    _h = BTN_FILE_HEIGHT ; //56 ;
     isFileName = true ;      
   }  
   if (  currentPage == _P_SD || currentPage == _P_SD_GRBL) {
@@ -411,7 +454,7 @@ void mButtonClear(uint8_t pos , uint8_t btnIdx) {  // clear one button at positi
  
 uint8_t getButton( int16_t x, int16_t y  , uint16_t btnDef[12][4]) {    // convert x y into a button if possible
                                                  // return 1 à 12 suivant le bouton; return 0 if no button
-  if ( y > 240 || x > 320 ) return 0 ;
+  if ( y > SCREEN_HEIGHT || x > SCREEN_WIDTH ) return 0 ;
   uint8_t i = 12 ;
   while ( i ) {
     i--;
@@ -520,9 +563,10 @@ void blankTft( const char * titel, uint16_t x , uint16_t y) {    // blank screen
     tft.setTextSize(1) ;           // char is 2 X magnified => 
     tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
     tft.drawString( titel , x , y ) ;     // affiche un texte
-    tft.setCursor( x , y + 30 , 2) ; // x, y, font
+    tft.setCursor( x , y + hCoord(30) , vCoord(2) ) ; // x, y, font
   }
 }
+
 
 void clearScreen() {
   tft.fillScreen( SCREEN_BACKGROUND ) ;
@@ -647,7 +691,7 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
     
     tft.setTextDatum( TL_DATUM ) ; // align Left
     tft.setTextPadding (200) ; 
-    tft.drawString ( &printingStatusText[statusPrinting][0] , 5 , 0 )  ;
+    tft.drawString ( &printingStatusText[statusPrinting][0] , hCoord(5) , 0 )  ;
     statusPrintingPrev = statusPrinting ;
   }
   
@@ -657,9 +701,9 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
       tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when only 1 parameter, background = fond);
       tft.setTextDatum( TR_DATUM ) ;
       tft.setTextPadding (40) ;
-      tft.drawNumber( ( (100 * sdNumberOfCharSent) / sdFileSize), 170 , 0 ) ;
+      tft.drawNumber( ( (100 * sdNumberOfCharSent) / sdFileSize), hCoord(170) , 0 ) ;
       tft.setTextPadding (1) ;
-      tft.drawString( "%" , 190 , 0 ) ;
+      tft.drawString( "%" , hCoord(170) + 20 , 0 ) ;
       // Serial.print( sdNumberOfCharSent ); Serial.print(  " / ") ; Serial.println( sdFileSize ); 
   }
 
@@ -669,9 +713,9 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
       tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when only 1 parameter, background = fond);
       tft.setTextDatum( TR_DATUM ) ;
       tft.setTextPadding (40) ;
-      tft.drawNumber( runningPercent, 170 , 0 ) ;
+      tft.drawNumber( runningPercent, hCoord(170) , 0 ) ;
       tft.setTextPadding (1) ;
-      tft.drawString( "%" , 190 , 0 ) ;
+      tft.drawString( "%" , hCoord(170) + 20 , 0 ) ;
       // Serial.print( sdNumberOfCharSent ); Serial.print(  " / ") ; Serial.println( sdFileSize ); 
   }
 
@@ -696,7 +740,7 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
         tft.setTextColor(SCREEN_ALERT_TEXT ,  SCREEN_BACKGROUND ) ;      // display in red when not connected
       } 
       tft.setTextDatum( TL_DATUM ) ; 
-      tft.drawChar (  0x7F , 2 , 62 ) ;  // char 0x7E in font 4 has been redesigned to get the Wifi logo
+      tft.drawChar (  0x7F , hCoord(2) , vCoord(62) ) ;  // char 0x7E in font 4 has been redesigned to get the Wifi logo
       statusTelnetIsConnectedPrev = statusTelnetIsConnected ;
   }    
 
@@ -708,37 +752,38 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
       tft.setTextPadding (290) ; 
       tft.setFreeFont(LABELS9_FONT);
       if ( strlen( grblLastMessage) > 30 ) {
-        tft.drawString ( " " , 30 , 62) ; // print space first in the larger font to clear the pixels
+        tft.drawString ( " " , hCoord(30) , vCoord(62)) ; // print space first in the larger font to clear the pixels
         tft.setTextFont( 1 ); 
       }
-      tft.drawString ( &grblLastMessage[0] , 30 , 62) ;
+      tft.drawString ( &grblLastMessage[0] , hCoord(30) , vCoord(62) ) ;
       grblLastMessageChanged = false ;
   }
   
   tft.setTextDatum( TR_DATUM ) ; 
-  uint16_t line = 90 ;
+  uint16_t line = vCoord(90) ;
   if (newInfoPage ) {
     tft.setTextColor( SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND ) ; 
     tft.setTextFont( 2 );
     tft.setTextSize(1) ;           
     tft.setTextPadding (0) ;      // expect to clear 70 pixel when drawing text or 
-    tft.drawString( mText[_WPOS].pLabel , 70 , line ) ;     // affiche un texte
-    tft.drawString( mText[_MPOS].pLabel , 190 , line ) ;     // affiche un texte
+    tft.drawString( mText[_WPOS].pLabel , hCoord(70) , line ) ;     // affiche un texte
+    tft.drawString( mText[_MPOS].pLabel , hCoord(190) , line ) ;     // affiche un texte
     newInfoPage = false ;
   }
   //tft.setTextSize(2) ;
   //tft.setTextFont( 2 );
+  tft.setTextDatum( TR_DATUM ) ;
   tft.setFreeFont (LABELS12_FONT) ;
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ;
   tft.setTextPadding (120) ;      // expect to clear 120 pixel when drawing text or float
-  uint8_t c1 = 120, c2 = c1 + 120 ;
+  uint16_t c1 = hCoord(120), c2 =  c1 + hCoord(120) ;
 #ifdef AA_AXIS
-  uint8_t lineSpacing1 = 24 ;
+  uint16_t lineSpacing1 = vCoord(24) ;
 #else 
-  uint8_t lineSpacing1 = 34 ; // we have more space for 3 axis
+  uint16_t lineSpacing1 = vCoord(34) ; // we have more space for 3 axis
 #endif   
-  line += 20           ; tft.drawFloat( wposXYZA[0] , 2 , c1 , line ); tft.drawFloat( mposXYZA[0] , 2 , c2 , line ); 
+  line += vCoord(20)           ; tft.drawFloat( wposXYZA[0] , 2 , c1 , line ); tft.drawFloat( mposXYZA[0] , 2 , c2 , line ); 
   line += lineSpacing1 ; tft.drawFloat( wposXYZA[1] , 2 , c1 , line ); tft.drawFloat( mposXYZA[1] , 2 , c2 , line );
   line += lineSpacing1 ; tft.drawFloat( wposXYZA[2] , 2 , c1 , line ); tft.drawFloat( mposXYZA[2] , 2 , c2 , line  ); 
 #ifdef AA_AXIS
@@ -749,12 +794,12 @@ void drawDataOnInfoPage() { // to do : affiche les données sur la page d'info
   tft.setTextPadding (0) ;
   tft.setTextDatum( TL_DATUM ) ;
   tft.setTextColor(SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND) ; 
-  line += lineSpacing1 ; tft.drawString(mText[_FEED].pLabel , 90 , line)  ; tft.drawString(mText[_RPM].pLabel , 205 , line) ;
+  line += lineSpacing1 ; tft.drawString(mText[_FEED].pLabel , hCoord(90) , line)  ; tft.drawString(mText[_RPM].pLabel , hCoord(205) , line) ;
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND) ;
   tft.setTextPadding (80) ;
   tft.setTextDatum( TR_DATUM ) ;
-  tft.drawNumber( (long) feedSpindle[0] , 80 , line) ; // here we could add the Feed rate and the spindle rpm
-  tft.drawNumber( (long) feedSpindle[1] , 200 , line) ; // here we could add the Feed rate and the spindle rpm
+  tft.drawNumber( (long) feedSpindle[0] , hCoord(80) , line) ; // here we could add the Feed rate and the spindle rpm
+  tft.drawNumber( (long) feedSpindle[1] , hCoord(200) , line) ; // here we could add the Feed rate and the spindle rpm
   //tft.drawBitmap(100, 100, resetIcon , 74, 74, SCREEN_HEADER_TEXT );
 }
 
@@ -766,7 +811,7 @@ void fSetupBase(void) {
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
-  uint8_t line = 2 ;
+  uint16_t line = vCoord(2) ;
   //uint8_t col = 1 ;
   //char ipBuffer[20] ;
   //if ( getWifiIp( ipBuffer ) ) { 
@@ -775,7 +820,7 @@ void fSetupBase(void) {
   //} else {
   //  tft.drawString( "No WiFi" , col , line ); 
   //}
-  tft.drawString( ESP32_VERSION,  100 , line ) ;
+  tft.drawString( ESP32_VERSION,  hCoord(100) , line ) ;
 }
 
 void drawDataOnSetupPage() {  
@@ -786,10 +831,10 @@ void drawDataOnSetupPage() {
   tft.setTextPadding (240) ; 
   tft.setFreeFont(LABELS9_FONT); 
   if ( strlen( lastMsg) > 30 ) {
-     tft.drawString ( " " , 85 , 32) ; // print space first in the larger font to clear the pixels
+     tft.drawString ( " " , hCoord(85) , vCoord(32) ) ; // print space first in the larger font to clear the pixels
      tft.setTextFont( 1 );           
   }
-  tft.drawString ( &lastMsg[0] , 85 , 32) ;
+  tft.drawString ( &lastMsg[0] , hCoord(85) , vCoord(32) ) ;
 }
 
 void fMoveBase(void) {
@@ -815,7 +860,7 @@ void drawMachineStatus() {
       tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND) ; // when only 1 parameter, background = fond);
       tft.setTextDatum( TR_DATUM ) ;
       tft.setTextPadding (120) ;      // expect to clear 70 pixel when drawing text or 
-      tft.drawString( &machineStatus[0] , 315  , 0 ) ; // affiche le status GRBL (Idle,....)
+      tft.drawString( &machineStatus[0] , hCoord(315)  , 0 ) ; // affiche le status GRBL (Idle,....)
 }
 
 void drawLastMsg() {  // affiche le lastMsg en ligne 32  
@@ -825,10 +870,10 @@ void drawLastMsg() {  // affiche le lastMsg en ligne 32
       tft.setTextPadding (320) ; 
       tft.setFreeFont(LABELS9_FONT); 
       if ( strlen( lastMsg) > 30 ) {
-        tft.drawString ( " " , 2 , 32) ; // print space first in the larger font to clear the pixels
+        tft.drawString ( " " , hCoord(2) , vCoord(32) ) ; // print space first in the larger font to clear the pixels
         tft.setTextFont( 1 );           
       }
-      tft.drawString ( &lastMsg[0] , 2 , 32) ;
+      tft.drawString ( &lastMsg[0] , hCoord(2) , vCoord(32) ) ;
 }
       
 void drawDataOnSetXYZPage() {
@@ -843,14 +888,14 @@ void drawWposOnSetXYZPage() {
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
   tft.setTextDatum( TR_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
   tft.setTextPadding (80) ;      // expect to clear 70 pixel when drawing text or   
-  uint8_t line = 60 ; // was 60 ;
-  uint8_t col = 60 ;
+  uint16_t line = vCoord(60) ; // was 60 ;
+  uint16_t col = hCoord(60) ;
   tft.drawString( mText[_WPOS].pLabel , col , line);
   tft.drawFloat( wposXYZA[0] , 2 , col , line ); // affiche la valeur avec 3 décimales 
-  tft.drawFloat( wposXYZA[1] , 2 , col + 80 , line );
-  tft.drawFloat( wposXYZA[2] , 2 , col + 160 , line );
+  tft.drawFloat( wposXYZA[1] , 2 , col + hCoord(80) , line );
+  tft.drawFloat( wposXYZA[2] , 2 , col + hCoord(160) , line );
 #ifdef AA_AXIS  
-  tft.drawFloat( wposXYZA[3] , 2 , col + 240 , line );
+  tft.drawFloat( wposXYZA[3] , 2 , col + hCoord(240) , line );
 #endif  
 }
 
@@ -880,7 +925,7 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
     tft.setFreeFont (LABELS9_FONT) ;
     tft.setTextSize(1) ;
     tft.setTextDatum( TL_DATUM ) ;
-    tft.setCursor(180 , 20 ) ; // x, y, font
+    tft.setCursor(hCoord(180) , vCoord(20) ) ; // x, y, font
     tft.print( firstFileToDisplay ) ;
     tft.print( " / " ) ;
     tft.print( sdFileDirCnt ) ;  
@@ -893,7 +938,7 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
       fInfoBase () ;               // fill info page with basis data (affiche les data et redétermine les boutons à afficher sans les afficher)
       return ;
     }
-    tft.drawString( dirName , 310 , 40 );
+    tft.drawString( dirName , hCoord(310) , vCoord(40) );
     if ( ! updateFilesBtn() ) {             // met à jour les boutons à afficher; conserve le premier fichier affiché si possible ; retourne false en cas d'erreur
       //Serial.println( "updateFilesBtn retuns false"); 
       fillMsg(_BUG_UPDATE_FILE_BTN  );
@@ -977,24 +1022,24 @@ void drawWposOnMovePage() {
   tft.setTextDatum( TR_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
   tft.setTextPadding (75) ;      // expect to clear 70 pixel when drawing text or 
   
-  uint8_t line = 160 ;
-  uint8_t col1 = 75 ;
-  uint8_t col2 = 75 + 80 ;
+  uint16_t line = vCoord(160) ;
+  uint16_t col1 = hCoord(75) ;
+  uint16_t col2 = h(Coord(75 + 80) ;
   tft.drawString( mText[_WPOS].pLabel , col1  , line );
   tft.drawString( mText[_MOVE].pLabel , col2  , line  );
-  line +=16 ;
+  line += vCoord(16) ;
   //tft.drawString( "  X  " , col  , line + 80 );
   tft.drawFloat( wposXYZA[0] , 2 , col1 , line ); // affiche la valeur avec 2 décimales 
   tft.drawFloat( wposXYZA[0] - wposMoveInitXYZA[0] , 2 , col2 , line  ); // affiche la valeur avec 2 décimales 
-  line +=16 ;
+  line +=vCoord(16) ;
   //tft.drawString( "  Y  " , col + 160  , line + 80  );
   tft.drawFloat( wposXYZA[1] , 2 , col1 , line );
   tft.drawFloat( wposXYZA[1] - wposMoveInitXYZA[1] , 2 , col2 , line );
-  line +=16 ;
+  line +=vCoord(16) ;
   //tft.drawString( "  Z  " , col + 160  , line   );
   tft.drawFloat( wposXYZA[2] , 2 , col1 , line );
   tft.drawFloat( wposXYZA[2] - wposMoveInitXYZA[2] , 2 , col2 , line ) ;
-  line +=16 ;
+  line +=vCoord(16) ;
   tft.drawFloat( wposXYZA[3] , 2 , col1 , line );
   tft.drawFloat( wposXYZA[3] - wposMoveInitXYZA[3] , 2 , col2 , line ) ;
   
@@ -1014,22 +1059,22 @@ void drawWposOnMovePage() {
   tft.setTextDatum( TR_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
   tft.setTextPadding (65) ;      // expect to clear 70 pixel when drawing text or 
   
-  uint8_t line = 10 ;
-  uint8_t col = 70 ;
-  tft.drawString( mText[_WPOS].pLabel , col  , line + 20);
-  tft.drawString( mButton[_MOVE].pLabel , col  , line + 40 );
+  uint16_t line = vCoord(10) ;
+  uint16_t col = hCoord(70) ;
+  tft.drawString( mText[_WPOS].pLabel , col  , line + vCoord(20));
+  tft.drawString( mButton[_MOVE].pLabel , col  , line + vCoord(40) );
   
-  tft.drawString( "  X  " , col  , line + 80 );
-  tft.drawFloat( wposXYZA[0] , 2 , col , line + 100 ); // affiche la valeur avec 2 décimales 
-  tft.drawFloat( wposXYZA[0] - wposMoveInitXYZA[0] , 2 , col , line + 120 ); // affiche la valeur avec 2 décimales 
+  tft.drawString( "  X  " , col  , line + vCoord(80) );
+  tft.drawFloat( wposXYZA[0] , 2 , col , line + vCoord(100) ); // affiche la valeur avec 2 décimales 
+  tft.drawFloat( wposXYZA[0] - wposMoveInitXYZA[0] , 2 , col , line + vCoord(120) ); // affiche la valeur avec 2 décimales 
 
-  tft.drawString( "  Y  " , col + 160  , line + 80  );
-  tft.drawFloat( wposXYZA[1] , 2 , col + 160 , line +100 );
-  tft.drawFloat( wposXYZA[1] - wposMoveInitXYZA[1] , 2 , col + 160 , line + 120 );
+  tft.drawString( "  Y  " , col + hCoord(160)  , line + vCoord(80)  );
+  tft.drawFloat( wposXYZA[1] , 2 , col + hCoord(160) , line + vCoord(100) );
+  tft.drawFloat( wposXYZA[1] - wposMoveInitXYZA[1] , 2 , col + hCoord(160) , line + vCoord(120) );
 
-  tft.drawString( "  Z  " , col + 160  , line   );
-  tft.drawFloat( wposXYZA[2] , 2 , col + 160 , line + 20 );
-  tft.drawFloat( wposXYZA[2] - wposMoveInitXYZA[2] , 2 , col + 160 , line + 40 ) ;
+  tft.drawString( "  Z  " , col + hCoord(160)  , line   );
+  tft.drawFloat( wposXYZA[2] , 2 , col + hCoord(160) , line + vCoord(20) );
+  tft.drawFloat( wposXYZA[2] - wposMoveInitXYZA[2] , 2 , col + hCoord(160) , line + vCoord(40) ) ;
 
 #endif
 }
@@ -1048,19 +1093,19 @@ void drawDataOnLogPage() {
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
   tft.setTextPadding (0) ;
   
-  uint8_t line = 2 ;
-  uint8_t col = 0 ;
+  uint16_t line = vCoord(2) ;
+  uint16_t col = 0 ;
   uint8_t count = N_LOG_LINE_MAX ;
   //int16_t nCar = 0 ;
   while (count ) {
     printOneLogLine(col , line );
     count--;
-    line += 10 ; // goes to next line on screen (was20 if we use setTextFont(1)
+    line += vCoord(10) ; // goes to next line on screen (was20 if we use setTextFont(1)
     if (getNextLogLine() < 0 ) count = 0 ; // stop if next line is not complete
   }
 }
 
-void printOneLogLine(uint8_t col , uint8_t line ) {
+void printOneLogLine(uint16_t col , uint16_t line ) {
   lineOfText[49] = 0 ; //make sure there is an 0 at the end
   cpyLineToArray( lineOfText , pGet , 48) ; // copy one line
   tft.drawString( lineOfText , col , line) ;
@@ -1142,7 +1187,7 @@ void drawDataOnSdShowPage() { // this function assume that sdShowBuffer contains
   tft.setTextDatum( TL_DATUM ) ; 
   tft.setTextPadding (0) ;
   
-  uint16_t line = 20 ;
+  uint16_t line = vCoord(20) ;
   //uint8_t col = 0 ;
   int16_t sdShowCurrent  = sdShowFirst ;   // next char to display (during the loop)
   int16_t nChar ; // number of char in buffer for the current line
@@ -1155,13 +1200,13 @@ void drawDataOnSdShowPage() { // this function assume that sdShowBuffer contains
     nChar = bufferLineLength( sdShowCurrent , nCharInFile ) ; // détermine le nbr de char de la ligne à afficher (sans le \n)
     if (nChar < 0 ) break;                      // exit if we reach the end of the buffer
     nLines = convertNCharToNLines ( nChar ) ;   // calcule le nbr de lignes du TFT pour afficher une ligne du buffer
-    if ( ( line + (nLines * 20)) > 240 ) break ; // exit if we reach the end of the tft or if there are no enough free tft lines for next SD line
+    if ( ( line + (nLines * vCoord(20)) ) > vCoord(240) ) break ; // exit if we reach the end of the tft or if there are no enough free tft lines for next SD line
     // when it is possible to print the full line on TFT, do it (even on several tft lines
     tft.setCursor( 0 , line ) ;
     if ( (sdShowBeginPos  + sdShowCurrent) >= sdMillPos) tft.setTextColor(SCREEN_TO_SEND_TEXT ,  SCREEN_BACKGROUND ) ;
     tft.print(">") ; // display > on each new line
     //Serial.println( "put >" ); // to debug
-    tft.setCursor( 15 , line ) ;
+    tft.setCursor( hCoord(15) , line ) ;
     uint16_t i = 0 ;
     uint8_t nCharOnTftLine = 0 ;
     while ( i <= nChar ) {                     // display each tft line
@@ -1171,15 +1216,15 @@ void drawDataOnSdShowPage() { // this function assume that sdShowBuffer contains
         nCharOnTftLine++ ;
         i++;                                  // move to next char
        } else {
-        tft.setCursor( 230 , line ) ;
+        tft.setCursor( hCoord(230) , line ) ;
         tft.print( "+" ) ; // put a + at the end of the line on tft when sd line continue
-        line += 20 ;                          // move to next line
+        line += vCoord(20) ;                          // move to next line
         nCharOnTftLine = 0 ;                       // reset counter of char per line
-        tft.setCursor( 15 , line ) ;
+        tft.setCursor( hCoord(15) , line ) ;
        }
     } // end while
     sdShowCurrent += nCharInFile   ;            
-    line += 20 ;
+    line += vCoord(20) ;
     //Serial.print("line = ") ; Serial.println(line); // to debug
        
   } while (true ) ;  // end do
@@ -1205,16 +1250,16 @@ void drawDataOnOverwritePage() {                                // to do : text 
   tft.setTextColor( SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND ) ; // when only 1 parameter, background = fond);
   tft.setTextDatum( TL_DATUM ) ; // align left 
   tft.setTextPadding (239) ;      // expect to clear 230 pixel when drawing text or 
-  uint8_t line = 15 ;
-  uint8_t col = 2 ;
+  uint16_t line = vCoord(15) ;
+  uint16_t col = hCoord(2) ;
   if ( mPages[_P_OVERWRITE].boutons[POS_OF_OVERWRITE_OVERWRITE] == _OVER_SWITCH_TO_SPINDLE ) {
     tft.drawString( mText[_CHANGING_FEEDRATE1].pLabel , col  , line );
     tft.setTextDatum( TR_DATUM ) ; // align rigth 
-    tft.drawString( mText[_CHANGING_FEEDRATE2].pLabel , col  + 230 , line + 30 );  
+    tft.drawString( mText[_CHANGING_FEEDRATE2].pLabel , col  + hCoord(230) , line + vCoord(30) );  
   } else {
     tft.drawString( mText[_CHANGING_SPINDLE1].pLabel , col  , line );
     tft.setTextDatum( TR_DATUM ) ; // align rigth 
-    tft.drawString( mText[_CHANGING_SPINDLE2].pLabel , col + 230 , line + 30 );
+    tft.drawString( mText[_CHANGING_SPINDLE2].pLabel , col + hCoord(230) , line + vCoord(30) );
   }
 
   tft.setTextFont( 2 );
@@ -1222,20 +1267,20 @@ void drawDataOnOverwritePage() {                                // to do : text 
   tft.setTextPadding (0) ;
   tft.setTextDatum( TL_DATUM ) ;
   tft.setTextColor(SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND) ; 
-  line = 180 ;
-  tft.drawString(mText[_FEED].pLabel , 5 , line )  ;
-  tft.drawString(mText[_RPM].pLabel , 5 , line + 20 ) ;
+  line = vCoord(180) ;
+  tft.drawString(mText[_FEED].pLabel , hCoord(5) , line )  ;
+  tft.drawString(mText[_RPM].pLabel , hCoord(5) , line + vCoord(20) ) ;
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND) ;
   tft.setTextPadding (70) ;
   tft.setTextDatum( TR_DATUM ) ;
-  tft.drawNumber( (long) feedSpindle[0] , 110 , line) ; 
-  tft.drawNumber( (long) feedSpindle[1] , 110 , line + 20) ; 
+  tft.drawNumber( (long) feedSpindle[0] , hCoord(110) , line) ; 
+  tft.drawNumber( (long) feedSpindle[1] , hCoord(110) , line + vCoord(20) ) ; 
   tft.setTextPadding (30) ;
-  tft.drawNumber( (long) overwritePercent[0] , 140 , line) ;
-  tft.drawNumber( (long) overwritePercent[2] , 140 , line + 20) ;
+  tft.drawNumber( (long) overwritePercent[0] , hCoord(140) , line) ;
+  tft.drawNumber( (long) overwritePercent[2] , hCoord(140) , line + vCoord(20)  ) ;
   tft.setTextPadding (0) ;
-  tft.drawString(  "%" , 155 , line )  ;
-  tft.drawString(  "%" , 155 , line + 20 )  ;
+  tft.drawString(  "%" , hCoord(155) , line )  ;
+  tft.drawString(  "%" , hCoord(155) , line + vCoord(20) )  ;
 }
 
 // Fill the first part of the Communication page.
@@ -1245,8 +1290,8 @@ void fCommunicationBase(void) { // fonction pour l'affichage de l'écran communi
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
-  uint8_t line = 2 ;
-  uint8_t col = 1 ;
+  uint16_t line = vCoord(2) ;
+  uint16_t col = hCoord(1) ;
   char ipBuffer[20] ;
   if (wifiType == NO_WIFI ) {
     tft.drawString( "No WiFi" , col , line );
@@ -1257,10 +1302,10 @@ void fCommunicationBase(void) { // fonction pour l'affichage de l'écran communi
       tft.drawString( "AP: " , col , line );
     }  
     if ( getWifiIp( ipBuffer ) ) { 
-      tft.drawString( "IP=" , col + 50 , line );
-      tft.drawString( ipBuffer , col + 80 , line ); // affiche la valeur avec 3 décimales 
+      tft.drawString( "IP=" , col + hCoord(50) , line );
+      tft.drawString( ipBuffer , col + hCoord(80) , line ); // affiche la valeur avec 3 décimales 
     } else {
-      tft.drawString( mText[_NO_IP_ASSIGNED].pLabel , col + 50  , line ); 
+      tft.drawString( mText[_NO_IP_ASSIGNED].pLabel , col + hCoord(50)  , line ); 
     }
   }  
 }
@@ -1274,8 +1319,8 @@ void drawDataOnCommunicationPage() {
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
-  uint8_t line = 100 ;
-  uint8_t col = 1 ;
+  uint16_t line = vCoord(100) ;
+  uint16_t col = hCoord(1) ;
   if ( grblLink == GRBL_LINK_SERIAL) {
     tft.drawString( mText[_GRBL_SERIAL_CONNECTED].pLabel , col , line );
   } else if ( grblLink == GRBL_LINK_BT) {
@@ -1287,7 +1332,7 @@ void drawDataOnCommunicationPage() {
   } else if ( grblLink == GRBL_LINK_TELNET) {
     tft.drawString( mText[_USES_TELNET_TO_GRBL].pLabel , col , line );
   }
-  tft.drawString( " " , col , line+20 ); // clear the second line used to say "please wait"  
+  tft.drawString( " " , col , line+ vCoord(20) ); // clear the second line used to say "please wait"  
 }
 
 void drawMsgOnTft(const char * msg1 , const char * msg2){
@@ -1295,10 +1340,10 @@ void drawMsgOnTft(const char * msg1 , const char * msg2){
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
-  uint8_t line = 100 ;
-  uint8_t col = 1 ;
+  uint16_t line = vCoord(100) ;
+  uint16_t col = hCoord(1) ;
   tft.drawString( msg1 , col , line );
-  tft.drawString( msg2 , col , line+20 );  
+  tft.drawString( msg2 , col , line+ vCoord(20) );  
 }
 
 /*
@@ -1349,7 +1394,7 @@ void fSdGrblWaitBase(void) {                // cette fonction doit vérifier que
     tft.setFreeFont (LABELS9_FONT) ;
     tft.setTextSize(1) ;
     tft.setTextDatum( TL_DATUM ) ;
-    tft.setCursor(0 , 20 ) ; // x, y, font
+    tft.setCursor(0 , vCoord(20) ) ; // x, y, font
     tft.println( mText[_CURRENT_GRBL_DIR].pLabel );
     tft.println(grblDirFilter) ;
     tft.println(" ") ;
@@ -1390,23 +1435,39 @@ void fSdGrblBase(void) {                // cette fonction est appelée une fois 
     tft.setFreeFont (LABELS9_FONT) ;
     tft.setTextSize(1) ;
     tft.setTextDatum( TL_DATUM ) ;
-    tft.setCursor(180 , 20 ) ; // x, y, font
+    tft.setCursor(hCoord(180) , vCoord(20) ) ; // x, y, font
     tft.print( firstGrblFileToDisplay + 1 ) ; // we add 1 because first file has an index of 0
     tft.print( " / " ) ;
     tft.print( grblFileIdx ) ;  
     tft.setTextDatum( TR_DATUM ) ;
     if ( strlen(grblDirFilter) <= 1 ) {
-      tft.drawString( "/" , 310 , 40 );
+      tft.drawString( "/" , hCoord(310) , vCoord(40) );
     } else {  // search the current 'last' dir in the full filtering name 
       char * plastDirFilter ; // pointer to the begin of current dir (based on current filter 
       plastDirFilter = grblDirFilter + strlen(grblDirFilter) - 2;
       while ( ((*plastDirFilter) != '/')  && (plastDirFilter >= grblDirFilter) ) plastDirFilter--; 
-      tft.drawString( plastDirFilter , 310 , 40 );
+      tft.drawString( plastDirFilter , hCoord(310) , vCoord(40) );
     }
     updateGrblFilesBtn() ;              // met à jour les boutons à afficher;
 }
 
-
+void fConfirmYesNoBase() { // should display the name of the file to be printed just before execution
+  char * pfileName ;
+  if ( fileToExecuteIdx <=3 ){ //we are printing from Sd card on TFT
+    pfileName = fileNames[fileToExecuteIdx] ;
+  } else if ( fileToExecuteIdx >=10 && fileToExecuteIdx <=13 ) {
+    pfileName = grblFileNames[fileToExecuteIdx-10] ;
+  } else {
+    *pfileName = NULL ;
+  }
+  tft.setFreeFont (LABELS9_FONT) ;
+  tft.setTextSize(1) ;
+  tft.setTextDatum( TL_DATUM ) ;
+  tft.setCursor(hCoord(20) , vCoord(100) ) ; // x, y, font
+  tft.print( mText[_CONFIRM_SD_FILE].pLabel ) ; 
+  tft.setCursor(hCoord(20) , vCoord(140) ) ; // x, y, font
+  if (pfileName ) tft.print( pfileName ) ;
+}
 
 // ********************************************************************************************
 // ******************************** touch calibrate ********************************************
@@ -1466,7 +1527,7 @@ void touch_calibrate() {
     Serial.println("Perform calibration");
     #endif
     clearScreen();
-    tft.setCursor(20, 0);
+    tft.setCursor(hCoord(20), 0);
     tft.setTextFont(2);
     tft.setTextSize(1);
     tft.setTextColor(SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND);

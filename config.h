@@ -2,7 +2,7 @@
 #define _config_h
 
 
-#define ESP32_VERSION "vers.2.0.h"
+#define ESP32_VERSION "vers.2.0.i"
 
 
 // decide if you will use Wifi or not (and how)
@@ -37,7 +37,7 @@
 
 #define TFT_CARD_VERSION 2 // define the version of the TFT board being used ; it can be 1 or 2 (1 uses 4 pins header to connect to GRbl; 2 use RJ45 connector)               
 
-#define TFT_SIZE 3   // define size of display : must be 3 (for 3.5) or 4     
+#define TFT_SIZE 4   // define size of display : must be 3 (for 3.2) or 4     
 
 // Set REPEAT_CAL to true instead of false to run calibration again, otherwise it will only be done once.
 // Repeat calibration if you change the screen rotation.

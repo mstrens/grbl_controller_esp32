@@ -1,6 +1,10 @@
 #ifndef _draw_h
 #define _draw_h
 
+uint16_t hCoord(uint16_t x) ;
+
+uint16_t vCoord(uint16_t y) ;
+
 void tftInit(void) ;
 void testTft(void);
 void  touch_calibrate();
@@ -23,6 +27,7 @@ void printTft(const char * text) ;
 
 boolean convertPosToXY( uint8_t pos , int32_t *_x, int32_t *_y , uint16_t btnDef[12][4]) ;
 uint8_t convertBtnPosToBtnIdx( uint8_t page , uint8_t btn ) ;
+
 
 // à chaque loop,
 void updateBtnState( ) ;       // tester le touchscreen et mettre à jour les valeurs de just pressed, long pressed, just released
@@ -49,12 +54,12 @@ void fLogBase(void) ; // fonction pour l'affichage de l'écran Log
 void fToolBase(void) ;  // fonction pour l'affichage de l'écran Change tool
 void fSdShowBase(void) ;  // fonction pour l'affichage de l'écran SdShow
 void fOverBase(void) ;  // fonction pour l'affichage de l'écran Overwrite
-void printOneLogLine(uint8_t col , uint8_t line ) ; // imprime une ligne de log
+void printOneLogLine(uint16_t col , uint16_t line ) ; // imprime une ligne de log
 void fCommunicationBase(void) ; // fonction pour l'affichage de l'écran communication
 void fSdGrblWaitBase(void) ; // fonction pour afficher la commande de lecture des fichiers à Grbl
 void executeGrblEndOfFileReading() ;// function call when list of file has been provided.
 void fSdGrblBase(void) ; // fonction pour afficher la liste des fichiers sur SD card de  Grbl
-
+void fConfirmYesNoBase(void) ; // fonction pour afficher le nom du fichier à imprimer (que l'on doit confirmer)
 
 void updateButtonsInfoPage() ; // met à jour le set up de la page en fonction du statut d'impression
 void drawMachineStatus() ;   // affiche le status GRBL dans le coin supérieur droit
@@ -82,7 +87,6 @@ void drawMsgOnTft( const char * msg1 , const char * msg2); // affiche 2 lignes d
 void fSdGrblBase(void) ;                // cette fonction doit vérifier que la carte est accessible et actualiser les noms des fichiers disponibles sur la carte sd attahée à grbl
 
 uint8_t getButton( int16_t x, int16_t y ) ; // convert raw position into tft position
-
 
 
 #endif
