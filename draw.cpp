@@ -144,20 +144,22 @@ extern boolean runningFromGrblSd  ; // indicator saying that we are running a jo
 #define BTN_FILE_HEIGHT 54
 #define TFT_H_RATIO 1
 #define TFT_V_RATIO 1
+#define RADIUS_ROUND_RECTANGLE 4
 #elif defined(TFT_SIZE) and (TFT_SIZE == 4)
 #define SCREEN_WIDTH 480
 #define SCREEN_HEIGHT 320
 #define BTN_SIZE 100
-#define ICON_SIZE 74
+#define ICON_SIZE 100
 #define BTN_H_MARGIN 10
 #define BTN_V_MARGIN 3
 #define BTN_FILE_HEIGHT 74
 #define TFT_H_RATIO 1.5
 #define TFT_V_RATIO 1.33333
+#define RADIUS_ROUND_RECTANGLE 6
 #else
 #error TFT_SIZE must be 3 or 4 (see config.h)
 #endif
-#define RADIUS_ROUND_RECTANGLE 4
+
 
 
 #define XB0 (BTN_H_MARGIN) // B is for begin, E is for end; it was B0 but B0 is already defined in some ESP32 library; so  I renamed B0 to XB0
