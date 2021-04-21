@@ -822,7 +822,7 @@ void fSetupBase(void) {
   //} else {
   //  tft.drawString( "No WiFi" , col , line ); 
   //}
-  tft.drawString( ESP32_VERSION,  hCoord(100) , line ) ;
+  tft.drawString( ESP32_VERSION,  hCoord(85) , line ) ;
 }
 
 void drawDataOnSetupPage() {  
@@ -1293,7 +1293,7 @@ void fCommunicationBase(void) { // fonction pour l'affichage de l'écran communi
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
   uint16_t line = vCoord(2) ;
-  uint16_t col = hCoord(1) ;
+  uint16_t col = hCoord(100) ;
   char ipBuffer[20] ;
   if (wifiType == NO_WIFI ) {
     tft.drawString( "No WiFi" , col , line );

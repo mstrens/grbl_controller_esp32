@@ -203,8 +203,6 @@ void setup() {
   pinMode(TFT_LED_PIN , OUTPUT) ;
   digitalWrite(TFT_LED_PIN , HIGH) ;
   
-  initButtons() ; //initialise les noms des boutons et les boutons pour chaque page.
-  tftInit() ; // init screen and touchscreen, set rotation and calibrate
   if (! spiffsInit() ) {   // try to load the cmd in memory when the files exist in spiffs 
     fillMsg(_SPIFFS_FORMATTED , SCREEN_NORMAL_TEXT ) ;
   } else {
@@ -212,6 +210,8 @@ void setup() {
       fillMsg(_CMD_NOT_LOADED ) ;
     }
   }
+  initButtons() ; //initialise les noms des boutons et les boutons pour chaque page.
+  tftInit() ; // init screen and touchscreen, set rotation and calibrate
   
 //  listSpiffsDir( "/", 0 );   // uncomment to see the SPIFFS content
   preferences.begin("savedData") ; //define the namespace for saving preferences (used for saving WIFI parameters, and z coord for change tool)

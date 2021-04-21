@@ -57,7 +57,7 @@
 #define __PREV "Pr\x80" "c"
 #define __NEXT "Suiv"
 #define __SD_SHOW "Voir*GCode"
-//#define __OVERWRITE // it is a hidden button , so no need for a text
+#define __OVERWRITE "Feedrate*Rpm" // it is a hidden button , so no need for a text
 #define __OVER_SWITCH_TO_FEEDRATE "Changer*Feedrate"
 #define __OVER_SWITCH_TO_SPINDLE "Changer*Rpm"
 #define __OVER_100 "Set to*100%"
@@ -72,6 +72,7 @@
 #define __SD_GRBL "SD*Grbl"
 #define __YES "Oui"
 #define __NO "Non"
+#define __LOG "Grbl*Msg"
 
 #define __WPOS "Wpos"
 #define __MPOS "Mpos"
@@ -252,7 +253,7 @@
 #define __PREV "Prev"
 #define __NEXT "Next"
 #define __SD_SHOW "See*GCode"
-//#define __OVERWRITE // it is a hidden button , so no need for a text
+#define __OVERWRITE "Feedrate*Speed" // it is a hidden button , so no need for a text
 #define __OVER_SWITCH_TO_FEEDRATE "Switch to*Feedrate"
 #define __OVER_SWITCH_TO_SPINDLE "Switch to*Spindle"
 #define __OVER_100 "Set to*100%"
@@ -267,7 +268,7 @@
 #define __SD_GRBL "SD*Grbl"
 #define __YES "Ja"
 #define __NO "Nein"
-
+#define __LOG "Grbl*Msg"
 
 #define __WPOS "Wpos"
 #define __MPOS "Mpos"
@@ -451,7 +452,7 @@
 #define __PG_PREV "Prev"
 #define __PG_NEXT "Next"
 #define __SD_SHOW "See*GCode"
-//#define __OVERWRITE // it is a hidden button , so no need for a text
+#define __OVERWRITE "Feedrate*Speed" // it is a hidden button , so no need for a text
 #define __OVER_SWITCH_TO_FEEDRATE "Change*Feedrate"
 #define __OVER_SWITCH_TO_SPINDLE "Change*Spindle"
 #define __OVER_100 "Set to*100%"
@@ -466,6 +467,7 @@
 #define __SD_GRBL "SD*Grbl"
 #define __YES "Yes"
 #define __NO "No"
+#define __LOG "Grbl*Msg"
 
 #define __WPOS "Wpos"
 #define __MPOS "Mpos"

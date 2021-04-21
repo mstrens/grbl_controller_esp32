@@ -180,7 +180,7 @@ mButton[_MORE_PAUSE].pIcon = morePauseIcon ;
 mButton[_PG_PREV].pIcon = pgPrevIcon ;
 mButton[_PG_NEXT].pIcon = pgNextIcon ;
 mButton[_SD_SHOW].pIcon = sdShowIcon ; 
-//mButton[_OVERWRITE].pLabel = "" ; // this is a hidden button; so must be empty
+mButton[_OVERWRITE].pLabel = __OVERWRITE ; 
 //mButton[_OVER_SWITCH_TO_FEEDRATE].pLabel = __OVER_SWITCH_TO_FEEDRATE ;
 //mButton[_OVER_SWITCH_TO_SPINDLE].pLabel = __OVER_SWITCH_TO_SPINDLE ;
 //mButton[_OVER_10P].pLabel = __OVER_10P ;
@@ -196,7 +196,9 @@ mButton[_SD_SHOW].pIcon = sdShowIcon ;
 //mButton[_FILE0_GRBL].pLabel = grblFileNamesTft[0] ;
 //mButton[_FILE1_GRBL].pLabel = grblFileNamesTft[1] ;
 //mButton[_FILE2_GRBL].pLabel = grblFileNamesTft[2] ;
-//mButton[_FILE3_GRBL].pLabel = grblFileNamesTft[3] ; 
+//mButton[_FILE3_GRBL].pLabel = grblFileNamesTft[3] ;
+mButton[_LOG].pLabel = __LOG ;
+
 #endif //end of USE_ICONS
 
 
@@ -205,20 +207,21 @@ mButton[_SD_SHOW].pIcon = sdShowIcon ;
 mPages[_P_INFO].titel = "" ;
 mPages[_P_INFO].pfBase = fInfoBase ;
 fillMPage (_P_INFO , 0 , _MASKED1 , _JUST_PRESSED , fGoToPage , _P_LOG ) ; // this button is masked but clicking on the zone call another screen
-fillMPage (_P_INFO , 3 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; // this button is masked but clicking on the zone call another screen
+fillMPage (_P_INFO , 3 , _MASKED1 , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; // this button is masked but clicking on the zone call another screen
 fillMPage (_P_INFO , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;   // those buttons are changed dynamically based on status (no print, ...)
 fillMPage (_P_INFO , 11 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;   // those buttons are changed dynamically based on status (no print, ...)
 
 mPages[_P_SETUP].titel = "" ;
 mPages[_P_SETUP].pfBase = fSetupBase ;
-fillMPage (_P_SETUP , 0 , _COMMUNICATION , _JUST_PRESSED , fGoToPage , _P_COMMUNICATION ) ;
+fillMPage (_P_SETUP , 0 , _UNLOCK , _JUST_PRESSED , fUnlock , 0) ;
+fillMPage (_P_SETUP , 3 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; // this button is masked but clicking on the zone call another screen
 fillMPage (_P_SETUP , 4 , _HOME , _JUST_PRESSED , fHome , 0) ;
-fillMPage (_P_SETUP , 5 , _UNLOCK , _JUST_PRESSED , fUnlock , 0) ;
-fillMPage (_P_SETUP , 6 , _RESET , _JUST_PRESSED , fReset , 0) ;
-fillMPage (_P_SETUP , 7 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;
-fillMPage (_P_SETUP , 8 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE ) ;
-fillMPage (_P_SETUP , 9 , _SET_WCS , _JUST_PRESSED , fGoToPage , _P_SETXYZ ) ;
-fillMPage (_P_SETUP , 10 , _TOOL , _JUST_PRESSED , fGoToPage , _P_TOOL ) ;
+fillMPage (_P_SETUP , 5 , _RESET , _JUST_PRESSED , fReset , 0) ;
+fillMPage (_P_SETUP , 6 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;
+fillMPage (_P_SETUP , 7 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE ) ;
+fillMPage (_P_SETUP , 8 , _SET_WCS , _JUST_PRESSED , fGoToPage , _P_SETXYZ ) ;
+fillMPage (_P_SETUP , 9 , _TOOL , _JUST_PRESSED , fGoToPage , _P_TOOL ) ;
+fillMPage (_P_SETUP , 10 , _COMMUNICATION , _JUST_PRESSED , fGoToPage , _P_COMMUNICATION ) ;
 fillMPage (_P_SETUP , 11 , _INFO , _JUST_PRESSED , fGoToPageAndClearMsg ,  _P_INFO) ;
 
 mPages[_P_PRINT].titel = "" ;
@@ -334,6 +337,7 @@ fillMPage (_P_OVERWRITE , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
 mPages[_P_COMMUNICATION].titel = "" ;
 mPages[_P_COMMUNICATION].pfBase = fCommunicationBase ;
+fillMPage (_P_COMMUNICATION , 0 , _LOG , _JUST_PRESSED , fGoToPage , _P_LOG ) ; 
 fillMPage (_P_COMMUNICATION , 8 , _SERIAL , _JUST_PRESSED , fSerial , 0) ;
 fillMPage (_P_COMMUNICATION , 9 , _BLUETOOTH , _JUST_PRESSED , fBluetooth , 0) ;
 fillMPage (_P_COMMUNICATION , 10 , _TELNET , _JUST_PRESSED , fTelnet , 0) ;

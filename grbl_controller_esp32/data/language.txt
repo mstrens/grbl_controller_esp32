@@ -73,7 +73,7 @@ MASKED1      ""
 PG_PREV      "Préc"
 PG_NEXT      "Suiv"
 SD_SHOW      "Voir*GCode" 
-OVERWRITE    "" // hidden button , so no need for a text
+OVERWRITE    "Feedrate*Rpm"
 OVER_SWITCH_TO_FEEDRATE "Changer*Feedrate"
 OVER_SWITCH_TO_SPINDLE  "Changer*Rpm"
 OVER_100     "Set to*100%"
@@ -93,7 +93,7 @@ FILE2_GRBL    ""
 FILE3_GRBL    ""
 YES           "Oui"
 NO            "Non"
-
+LOG           "Grbl*Msg"
 
 
 #Text
