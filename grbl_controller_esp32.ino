@@ -25,7 +25,6 @@
 // vérifier si le soft reset provoque la perte de la liaison bluetooth ou telnet (car comment canceler un job lancer de GRBL SD card sinon); changer fCancel dans le tab actions
 // pourquoi avoir parfois des messages "error 120"
 // afficher le nom du fichier en cas d'usinage via la carte GRBL SD
-// Mettre en pause si on lance le fichier via GRBL SD????
 // le move au clavier ne marche pas toujours : grbl retourne une erreur 8 
 // avec l'impression via grbl SD, quand on fait pause, l'écran doit être adapté (ne pas montrer l'icone show gcode) et certaines fonctions aussi (sans doute Cancel et Resume)
 
