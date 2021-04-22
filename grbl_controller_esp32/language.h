@@ -54,8 +54,8 @@
 #define __RIGHT "->" 
 #define __UP "Haut" 
 #define __MORE_PAUSE "Plus" 
-#define __PREV "Pr\x80" "c"
-#define __NEXT "Suiv"
+#define __PG_PREV "Pr\x80" "c"
+#define __PG_NEXT "Suiv"
 #define __SD_SHOW "Voir*GCode"
 #define __OVERWRITE "Feedrate*Rpm" // it is a hidden button , so no need for a text
 #define __OVER_SWITCH_TO_FEEDRATE "Changer*Feedrate"
@@ -250,8 +250,8 @@
 #define __RIGHT "->" 
 #define __UP "Oben" 
 #define __MORE_PAUSE "Mehr" 
-#define __PREV "Prev"
-#define __NEXT "Next"
+#define __PG_PREV "Prev"
+#define __PG_NEXT "Next"
 #define __SD_SHOW "See*GCode"
 #define __OVERWRITE "Feedrate*Speed" // it is a hidden button , so no need for a text
 #define __OVER_SWITCH_TO_FEEDRATE "Switch to*Feedrate"
