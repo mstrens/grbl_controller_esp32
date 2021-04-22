@@ -27,7 +27,7 @@
 // afficher le nom du fichier en cas d'usinage via la carte GRBL SD
 // le move au clavier ne marche pas toujours : grbl retourne une erreur 8 
 // avec l'impression via grbl SD, quand on fait pause, l'écran doit être adapté (ne pas montrer l'icone show gcode) et certaines fonctions aussi (sans doute Cancel et Resume)
-
+// ajouter Overwrite sur l'écran More
 
 
 /*

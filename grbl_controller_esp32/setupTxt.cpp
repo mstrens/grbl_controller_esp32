@@ -214,7 +214,7 @@ fillMPage (_P_INFO , 11 , _PRINT , _JUST_PRESSED , fGoToPage , _P_PRINT) ;   // 
 mPages[_P_SETUP].titel = "" ;
 mPages[_P_SETUP].pfBase = fSetupBase ;
 fillMPage (_P_SETUP , 0 , _UNLOCK , _JUST_PRESSED , fUnlock , 0) ;
-fillMPage (_P_SETUP , 3 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; // this button is masked but clicking on the zone call another screen
+//fillMPage (_P_SETUP , 3 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; 
 fillMPage (_P_SETUP , 4 , _HOME , _JUST_PRESSED , fHome , 0) ;
 fillMPage (_P_SETUP , 5 , _RESET , _JUST_PRESSED , fReset , 0) ;
 fillMPage (_P_SETUP , 6 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;

@@ -636,7 +636,8 @@ void updateButtonsInfoPage (void) { // met à jour le set up de la page en fonct
       break ;
     case PRINTING_FROM_SD :
       fillMPage (_P_INFO , 7 , _PAUSE , _JUST_PRESSED , fPause , 0 ) ;
-      fillMPage (_P_INFO , 11 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
+      fillMPage (_P_INFO , 3 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; 
+      //fillMPage (_P_INFO , 11 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
       break ;
     case PRINTING_ERROR :                                              // to do; not clear what we should do
       fillMPage (_P_INFO , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
@@ -664,7 +665,8 @@ void updateButtonsInfoPage (void) { // met à jour le set up de la page en fonct
       break ;  
     case PRINTING_FROM_GRBL :
       fillMPage (_P_INFO , 7 , _PAUSE , _JUST_PRESSED , fPause , 0 ) ;
-      fillMPage (_P_INFO , 11 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
+      fillMPage (_P_INFO , 11 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; 
+      //fillMPage (_P_INFO , 11 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
       break ;
     case PRINTING_FROM_GRBL_PAUSED :
       fillMPage (_P_INFO , 7 , _RESUME , _JUST_PRESSED , fResume , 0 ) ;
@@ -827,16 +829,20 @@ void fSetupBase(void) {
 
 void drawDataOnSetupPage() {  
   drawMachineStatus() ;       // draw machine status in the upper right corner
+  drawLastMsgAt( 85 , 32 ) ; // Coord are for 3.2 TFT; conversion is done inside the function.
+}
+
+void drawLastMsgAt( uint16_t col , uint16_t line ) {
   tft.setTextSize(1) ;
   tft.setTextColor(lastMsgColor ,  SCREEN_BACKGROUND ) ; // color is defined in lastMsgColor ; previously SCREEN_ALERT_TEXT
   tft.setTextDatum( TL_DATUM ) ; // align Left
-  tft.setTextPadding (240) ; 
+  tft.setTextPadding (320-col) ; 
   tft.setFreeFont(LABELS9_FONT); 
   if ( strlen( lastMsg) > 30 ) {
-     tft.drawString ( " " , hCoord(85) , vCoord(32) ) ; // print space first in the larger font to clear the pixels
+     tft.drawString ( " " , hCoord(col) , vCoord(line) ) ; // print space first in the larger font to clear the pixels
      tft.setTextFont( 1 );           
   }
-  tft.drawString ( &lastMsg[0] , hCoord(85) , vCoord(32) ) ;
+  tft.drawString ( &lastMsg[0] , hCoord(col) , vCoord(line) ) ;
 }
 
 void fMoveBase(void) {
@@ -1316,7 +1322,7 @@ void drawDataOnCommunicationPage() {
   // Show:  the IP adress (already done in Sbase); wifi mode (no wifi, Station, access point)
   //  
   drawMachineStatus() ;       // draw machine status in the upper right corner
-  drawLastMsg() ;             // draw text on line 32
+  drawLastMsgAt( 85 , 32 ) ; // Coord are for 3.2 TFT; conversion is done inside the function.
   tft.setFreeFont (LABELS9_FONT) ;
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
@@ -1341,7 +1347,8 @@ void drawMsgOnTft(const char * msg1 , const char * msg2){
   tft.setFreeFont (LABELS9_FONT) ;
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
-  tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
+  tft.setTextDatum( TL_DATUM ) ; // align left
+  tft.setTextPadding (hCoord(239)) ;
   uint16_t line = vCoord(100) ;
   uint16_t col = hCoord(1) ;
   tft.drawString( msg1 , col , line );

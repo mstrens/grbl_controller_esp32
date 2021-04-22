@@ -63,7 +63,8 @@ void fConfirmYesNoBase(void) ; // fonction pour afficher le nom du fichier à im
 
 void updateButtonsInfoPage() ; // met à jour le set up de la page en fonction du statut d'impression
 void drawMachineStatus() ;   // affiche le status GRBL dans le coin supérieur droit
-void drawLastMsg() ;         // affiche le lastMsg 
+void drawLastMsg() ;         // affiche le lastMsg
+void drawLastMsgAt( uint16_t col , uint16_t line ) ; // affiche le lastMsg à partir d'une position donnée
 void drawDataOnInfoPage()  ; // affiche les données sur la page d'info
 void drawWposOnMovePage() ;
 void drawDataOnSetupPage() ;  // affiche wpos et distance since entry on this screen
