@@ -2,7 +2,7 @@
 #define _config_h
 
 
-#define ESP32_VERSION "vers.2.0.n"
+#define ESP32_VERSION "vers.2.0.p"
 
 
 // decide if you will use Wifi or not (and how)
@@ -13,7 +13,7 @@
 
 // for ESP32_ACT_AS_STATION , set the password to get access to your access point (router)
 // for ESP_ACT_AS_AP, set the password you want to use to protect your ESP32 ( can be empty)
-#define MY_PASSWORD "alineloriejulien" // replace by your password 
+#define MY_PASSWORD "password" // replace by your password 
 
 // if you use Wifi, you can (optional) define a fix IP address. Then you have to define 3 parameters
 // If one of next 3 parameters is "", it means that you do not want to use a fix local IP address.
@@ -27,7 +27,7 @@
 #define GRBL_TELNET_IP "192.168.1.11" // IP address of GRBL_ESP32 telnet server  (as defined in GRBL_ESP32)
 
 // to connect via Bluetooth, you have to define the Bluetooth name of the GRBL_ESP32 board
-#define GRBL_BT_NAME "ESP32_BT"   // name of GRBL_ESP32 bluetooth device (as defined in GRBL_ESP32)
+#define GRBL_BT_NAME "btgrblesp"   // name of GRBL_ESP32 bluetooth device (as defined in GRBL_ESP32)
 
 
 // select your language between EN, FR, DE
@@ -37,7 +37,7 @@
 
 #define TFT_CARD_VERSION 2 // define the version of the TFT board being used ; it can be 1 or 2 (1 uses 4 pins header to connect to GRbl; 2 use RJ45 connector)               
 
-#define TFT_SIZE 4   // define size of display : must be 3 (for 3.2) or 4     
+#define TFT_SIZE 3   // define size of display : must be 3 (for 3.2) or 4     
 
 // Set REPEAT_CAL to true instead of false to run calibration again, otherwise it will only be done once.
 // Repeat calibration if you change the screen rotation.
