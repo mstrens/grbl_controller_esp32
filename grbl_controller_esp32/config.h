@@ -2,7 +2,7 @@
 #define _config_h
 
 
-#define ESP32_VERSION "vers.2.0.p"
+#define ESP32_VERSION "vers.2.0.q"
 
 
 // decide if you will use Wifi or not (and how)

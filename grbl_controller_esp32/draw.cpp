@@ -636,7 +636,7 @@ void updateButtonsInfoPage (void) { // met à jour le set up de la page en fonct
       break ;
     case PRINTING_FROM_SD :
       fillMPage (_P_INFO , 7 , _PAUSE , _JUST_PRESSED , fPause , 0 ) ;
-      fillMPage (_P_INFO , 3 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; 
+      fillMPage (_P_INFO , 11 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; 
       //fillMPage (_P_INFO , 11 , _CANCEL , _JUST_PRESSED , fCancel , 0 ) ;
       break ;
     case PRINTING_ERROR :                                              // to do; not clear what we should do
