@@ -230,7 +230,9 @@ fillMPage (_P_PRINT , 4 , _SD , _JUST_PRESSED , fGoToPage , _P_SD) ;
 fillMPage (_P_PRINT , 5 , _USB_GRBL , _JUST_PRESSED , fStartUsb , 0) ;
 fillMPage (_P_PRINT , 6 , _TELNET_GRBL , _JUST_PRESSED , fStartTelnet , 0) ;
 fillMPage (_P_PRINT , 7 , _SETUP , _JUST_PRESSED , fGoToPage , _P_SETUP) ;
+#if defined(TFT_CARD_VERSION) && (TFT_CARD_VERSION == 2)
 fillMPage (_P_PRINT , 8 , _SD_GRBL , _JUST_PRESSED , fGoToPage , _P_SD_GRBL_WAIT) ;
+#endif
 fillMPage (_P_PRINT , 10 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;
 fillMPage (_P_PRINT , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
 
@@ -338,9 +340,11 @@ fillMPage (_P_OVERWRITE , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 mPages[_P_COMMUNICATION].titel = "" ;
 mPages[_P_COMMUNICATION].pfBase = fCommunicationBase ;
 fillMPage (_P_COMMUNICATION , 0 , _LOG , _JUST_PRESSED , fGoToPage , _P_LOG ) ; 
+#if defined(TFT_CARD_VERSION) && (TFT_CARD_VERSION == 2)
 fillMPage (_P_COMMUNICATION , 8 , _SERIAL , _JUST_PRESSED , fSerial , 0) ;
 fillMPage (_P_COMMUNICATION , 9 , _BLUETOOTH , _JUST_PRESSED , fBluetooth , 0) ;
 fillMPage (_P_COMMUNICATION , 10 , _TELNET , _JUST_PRESSED , fTelnet , 0) ;
+#endif
 fillMPage (_P_COMMUNICATION , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
 
 mPages[_P_SD_GRBL_WAIT].titel = "" ;  // this screen has only 10 buttons instead of 12
