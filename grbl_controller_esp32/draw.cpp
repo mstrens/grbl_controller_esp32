@@ -241,6 +241,8 @@ void tftInit() {
   
   //spiTouch.begin( TOUCH_SCLK , TOUCH_MISO ,TOUCH_MOSI , TOUCH_CS_PIN );
   touchscreen.begin(spiTouch , TOUCH_CS_PIN ) ; // specify the SPI being used (we do not use "SPI" = default from Arduino = HVSPI) and the pin used for touchscreen Chip select 
+  pinMode(TFT_LED_PIN , OUTPUT) ;
+  digitalWrite(TFT_LED_PIN , HIGH) ;
   
   touch_calibrate(); // call screen calibration
   //tft.printCalibration() ;  // print calibration data (print on Serial port the calibration data ; only for debug
@@ -565,13 +567,35 @@ void blankTft( const char * titel, uint16_t x , uint16_t y) {    // blank screen
     tft.setTextSize(1) ;           // char is 2 X magnified => 
     tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
     tft.drawString( titel , x , y ) ;     // affiche un texte
-    tft.setCursor( x , y + hCoord(30) , vCoord(2) ) ; // x, y, font
+    tft.setCursor( x , y + vCoord(30) , 2 ) ; // x, y, font
   }
 }
 
 
 void clearScreen() {
   tft.fillScreen( SCREEN_BACKGROUND ) ;
+}
+
+void drawLogo() {
+  tft.drawBitmap(( hCoord(320)-130) /2 , vCoord(20), logoIcon , 130, 118 , BUTTON_BACKGROUND );
+  tft.setTextFont( 2 ); // use Font2 = 16 pixel X 7 probably
+  tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
+  tft.setTextSize(1) ;           // char is 2 X magnified => 
+  tft.setTextDatum( TC_DATUM ) ; // align center
+  tft.drawString( "Developped by mstrens for MakerFr" , hCoord(160) , vCoord(180) ) ;     // affiche un texte
+  tft.drawString( VERSION_TEXT , hCoord(160) , vCoord(200) ) ; 
+}
+
+void drawLineText( char * text, uint16_t x, uint16_t y, uint8_t font , uint8_t fontSize, uint16_t color) { // texte, x, y , font, size, color
+  tft.setTextFont( font ); // use Font2 = 16 pixel X 7 probably
+  tft.setTextColor(color ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
+  tft.setTextSize(fontSize) ;           // char is 2 X magnified => 
+  tft.setTextDatum( TC_DATUM ) ; // center align 
+  tft.drawString( text , x , y ) ;     // affiche un texte 
+}
+
+void clearLine( uint16_t y , uint8_t font , uint8_t fontSize , uint16_t color) { // clear a line based on font and font Size.
+  tft.fillRect( 0, y, 320, tft.fontHeight(font)* fontSize , color);
 }
 
 void printTft(const char * text ) {     // print a text on screen

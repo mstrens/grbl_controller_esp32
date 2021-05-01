@@ -28,8 +28,11 @@
 // le move au clavier ne marche pas toujours : grbl retourne une erreur 8 
 // avec l'impression via grbl SD, quand on fait pause, l'écran doit être adapté (ne pas montrer l'icone show gcode) et certaines fonctions aussi (sans doute Cancel et Resume)
 // ajouter Overwrite sur l'écran More
-
-
+// durant l'impression, afficher le nbr de min depuis le début (ne pas compter quand c'est en pause.
+// pouquoi ne peut-on pas faire un move qaund on est en pause (l'icone est présente mais semble ne pas focntionner)
+// quand le PC est relié via serial à la carte grbl, il semble que les commandes $$ du pc ne passent pas.(alors que le pc recôit bien les répônses au ? envoyé par le TFT
+// prévoir de pouvoir définir des icones pour les boutons personnalisés
+// retier le bouton MOVE de l'écran MORE; ajouter OVEWRITE; retirer le bouton Resume
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.
 
@@ -200,8 +203,8 @@ void setup() {
   Serial2.begin(115200, SERIAL_8N1, SERIAL2_RXPIN, SERIAL2_TXPIN); // initialise le port série vers grbl
   Serial2.setRxBufferSize(1024);
   pinMode (SERIAL2_RXPIN, INPUT_PULLUP ); // added to force a level when serial wire is not connected
-  pinMode(TFT_LED_PIN , OUTPUT) ;
-  digitalWrite(TFT_LED_PIN , HIGH) ;
+  //pinMode(TFT_LED_PIN , OUTPUT) ;
+  //digitalWrite(TFT_LED_PIN , HIGH) ;
   
   if (! spiffsInit() ) {   // try to load the cmd in memory when the files exist in spiffs 
     fillMsg(_SPIFFS_FORMATTED , SCREEN_NORMAL_TEXT ) ;

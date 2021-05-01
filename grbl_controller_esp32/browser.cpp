@@ -35,9 +35,12 @@ extern Preferences preferences ; // used to save the WIFi parameters
 File32 root ; // used for Directory 
 
 void initWifi() {
-   
+  uint32_t startMillis = millis();
+  uint8_t yText = 140 ;
+  drawLogo();
   retrieveWifiParam();
   if (wifiType == NO_WIFI) {
+    drawLineText( "No wifi foreseen" , hCoord(160), vCoord(yText), 2 , 1 , TFT_GREEN) ; // texte, x, y , font, size ,color  
       return ; 
   }
   grbl_Telnet_IP.fromString(grbl_Telnet_IPStr); // convert telnet ip adr
@@ -56,22 +59,35 @@ void initWifi() {
       //Serial.print("local IP="); Serial.println(local_IPStr);
       //Serial.print("gateway="); Serial.println(gatewayStr);
       //Serial.print("subnet="); Serial.println(subnetStr);
-      blankTft("Connecting to Wifi access point", 5 , 20 ) ; // blank screen and display a text at x, y 
+      //blankTft("Connecting to Wifi access point", 5 , 20 ) ; // blank screen and display a text at x, y 
       WiFi.begin(wifiSsid , wifiPassword);
       uint8_t initWifiCnt = 40 ;   // maximum 40 retries for connecting to wifi
       while (WiFi.status() != WL_CONNECTED)  { // Wait for the Wi-Fi to connect; max 40 retries
         delay(250); // Serial.print('.');
-        printTft("X") ;
+        if ((initWifiCnt % 8) == 0) {
+          drawLineText( "Connecting to wifi" , hCoord(160), vCoord(yText), 2 , 1 , TFT_GREEN) ; // texte, x, y , font, size ,color  
+        }else if ((initWifiCnt % 8) == 5) {
+          clearLine(vCoord(yText), 2 , 1, SCREEN_BACKGROUND);
+        }
+        //printTft(".") ;
         initWifiCnt--;
         if ( initWifiCnt == 0) {
           fillMsg(_WIFI_NOT_FOUND  );
           break;
         }
       }
+      clearLine(vCoord(yText), 2 , 1, SCREEN_BACKGROUND);
+      if (initWifiCnt == 0){
+        drawLineText( "No connection to wifi" , hCoord(160), vCoord(yText), 2 , 1 , SCREEN_ALERT_TEXT) ; // texte, x, y , font, size ,color  
+      } else {
+        drawLineText( "Connected to wifi as Station" , hCoord(160), vCoord(yText), 2 , 2 , TFT_GREEN) ; // texte, x, y , font, size ,color  
+      }
+      delay(2000) ;
       //Serial.println("\nConnected to "+WiFi.SSID()+" Use IP address: "+WiFi.localIP().toString()); // Report which SSID and IP is in use
   } else if (wifiType == ESP32_ACT_AS_AP) {
     WiFi.softAP( wifiSsid , wifiPassword );
     //Serial.println("\nESP has IP address: "+ WiFi.softAPIP().toString()); // Report which SSID and IP is in use
+        drawLineText( "Wifi Access Point started" , hCoord(160), vCoord(yText), 2 , 1 , TFT_GREEN) ; // texte, x, y , font, size ,color  
   }  
   //WiFi.setSleep(false);
   //----------------------------------------------------------------------   
@@ -88,7 +104,10 @@ void initWifi() {
   ///////////////////////////// End of Request commands
   server.begin();
   //Serial.println("HTTP server started");  
-  
+
+  while (millis() < (startMillis + 2000) ) {
+    delay(100);
+  }
 }
 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

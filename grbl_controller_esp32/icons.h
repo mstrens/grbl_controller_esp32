@@ -5,6 +5,10 @@
 
 #if defined( TFT_SIZE) and (TFT_SIZE == 3)
 
+const uint8_t logoIcon[] = {
+#include "icons/bmp74/logo.h "  
+};
+
 const uint8_t setupIcon[] = {
 #include "icons/bmp74/setup1_button.h "  
 };
@@ -129,6 +133,11 @@ const uint8_t sdShowIcon[] = {
 
 //********************************************* 4" TFT
 #elif defined(TFT_SIZE) and (TFT_SIZE == 4)
+
+const uint8_t logoIcon[] = {   // currently use the logo defined for 3.2" TFT
+#include "icons/bmp74/logo.h "  
+};
+
 const uint8_t setupIcon[] = {
 #include "icons/bmp100/setup1_button.h "  
 };

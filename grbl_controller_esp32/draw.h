@@ -22,8 +22,13 @@ enum { PRINTING_STOPPED = 0 , PRINTING_FROM_SD , PRINTING_ERROR , PRINTING_PAUSE
 
 void clearScreen() ; // clear tft screen
 
+
 void blankTft(const char * titel , uint16_t x , uint16_t y ) ; // clear tft screen
+void drawLineText( char * text, uint16_t x, uint16_t y, uint8_t font , uint8_t fontSize, uint16_t color) ;
+void clearLine( uint16_t y , uint8_t font , uint8_t fontSize , uint16_t color ) ; // clear a line based on font and font Size.
 void printTft(const char * text) ;
+void drawLogo() ;
+
 
 boolean convertPosToXY( uint8_t pos , int32_t *_x, int32_t *_y , uint16_t btnDef[12][4]) ;
 uint8_t convertBtnPosToBtnIdx( uint8_t page , uint8_t btn ) ;

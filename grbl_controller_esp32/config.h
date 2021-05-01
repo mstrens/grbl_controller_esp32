@@ -3,6 +3,7 @@
 
 
 #define ESP32_VERSION "vers.2.0.r"
+#define VERSION_TEXT "Firmware vers. 2.0.s ( 1 may 2021)"
 
 
 // decide if you will use Wifi or not (and how)
@@ -13,7 +14,7 @@
 
 // for ESP32_ACT_AS_STATION , set the password to get access to your access point (router)
 // for ESP_ACT_AS_AP, set the password you want to use to protect your ESP32 ( can be empty)
-#define MY_PASSWORD "password" // replace by your password 
+#define MY_PASSWORD "alineloriejulien" // replace by your password 
 
 // if you use Wifi, you can (optional) define a fix IP address. Then you have to define 3 parameters
 // If one of next 3 parameters is "", it means that you do not want to use a fix local IP address.
@@ -89,7 +90,7 @@
 #define BUTTON_BORDER_PRESSED TFT_RED
 #define BUTTON_BACKGROUND TFT_GREEN
 #define BUTTON_TEXT TFT_BLACK
-#define SCREEN_BACKGROUND TFT_DARKGREY
+#define SCREEN_BACKGROUND TFT_BLACK   //TFT_DARKGREY
 #define SCREEN_NORMAL_TEXT TFT_GREEN
 #define SCREEN_ALERT_TEXT TFT_RED
 #define SCREEN_HEADER_TEXT TFT_WHITE

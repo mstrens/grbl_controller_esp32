@@ -239,9 +239,9 @@ fillMPage (_P_PRINT , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
 mPages[_P_PAUSE].titel = "" ;
 mPages[_P_PAUSE].pfBase = fNoBase ;
 fillMPage (_P_PAUSE , 4 , _CANCEL , _JUST_PRESSED , fCancel , 0) ;
-fillMPage (_P_PAUSE , 5 , _RESUME , _JUST_PRESSED , fResume , 0) ;
+//fillMPage (_P_PAUSE , 5 , _RESUME , _JUST_PRESSED , fResume , 0) ;
 fillMPage (_P_PAUSE , 6 , _SD_SHOW , _JUST_PRESSED , fGoToPage , _P_SD_SHOW ) ;
-fillMPage (_P_PAUSE , 7 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE) ;
+fillMPage (_P_PAUSE , 7 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; 
 fillMPage (_P_PAUSE , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
 
 mPages[_P_MOVE].titel = "" ;
@@ -365,8 +365,8 @@ fillMPage (_P_SD_CONFIRM , 10 , _NO_BTN , _JUST_PRESSED , fConfirmedNo , 0 ) ;
 mPages[_P_PAUSE_GRBL].titel = "" ;
 mPages[_P_PAUSE_GRBL].pfBase = fNoBase ;
 fillMPage (_P_PAUSE_GRBL , 4 , _CANCEL , _JUST_PRESSED , fCancelGrbl , 0) ;
-fillMPage (_P_PAUSE_GRBL , 5 , _RESUME , _JUST_PRESSED , fResumeGrbl , 0) ;
-fillMPage (_P_PAUSE_GRBL , 7 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE) ;
+//fillMPage (_P_PAUSE_GRBL , 5 , _RESUME , _JUST_PRESSED , fResumeGrbl , 0) ;
+fillMPage (_P_PAUSE_GRBL , 7 , _OVERWRITE , _JUST_PRESSED , fGoToPage , _P_OVERWRITE ) ; 
 fillMPage (_P_PAUSE_GRBL , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO) ;
 
 
