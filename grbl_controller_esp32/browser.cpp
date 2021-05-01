@@ -80,7 +80,7 @@ void initWifi() {
       if (initWifiCnt == 0){
         drawLineText( "No connection to wifi" , hCoord(160), vCoord(yText), 2 , 1 , SCREEN_ALERT_TEXT) ; // texte, x, y , font, size ,color  
       } else {
-        drawLineText( "Connected to wifi as Station" , hCoord(160), vCoord(yText), 2 , 2 , TFT_GREEN) ; // texte, x, y , font, size ,color  
+        drawLineText( "Connected to wifi as Station" , hCoord(160), vCoord(yText), 2 , 1 , TFT_GREEN) ; // texte, x, y , font, size ,color  
       }
       delay(2000) ;
       //Serial.println("\nConnected to "+WiFi.SSID()+" Use IP address: "+WiFi.localIP().toString()); // Report which SSID and IP is in use
