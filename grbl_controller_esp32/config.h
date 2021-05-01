@@ -3,7 +3,7 @@
 
 
 #define ESP32_VERSION "vers.2.0.r"
-#define VERSION_TEXT "Firmware vers. 2.0.s ( 1 may 2021)"
+#define VERSION_TEXT "Firmware vers. 2.0.t ( 1 may 2021)"
 
 
 // decide if you will use Wifi or not (and how)

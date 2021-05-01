@@ -958,6 +958,7 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
     tft.setTextSize(1) ;
     tft.setTextDatum( TL_DATUM ) ;
     tft.setCursor(hCoord(180) , vCoord(20) ) ; // x, y, font
+    tft.setTextColor(SCREEN_NORMAL_TEXT)
     tft.print( firstFileToDisplay ) ;
     tft.print( " / " ) ;
     tft.print( sdFileDirCnt ) ;  
@@ -1428,6 +1429,7 @@ void fSdGrblWaitBase(void) {                // cette fonction doit vérifier que
     tft.setTextSize(1) ;
     tft.setTextDatum( TL_DATUM ) ;
     tft.setCursor(0 , vCoord(20) ) ; // x, y, font
+    tft.setTextColor(SCREEN_NORMAL_TEXT) ;
     tft.println( mText[_CURRENT_GRBL_DIR].pLabel );
     tft.println(grblDirFilter) ;
     tft.println(" ") ;
@@ -1469,6 +1471,7 @@ void fSdGrblBase(void) {                // cette fonction est appelée une fois 
     tft.setTextSize(1) ;
     tft.setTextDatum( TL_DATUM ) ;
     tft.setCursor(hCoord(180) , vCoord(20) ) ; // x, y, font
+    tft.setTextColor(SCREEN_NORMAL_TEXT) ;
     tft.print( firstGrblFileToDisplay + 1 ) ; // we add 1 because first file has an index of 0
     tft.print( " / " ) ;
     tft.print( grblFileIdx ) ;  
@@ -1497,6 +1500,7 @@ void fConfirmYesNoBase() { // should display the name of the file to be printed 
   tft.setTextSize(1) ;
   tft.setTextDatum( TL_DATUM ) ;
   tft.setCursor(hCoord(20) , vCoord(100) ) ; // x, y, font
+  tft.setTextColor(SCREEN_NORMAL_TEXT)
   tft.print( mText[_CONFIRM_SD_FILE].pLabel ) ; 
   tft.setCursor(hCoord(20) , vCoord(140) ) ; // x, y, font
   if (pfileName ) tft.print( pfileName ) ;
