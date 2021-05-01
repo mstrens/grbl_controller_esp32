@@ -33,6 +33,7 @@
 // quand le PC est relié via serial à la carte grbl, il semble que les commandes $$ du pc ne passent pas.(alors que le pc recôit bien les répônses au ? envoyé par le TFT
 // prévoir de pouvoir définir des icones pour les boutons personnalisés
 // retier le bouton MOVE de l'écran MORE; ajouter OVEWRITE; retirer le bouton Resume
+// pour l'écran d'accueil prévoir l'utilisation du fichier langage (actuellement codé dans browser et draw.
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.
 
