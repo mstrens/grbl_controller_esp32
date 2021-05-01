@@ -582,7 +582,7 @@ void drawLogo() {
   tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextDatum( TC_DATUM ) ; // align center
-  tft.drawString( "Developped by mstrens for MakerFr" , hCoord(160) , vCoord(180) ) ;     // affiche un texte
+  tft.drawString( "Developped by mstrens & htheatre for MakerFr" , hCoord(160) , vCoord(180) ) ;     // affiche un texte
   tft.drawString( VERSION_TEXT , hCoord(160) , vCoord(200) ) ; 
 }
 
