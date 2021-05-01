@@ -958,7 +958,7 @@ void fSdBase(void) {                // cette fonction doit vérifier que la cart
     tft.setTextSize(1) ;
     tft.setTextDatum( TL_DATUM ) ;
     tft.setCursor(hCoord(180) , vCoord(20) ) ; // x, y, font
-    tft.setTextColor(SCREEN_NORMAL_TEXT)
+    tft.setTextColor(SCREEN_NORMAL_TEXT);
     tft.print( firstFileToDisplay ) ;
     tft.print( " / " ) ;
     tft.print( sdFileDirCnt ) ;  
@@ -1500,7 +1500,7 @@ void fConfirmYesNoBase() { // should display the name of the file to be printed 
   tft.setTextSize(1) ;
   tft.setTextDatum( TL_DATUM ) ;
   tft.setCursor(hCoord(20) , vCoord(100) ) ; // x, y, font
-  tft.setTextColor(SCREEN_NORMAL_TEXT)
+  tft.setTextColor(SCREEN_NORMAL_TEXT) ;
   tft.print( mText[_CONFIRM_SD_FILE].pLabel ) ; 
   tft.setCursor(hCoord(20) , vCoord(140) ) ; // x, y, font
   if (pfileName ) tft.print( pfileName ) ;
