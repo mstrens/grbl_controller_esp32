@@ -1,0 +1,182 @@
+é
+ä
+ö
+ü
+
+
+
+
+
+#Buttons
+1=__SETUP         "Config 
+2=__PRINT         "Fraisage 
+3=__HOME          "Home*XYZ 
+4=__UNLOCK        "Débloquer 
+5=__RESET         "Reset
+6=__SD            "Carte SD 
+7=__USB_GRBL      "USB" 
+8=__TELNET_GRBL   "Telnet" 
+9=__PAUSE         "Pause" 
+10=__CANCEL       "Annuler" 
+11=__INFO         "Info" 
+12=__CMD          "Cmd" 
+13=__MOVE         "Bouger" 
+14=__RESUME       "Lancer" 
+15=__STOP_PC_GRBL "Stop PC" 
+16=__D_AUTO       "Auto"
+17=__SET_WCS      "Set*WCS 1"
+18=__SETX         "Set X" 
+19=__SETY         "Set Y" 
+20=__SETZ         "Set Z"
+21=__SETA         "Set A"
+22=__SETXYZ       
+"Set*XYZ"
+23=__SETXYZA "Set*XYZA"
+24=__TOOL "Tool" 
+25=__SET_CHANGE "D\x80" "f.*change"
+26=__SET_PROBE "D\x80" "f.*sonde"
+27=__SET_CAL "Calibrer"
+28=__GO_CHANGE "Changer"
+29=__GO_PROBE "Sonder"
+30=__BACK "Retour" 
+31=__LEFT "<-" 
+32=__RIGHT "->" 
+33=__UP "Haut" 
+34=__MORE_PAUSE "Plus" 
+35=__PREV "Pr\x80" "c"
+36=__NEXT "Suiv"
+37=__SD_SHOW "Voir*GCode"
+38=__OVERWRITE "" // hidden button , so no need for a text
+39=__OVER_SWITCH_TO_FEEDRATE "Changer*Feedrate"
+40=__OVER_SWITCH_TO_SPINDLE "Changer*Rpm"
+41=__OVER_100 "Set to*100%"
+42=__OVER_10P "+10%"
+43=__OVER_10M "-10%"
+44=__OVER_1P  "+1%"
+45=__OVER_1M  "-1%"
+46=__COMMUNICATION "Com"
+47=__SERIAL "Wire"
+48=__BLUETOOTH "Blue*tooth"
+49=__TELNET "Telnet"
+50=__SD_GRBL "SD*Grbl"
+
+
+
+
+
+
+
+
+
+#Text
+1=__WPOS "Wpos"
+2=__MPOS "Mpos"
+3=__FEED "Feed"
+4=__RPM  "Rpm"
+5=__TOUCH_CORNER "Touchez les coins comme indiqu\x80"
+6=__SET_REPEAT_CAL "Definissez REPEAT_CAL sur false pour ne pas r\x80" "p\x80" "ter cette operation!"
+7=__CAL_COMPLETED "Calibration finie!"
+8=__SETX_EXECUTED  "X set dans G54"
+9=__SETY_EXECUTED  "Y set dans G54"
+10=__SETZ_EXECUTED  "Z set dans G54"
+11=__SETA_EXECUTED  "A set dans G54"
+12=__SETXYZ_EXECUTED  "XYZ set dans G54"
+13=__SETXYZA_EXECUTED  "XYZA set dans G54"
+14=__SET_CHANGE_EXECUTED  "Change tool pos. enregsitr\x80"
+15=__SET_PROBE_EXECUTED "Probe position enregistr\x80"
+16=__SET_CAL_EXECUTED "Tool Calib. ex\x80" "cut\x80"
+17=__GO_CHANGE_EXECUTED "En position change tool"
+18=__GO_PROBE_EXECUTED "WCS Z sauv\x80" " en G54"
+19=__UNKNOWN_BTN_EXECUTED "Index boutton erronn\x80"
+20=__SPIFFS_FORMATTED "SPIFFS format\x80"
+21=__CMD_NOT_LOADED "Cmd non charg\x80" "e"
+22=__TELENET_DISCONNECTED "Telnet d\x80" "connect\x80"
+23=__INVALID_BTN_HOME "Bouton invalide (Home)"
+24=__CMD_NOT_RETRIEVED "Cmd non retrouv\x80" "e"
+25=__NO_TELNET_CONNECTION "pas de connexion telnet"
+26=__WIFI_NOT_FOUND  "WiFi non trouv\x80" 
+27=__SPIFFS_FAIL_TO_OPEN "Echec ouverture SPIFFS"
+28=__FAILED_TO_CREATE_CMD "Echec cr\x80" "ation cmd"
+29=__CAN_JOG_MISSING_OK "Can.JOG:Ok manque"
+30=__CMD_JOG_MISSING_OK "Cmd JOG:Ok manque"
+31=__DIR_NAME_NOT_FOUND "R\x80" "pertoire non trouv\x80"
+32=__BUG_UPDATE_FILE_BTN "Bug: updateFilesBtn"
+33=__CARD_MOUNT_FAILED "Echec montage de carte"
+34=__ROOT_NOT_FOUND "Racine non trouv\x80" "e" 
+35=__CHDIR_ERROR "erreur chdir"
+36=__FAILED_TO_OPEN_ROOT "Echec lors de l'ouverture de la racine" 
+37=__FIRST_DIR_IS_NOT_ROOT "1er r\x80" "pertoire n'est pas la racine"
+38=__CURRENT_DIR_IS_NOT_A_SUB_DIR "R\x80" "pertoire n'est pas un sous-r\x80" "pertoire"
+39=__FILES_MISSING "fichiers manquants"
+40=__FAILED_TO_OPEN_A_FILE "Echec d'ouverture d'un fichier"
+41=__NO_FILE_NAME  "Pas de nom de fichier"
+42=__SELECTED_FILE_MISSING "Fichier selectionn\x80" " manque"
+43=__FILE_NAME_NOT_FOUND "Nom de fichier non trouv\x80"
+44=__CMD_DELETED "Cmd effac\x80" "e"
+45=__CMD_NOT_CREATED "Cmd non cr\x80" "\x80" "e"
+46=__CMD_CREATED "Cmd cr\x80" "\x80" "e"
+47=__CMD_PART_NOT_READ "Cmd: partie non lue"
+48=__CMD_COULD_NOT_SAVE "Cmd non sauv\x80" "e"
+49=__NO_NUNCHUK "Pas de Nunchuk" 
+50=__MISSING_OK_WHEN_SENDING_FROM_SD "Envoi de Gcode suspendu pendant plus de 2 min" 
+51=__NOT_IDLE "Status not Idle"
+52=__CHANGING_FEEDRATE1 "Changement du"
+53=__CHANGING_FEEDRATE2 "Feedrate"
+54=__CHANGING_SPINDLE1 "Changement du"
+55=__CHANGING_SPINDLE2 "Spindle (Rpm)"
+
+
+
+
+#GrblError
+1=__UNKNOWN_ERROR "Erreur inconnue"  
+2=__EXPECTED_CMD_LETTER "1.Lettre Cmd attendue"
+3=__BAD_NUMBER_FORMAT "2.Erreur de nombre (format)"
+4=__INVALID_$_SYSTEM_CMD "3.Cmd $ non valide"
+5=__NEGATIVE_VALUE "4.Valeur n\x80" "gative"
+6=__HOMING_NOT_ENABLED "5.Homing non actif"
+7=__STEP_PULSE_LESS_3_USEC "6.Impulsion Step <3 usec"
+8=__EEPROM_READ_FAIL "7.Echec lecture EEPROM"
+9=__$_WHILE_NOT_IDLE "8. $ alors que non IDLE"
+10=__LOCKED_ALARM_OR_JOG "9.Verrouill\x80" " (alarme ou jog)"
+11=__SOFT_LIMIT_NO_HOMING "10.Soft limit sans homing"
+12=__LINE_OVERFLOW "11.D\x80" "bordement de ligne"
+13=__STEP_RATE_TO_HIGH "12.Step rate trop \x80" "lev\x80"
+14=__SAFETY_DOOR_DETECTED "13.S\x80" "curite porte detect\x80" "e"
+15=__LINE_LENGHT_EXCEEDED "14.Longueur de ligne depass\x80" "e"
+16=__JOG_TRAVEL_EXCEEDED "15.Jog trop long"
+17=__INVALID_JOG_COMMANF "16.Commande de Jog non valide"
+18=__LASER_REQUIRES_PWM "17.Laser requiert PWM"
+19=__UNSUPPORTED_COMMAND "20.Commande non support\x80" "e"
+20=__MODAL_GROUP_VIOLATION "21.Violation du groupe modal"
+21=__UNDEF_FEED_RATE "22.Feed rate non defini"
+22=__CMD_REQUIRES_INTEGER "23.La Cmd exige un nbr entier"
+23=__SEVERAL_AXIS_GCODE "24.Plusieurs axes Gcode"
+24=__REPEATED_GCODE "25.Gcode r\x80" "p\x80" "t\x80" 
+25=__AXIS_MISSING_IN_GCODE "26.Axe manquant dans Gcode"
+26=__INVALID_LINE_NUMBER "27.Numero de ligne non valide"
+27=__VALUE_MISSING_IN_GCODE "28.Valeur manquante dans Gcode"
+28=__G59_WCS_NOT_SUPPORTED "29.G59 WCS non support\x80"
+29=__G53_WITHOUT_G01_AND_G1 "30.G53 sans G0 et G1"
+30=__AXIS_NOT_ALLOWED "31.Axe non autoris\x80" "e"
+31=__G2_G3_REQUIRE_A_PLANE "32.G2,G3 requiert un plan"
+32=__INVALID_MOTION_TARGET "33.Cible du mouvement non valide"
+33=__INVALID_ARC_RADIUS "34.Rayon d'arc non valide"
+34=__G2_G3_REQUIRE_OFFSET "35.G2,G3 requiert un offset"
+35=__UNSUSED_VALUE "36.Valeur inutilis\x80" "e"
+36=__G431_TOOL_LENGTH "37.G43.1 longueur d'outil"
+37=__TOOL_NUMBER_EXCEED_MAX "38.Numero d'outil > max"
+ 
+ 
+#Alarm  
+1=__UNKNOWN_ALARM "Alarme inconnue" 
+2=__HARD_LIMIT_REACHED "A1.Fin de course atteinte(P?)"
+3=__MOTION_EXCEED_CNC "A2.Le mouvement d\x80" "passe la CNC"
+4=__RESET_IN_MOTION "A3.Reset lors d'un mouvement(P?)"
+5=__PROBE_INIT_FAIL "A4.Erreur initiation Probe"
+6=__PROBE_TRAVEL_FAIL "A5.Erreur  lors du trajet de la Probe" 
+7=__RESET_DURING_HOMING "A6.Reset durant le homing"
+8=__DOOR_OPEN_HOMING "A7.Porte ouverte (homing)"
+9=__LIMIT_ON_HOMING "A8.Fin de course durant homing"
+10=__LIMIT_MISSING_HOMING "A9.Pas de fin de course(homing)"
+

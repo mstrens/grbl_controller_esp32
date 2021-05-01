@@ -1,0 +1,46 @@
+Pour installer le nouveau firmware pour la carte TFT:
+- installer le soft arduino IDE (ex version 1.8.5 ou plus)
+- dans l'arduino, menu "Fichier" et "Préférences" veiller à avoir dan URL de gestion de cartes supplémentaires:
+https://github.com/stm32duino/BoardManagerFiles/raw/master/STM32/package_stm_index.json
+- fermer l'arduino IDE et le réouvrir (peut être pas nécessaire?)
+- dans l'arduino, menu "Outils" et "Type de carte", choisir "Gestionnaire de carte" et installer le module ESP32 version 1.0.4 (pas les version 1.05 ou 1.0.6 qui posent problème)
+- dans l'arduino, menu "Outils" et "Type de carte", choisir par exemple WMOS LOLIN32
+- dans l'arduino, menu "Outils" et "partition Scheme", choisir minimal SPIFFS
+- dans l'arduino, menu "Croquis" et "Inclure une bibliothèque", choisir gérer les bibliothèques et installer SDfat version 2.0.6
+- rechercher dans l'ordinateur où cette librairie SDfat a été installée (normalement l'endroit est précisé dans le menu "Fichier" + "Préférences" à "Emplacement du carnet de croquis". Rechercher à partir de là dans le répertoire "libraries"
+- changer le fichier src/SdFatConfig.h par celui présent dans le répertoire sdfat qui a été téléchargé avec le firmware
+- fermer l'arduino IDE et le réouvrir (peut être pas nécessaire?)
+- télécharger le firmware de https://github.com/mstrens/grbl_controller_esp32. Dans un premier temps NE PAS prendre la branche Main mais l'autre branche qui sert au développement de cette nouvelle version.
+- le décompresser sur le PC à l'endroit de votre choix
+- renommer le répertoire grbl_controller_esp32_master en grbl_controller_esp32 (pas sûr que ce soit les noms exacts)
+
+- dans l'arduino IDE, ouvrir le fichier grbl_controller_esp32.ino et aller dans le tab config.h
+- dans ce tab, modifier les paramètres voulus comme la langue, pour le wifi (nom d ela box, password,...), le type de carte utilisée (ex: choisir 2 pour la nouvelle carte de Romain avec un connecteur RJ45 pour la liaison série)
+- essayer de compiler le firmware avec l'arduino IDE
+- Si OK, raccorder l'ESP32 au port USB, sélectionner le port COM dans le menu "Outils" + "Port"
+- Quand les -......-...... apparaissent, si l'écriture ne commence pas automatiquement, presser le petit bouton "Boot" sur le module ESP32 pendant 2 à 4 sec et le relacher (recommencer au besoin).
+
+Personalisation:
+Au premier démarrage, il faudra faire un calibrage de l'écran tactile (en pressant successivement les 4 coins de l'écran comme demandé).
+Au besoin cette étape peut être faite à nouveau soit en reflashant le firmware avec l'option REPEAT_CAL mise à true dans le fichier config.h ou en plaçant un fichier calibrate.txt sur la carte SD
+Il est possible de changer les paramètres wifi sans reflasher en plaçant sur la carte SD un fichier wifi.cfg (voir modèle sur github).
+Il est aussi possible de changer le langage sans reflasher en plaçant sur la carte SD un fichier language.txt (voir 3 modèles sur github; changer le nom en language.txt)
+Il est possible de créer jusquà 11 boutons de commande personalisés en plaçant sur la carte SD des fichiers (un par bouton) et en les exécutant comme s'il s'agissait d'un fichier de gcode (voir la section read me) 
+
+
+ 
+Pour le firmware sur la carte GRBL, les premiers pas sont identiques (y compris le fait de sélectionner comme "partition scheme" le "Minimal SPIFFS"). Toutefois, il faut maintenant
+- télécharger le firmware GRBL de https://github.com/mstrens/grbl_on_ESP32/tree/main/Grbl_Esp32-main (prendre la branche Main)
+- le décompresser sur le PC à l'endroit de votre choix
+- ouvrir le fichier Grbl-esp32.ino
+- essayer de compiler le firmware avec l'arduino IDE
+- Si OK, raccorder l'ESP32 au port USB, sélectionner le port COM dans le menu "Outils" + "Port"
+- Quand les -......-...... apparaissent, si l'écriture ne commence pas automatiquement, presser le petit bouton "Boot" sur le module ESP32 pendant 2 à 4 sec et le relacher (recommencer au besoin).
+
+Personalisation:
+Consulter le wiki ici https://github.com/bdring/Grbl_Esp32
+A noter qu'il y a énormément de paramètres que l'on peut modifier sans reflasher le firmware.
+On peut communiquer avec le firmware par un interface web ou Android (donc sans utiliser le TFT)
+On peut utiliser une carte SD attachée directement à GRBL ce qui réduit fortement les possibles erreurs de communication durant l'usinage.
+On peut utiliser soit une liaison Série, soit telnet soit bluetooth pour communiquer entre la carte TFT et la carte GRBL.
+Il y a toutefois une restriction importante: sur la carte GRBL, on ne peut pas utiliser simultanément le bluetooth et le wifi/telnet.
