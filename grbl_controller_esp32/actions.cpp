@@ -252,6 +252,7 @@ void fMove( uint8_t param ) { // param contains the touch being pressed or the r
         case _AP :  bufferise2Grbl("A")  ;  break ;
         case _AM :  bufferise2Grbl("A-") ;  break ;
       }
+      if (distance == 100 && ( typeOfMove == _ZP || typeOfMove == _ZM ) ) distance =10;  
       char sdistance[20];
       sprintf(sdistance, "%.4f" , distance);
       bufferise2Grbl(sdistance) ; bufferise2Grbl(" F100\n", 's');
