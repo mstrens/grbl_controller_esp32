@@ -224,6 +224,9 @@ void fMove( uint8_t param ) { // param contains the touch being pressed or the r
       case _D10 :
         distance = 10 ;
         break ;
+      case _D100 :
+        distance = 100 ;
+        break ;
       }
       //bufferise2Grbl("\n\r",'b');
       bufferise2Grbl("$J=G91 G21 ", 'b') ;

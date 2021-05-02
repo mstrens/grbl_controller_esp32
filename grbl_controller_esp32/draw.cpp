@@ -271,7 +271,7 @@ void drawAllButtons(){
     while ( i < 12 ) {           // pour chacun des 12 boutons possibles
       btnIdx = mPages[currentPage].boutons[i] ;
       //Serial.print("btnIdx="); Serial.println(btnIdx) ;
-      //Serial.print("label de btnIdx="); Serial.println(mButton[btnIdx].pLabel[0]) ;
+      //if (btnIdx && mButton[btnIdx].pLabel[0] != 0 ) Serial.print("label de btnIdx="); Serial.println(mButton[btnIdx].pLabel[0]) ;
       
       //if ( btnIdx && btnIdx != _MASKED1 ) {  // si un n° de bouton est précisé, l'affiche sauf si c'est un bouton masqué (ex: _MASKED1)
       if ( btnIdx && mButton[btnIdx].pLabel[0] != 0 ) {  // si un n° de bouton est précisé, l'affiche sauf si c'est un bouton masqué (dont le label est vide)
@@ -282,6 +282,7 @@ void drawAllButtons(){
       i++ ;
     }
 }
+
 
 
 
@@ -582,7 +583,7 @@ void drawLogo() {
   tft.setTextColor(TFT_GREEN ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextDatum( TC_DATUM ) ; // align center
-  tft.drawString( "Developped by mstrens & htheatre for MakerFr" , hCoord(160) , vCoord(180) ) ;     // affiche un texte
+  tft.drawString( "Developped by mstrens & HTheatre for MakerFr" , hCoord(160) , vCoord(180) ) ;     // affiche un texte
   tft.drawString( VERSION_TEXT , hCoord(160) , vCoord(200) ) ; 
 }
 
@@ -1282,7 +1283,7 @@ void drawDataOnOverwritePage() {                                // to do : text 
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor( SCREEN_HEADER_TEXT ,  SCREEN_BACKGROUND ) ; // when only 1 parameter, background = fond);
   tft.setTextDatum( TL_DATUM ) ; // align left 
-  tft.setTextPadding (239) ;      // expect to clear 230 pixel when drawing text or 
+  tft.setTextPadding (239) ;      // expect to clear 230 pixel when drawing text (there is a button on the right) 
   uint16_t line = vCoord(15) ;
   uint16_t col = hCoord(2) ;
   if ( mPages[_P_OVERWRITE].boutons[POS_OF_OVERWRITE_OVERWRITE] == _OVER_SWITCH_TO_SPINDLE ) {
@@ -1323,8 +1324,8 @@ void fCommunicationBase(void) { // fonction pour l'affichage de l'écran communi
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
   tft.setTextDatum( TL_DATUM ) ; // align rigth ( option la plus pratique pour les float ou le statut GRBL)
-  uint16_t line = vCoord(2) ;
-  uint16_t col = hCoord(100) ;
+  uint16_t line = vCoord(60) ;
+  uint16_t col = hCoord(90) ;
   char ipBuffer[20] ;
   if (wifiType == NO_WIFI ) {
     tft.drawString( "No WiFi" , col , line );
@@ -1347,7 +1348,7 @@ void drawDataOnCommunicationPage() {
   // Show:  the IP adress (already done in Sbase); wifi mode (no wifi, Station, access point)
   //  
   drawMachineStatus() ;       // draw machine status in the upper right corner
-  drawLastMsgAt( 85 , 32 ) ; // Coord are for 3.2 TFT; conversion is done inside the function.
+  drawLastMsgAt( 85 , 32 ) ; // x,y Coord are for 3.2 TFT; conversion is done inside the function.
   tft.setFreeFont (LABELS9_FONT) ;
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
@@ -1373,7 +1374,7 @@ void drawMsgOnTft(const char * msg1 , const char * msg2){
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextColor(SCREEN_NORMAL_TEXT ,  SCREEN_BACKGROUND ) ; // when oly 1 parameter, background = fond);
   tft.setTextDatum( TL_DATUM ) ; // align left
-  tft.setTextPadding (hCoord(239)) ;
+  tft.setTextPadding (hCoord(319)) ;
   uint16_t line = vCoord(100) ;
   uint16_t col = hCoord(1) ;
   tft.drawString( msg1 , col , line );
