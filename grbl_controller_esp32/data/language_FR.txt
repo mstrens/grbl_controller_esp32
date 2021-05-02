@@ -171,11 +171,11 @@ WIFI_NOT_CONNECTED               "Wifi non connecté"
 TRY_TO_CONNECT_WITH_TELNET       "Connexion GRBL via Telnet en cours"
 WIFI_CONNECTED                   "Wifi connecté"   
 CONFIRM_SD_FILE                  "Voulez vous exécuter ce fichier?"
-
-
-
-
-
+WIFI_NOT_REQUESTED               "Wifi non prévu dans la config."
+CONNECTING_TO_WIFI               "Connexion au wifi en cours"
+NO_WIFI_CONNECTION               "Pas de connexion au wifi"
+CONNECTED_AS_STATION             "Connecté au wifi comme Station"
+AP_STARTED                       "Wifi Access Point démarré"
 
 #GrblErrors
 UNKNOWN_ERROR         "0.Erreur inconnue"  

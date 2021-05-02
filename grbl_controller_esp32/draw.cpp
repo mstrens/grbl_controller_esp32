@@ -584,7 +584,8 @@ void drawLogo() {
   tft.setTextSize(1) ;           // char is 2 X magnified => 
   tft.setTextDatum( TC_DATUM ) ; // align center
   tft.drawString( "Developped by mstrens & HTheatre for MakerFr" , hCoord(160) , vCoord(180) ) ;     // affiche un texte
-  tft.drawString( VERSION_TEXT , hCoord(160) , vCoord(200) ) ; 
+  tft.drawString( "www.makerfr.com" , hCoord(160) , vCoord(200) ) ;
+  tft.drawString( VERSION_TEXT , hCoord(160) , vCoord(220) ) ; 
 }
 
 void drawLineText( char * text, uint16_t x, uint16_t y, uint8_t font , uint8_t fontSize, uint16_t color) { // texte, x, y , font, size, color

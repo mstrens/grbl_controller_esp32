@@ -171,11 +171,11 @@ WIFI_NOT_CONNECTED               "Wifi not connected"
 TRY_TO_CONNECT_WITH_TELNET       "Trying to connect to GRBL using Telnet"
 WIFI_CONNECTED                   "Wifi is connected"   
 CONFIRM_SD_FILE                  "Are you sure to execute this file?"
-
-
-
-
-
+WIFI_NOT_REQUESTED               "Wifi not requested by setup"
+CONNECTING_TO_WIFI               "Connecting to wifi"
+NO_WIFI_CONNECTION               "No connection to wifi"
+CONNECTED_AS_STATION             "Connected to wifi as Station"
+AP_STARTED                       "Wifi Access Point started"
 
 #GrblErrors
 UNKNOWN_ERROR "0.Unknown error"  

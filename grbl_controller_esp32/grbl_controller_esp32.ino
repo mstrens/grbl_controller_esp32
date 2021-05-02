@@ -8,13 +8,10 @@
 // permettre l'accès au contenu du fichier SD seulement si le statut est print from SD en pause. 
 
 // prévoir de pouvoir faire un "continue" quand on a une pause alors que l'on est en train d'envoyer des CMD ou des STRING vers GRBL 
-// prévoir des icones pour les boutons; on peut créer des charactères en format RLE
 // sans doute autoriser des déplacements en jog (avec la nunchuk notamment) si le statut est en HOLD ou en DOOR? (actuellement seul les statuts Jog et Idle sont autorisés pour la nunchuk
 // déplacer les tests relatifs à la place restant dans le serial2 bufferwrite dans la fonction qui regroupe les transmissions à grbl - voir plusieurs fois (Serial2.availableForWrite() != 0x7F ) 
 // afficher un message sur le tft si la liaison telnet ou BT vers grbl est demandée mais ne s'active pas
 // afficher un message sur le tft si la liaison telnet ou BT vers grbl est demandée mais est perdue (? comment détecter une liaison telnet perdue?)
-// à voir: ajouter un paramètre dans config pour dire si on utilise GRBL_ESP32, et si oui, quel sont les noms de BT sur cet ESP32 et sur GRBL_ESP32 et l'adresse (ou nom du serveur) telnet 
-// remplacer certains messages envoyés à Serial par des messages affichés au TFT notamment au sujet des (dé)connectios de BT et Telnet vers GRBL.
 // quel statut appliquer pendant l'exécution d'un print via sd grbl? Quel blocage implémenter. Commennt reconnaître la fin. Voir si le % donné dans la ligne de statut est valable 
 // ajouter des libellés de code d'erreur dans langage. Attention: il y a plus d'erreur et pas mal de trous. Il faut peut être changer le système par exemple en les stockant dans preference.
 // voir les modifs faites par bradley pour éviter certains warnings; voir ce qu'il a fait pour éviter la perte du telnet au démarrage suite au reset
@@ -27,13 +24,10 @@
 // afficher le nom du fichier en cas d'usinage via la carte GRBL SD
 // le move au clavier ne marche pas toujours : grbl retourne une erreur 8 
 // avec l'impression via grbl SD, quand on fait pause, l'écran doit être adapté (ne pas montrer l'icone show gcode) et certaines fonctions aussi (sans doute Cancel et Resume)
-// ajouter Overwrite sur l'écran More
 // durant l'impression, afficher le nbr de min depuis le début (ne pas compter quand c'est en pause.
 // pouquoi ne peut-on pas faire un move qaund on est en pause (l'icone est présente mais semble ne pas focntionner)
 // quand le PC est relié via serial à la carte grbl, il semble que les commandes $$ du pc ne passent pas.(alors que le pc recôit bien les répônses au ? envoyé par le TFT
 // prévoir de pouvoir définir des icones pour les boutons personnalisés
-// retier le bouton MOVE de l'écran MORE; ajouter OVEWRITE; retirer le bouton Resume
-// pour l'écran d'accueil prévoir l'utilisation du fichier langage (actuellement codé dans browser et draw.
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.
 

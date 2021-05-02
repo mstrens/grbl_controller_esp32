@@ -149,6 +149,11 @@
 #define __TRY_TO_CONNECT_WITH_TELNET       "Connexion GRBL via Telnet en cours"
 #define __WIFI_CONNECTED                   "Wifi connecté\x80"   
 #define __CONFIRM_SD_FILE                  "Voulez vous ex\x80" "cuter ce fichier?"
+#define __WIFI_NOT_REQUESTED               "Wifi non prévu dans la config."
+#define __CONNECTING_TO_WIFI               "Connexion au wifi en cours"
+#define __NO_WIFI_CONNECTION               "Pas de connexion au wifi"
+#define __CONNECTED_AS_STATION             "Connect\x80" " au wifi comme Station"
+#define __AP_STARTED                       "Wifi Access Point démarr\x80"
 
 #define __UNKNOWN_ERROR "Erreur inconnue"  
 #define __EXPECTED_CMD_LETTER "1.Lettre Cmd attendue"
@@ -345,6 +350,11 @@
 #define __TRY_TO_CONNECT_WITH_TELNET       "Trying to connect to GRBL using Telnet"
 #define __WIFI_CONNECTED                   "Wifi is connected"   
 #define __CONFIRM_SD_FILE                  "Are you sure to execute this file?"
+#define __WIFI_NOT_REQUESTED               "Wifi not requested by setup"
+#define __CONNECTING_TO_WIFI               "Connecting to wifi"
+#define __NO_WIFI_CONNECTION               "No connection to wifi"
+#define __CONNECTED_AS_STATION             "Connected to wifi as Station"
+#define __AP_STARTED                       "Wifi Access Point started"
 
 #define __UNKNOWN_ERROR "Unbekannter Fehler"  
 #define __EXPECTED_CMD_LETTER "1.Erwarteter cmd Buchstabe"
@@ -544,6 +554,11 @@
 #define __TRY_TO_CONNECT_WITH_TELNET       "Trying to connect to GRBL using Telnet"
 #define __WIFI_CONNECTED                   "Wifi is connected"   
 #define __CONFIRM_SD_FILE                  "Are you sure to execute this file?"
+#define __WIFI_NOT_REQUESTED               "Wifi not requested by setup"
+#define __CONNECTING_TO_WIFI               "Connecting to wifi"
+#define __NO_WIFI_CONNECTION               "No connection to wifi"
+#define __CONNECTED_AS_STATION             "Connected to wifi as Station"
+#define __AP_STARTED                       "Wifi Access Point started"
 
 
 #define __UNKNOWN_ERROR "0.Unknown error"  

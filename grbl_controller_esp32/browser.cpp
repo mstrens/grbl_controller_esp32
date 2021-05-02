@@ -40,7 +40,7 @@ void initWifi() {
   drawLogo();
   retrieveWifiParam();
   if (wifiType == NO_WIFI) {
-    drawLineText( "No wifi foreseen" , hCoord(160), vCoord(yText), 2 , 1 , TFT_GREEN) ; // texte, x, y , font, size ,color  
+    drawLineText( __WIFI_NOT_REQUESTED , hCoord(160), vCoord(yText), 2 , 1 , TFT_GREEN) ; // texte, x, y , font, size ,color  
       //return ; 
   } else {
     grbl_Telnet_IP.fromString(grbl_Telnet_IPStr); // convert telnet ip adr
@@ -65,7 +65,7 @@ void initWifi() {
         while (WiFi.status() != WL_CONNECTED)  { // Wait for the Wi-Fi to connect; max 40 retries
           delay(250); // Serial.print('.');
           if ((initWifiCnt % 8) == 0) {
-            drawLineText( "Connecting to wifi" , hCoord(160), vCoord(yText), 2 , 1 , TFT_GREEN) ; // texte, x, y , font, size ,color  
+            drawLineText( __CONNECTING_TO_WIFI  , hCoord(160), vCoord(yText), 2 , 1 , TFT_GREEN) ; // texte, x, y , font, size ,color  
           }else if ((initWifiCnt % 8) == 5) {
             clearLine(vCoord(yText), 2 , 1, SCREEN_BACKGROUND);
           }
@@ -78,16 +78,16 @@ void initWifi() {
         }
         clearLine(vCoord(yText), 2 , 1, SCREEN_BACKGROUND);
         if (initWifiCnt == 0){
-          drawLineText( "No connection to wifi" , hCoord(160), vCoord(yText), 2 , 1 , SCREEN_ALERT_TEXT) ; // texte, x, y , font, size ,color  
+          drawLineText( __NO_WIFI_CONNECTION , hCoord(160), vCoord(yText), 2 , 1 , SCREEN_ALERT_TEXT) ; // texte, x, y , font, size ,color  
         } else {
-          drawLineText( "Connected to wifi as Station" , hCoord(160), vCoord(yText), 2 , 1 , TFT_GREEN) ; // texte, x, y , font, size ,color  
+          drawLineText( __CONNECTED_AS_STATION  , hCoord(160), vCoord(yText), 2 , 1 , TFT_GREEN) ; // texte, x, y , font, size ,color  
         }
         delay(2000) ;
         //Serial.println("\nConnected to "+WiFi.SSID()+" Use IP address: "+WiFi.localIP().toString()); // Report which SSID and IP is in use
     } else if (wifiType == ESP32_ACT_AS_AP) {
       WiFi.softAP( wifiSsid , wifiPassword );
       //Serial.println("\nESP has IP address: "+ WiFi.softAPIP().toString()); // Report which SSID and IP is in use
-          drawLineText( "Wifi Access Point started" , hCoord(160), vCoord(yText), 2 , 1 , TFT_GREEN) ; // texte, x, y , font, size ,color  
+          drawLineText( __AP_STARTED  , hCoord(160), vCoord(yText), 2 , 1 , TFT_GREEN) ; // texte, x, y , font, size ,color  
     }  
     //WiFi.setSleep(false);
     //----------------------------------------------------------------------   
