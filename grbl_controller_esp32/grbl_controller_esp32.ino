@@ -27,7 +27,6 @@
 // durant l'impression, afficher le nbr de min depuis le début (ne pas compter quand c'est en pause.
 // pouquoi ne peut-on pas faire un move qaund on est en pause (l'icone est présente mais semble ne pas focntionner)
 // quand le PC est relié via serial à la carte grbl, il semble que les commandes $$ du pc ne passent pas.(alors que le pc recôit bien les répônses au ? envoyé par le TFT
-// prévoir de pouvoir définir des icones pour les boutons personnalisés
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.
 
@@ -140,11 +139,14 @@ uint32_t sdNumberOfCharSent ;
 
 
 //         Commande à exécuter
-char cmdName[11][17] ;     // store the names of the commands
+char cmdName[11][17] ;     // store the names of the commands to be displayed on the button
+uint8_t cmdIcons[11][1300] ;    // store the icons of the commands buttons (if any) 1300 = an icon of 100X100
+boolean cmdIconExist[11];       // store a flag to say if an icon exist or not for a cmd
 uint8_t cmdToSend = 0 ;   //store the cmd to be send to grbl
 
 //         printing status
 uint8_t statusPrinting = PRINTING_STOPPED ;
+
 
 // grbl data
 boolean newGrblStatusReceived = false ;
@@ -201,7 +203,7 @@ void setup() {
   //pinMode(TFT_LED_PIN , OUTPUT) ;
   //digitalWrite(TFT_LED_PIN , HIGH) ;
   
-  if (! spiffsInit() ) {   // try to load the cmd in memory when the files exist in spiffs 
+  if (! spiffsInit() ) {   // try to load the cmd in memory when the files exist in spiffs (the names and the icons)
     fillMsg(_SPIFFS_FORMATTED , SCREEN_NORMAL_TEXT ) ;
   } else {
     if (! cmdNameInit() ) {

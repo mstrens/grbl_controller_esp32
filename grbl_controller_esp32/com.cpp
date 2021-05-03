@@ -1087,7 +1087,7 @@ void toGrbl(const char * data){ // send one string to GRBL on Serial, Bluetooth 
  switch (grblLink) {
     case GRBL_LINK_SERIAL:
       Serial2.print(data);
-      Serial.print("send buffer="); Serial.println(data);
+      //Serial.print("send buffer="); Serial.println(data);
       break;
     case GRBL_LINK_BT :
       toBt(data);

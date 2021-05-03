@@ -13,6 +13,9 @@ void deleteFileLike (const char * path) ;
 boolean createFileCmd( const char * fileName) ;
 boolean writeFileCmd( char ) ;      // write a char to an opened file
 void closeFileCmd() ;
+boolean createFileIcon( const char * fileName) ; // create the Icon file
+boolean writeFileIcon( char ) ;      // write a char to an opened file
+void closeFileIcon() ;
 boolean spiffsInit() ;
 boolean cmdNameInit() ; // true when error reading the cmd on SPIFFS
 boolean spiffsOpenCmdFile( char * spiffsCmdName ) ;

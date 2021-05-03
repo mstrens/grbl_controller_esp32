@@ -12,7 +12,11 @@
 
 File createdFile ;
 File cmdFileToRead ;
-extern char cmdName[11][17] ;
+extern char cmdName[11][17] ;           // store the name of the button.
+extern uint8_t cmdIcons[11][1300] ;    // store the icons of the commands buttons (if any) 1300 = an icon of 100X100
+extern boolean cmdIconExist[11];       // store a flag to say if an icon exist or not for a cmd
+
+
 
 boolean spiffsInit() {
   return SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED) ;
@@ -20,7 +24,17 @@ boolean spiffsInit() {
 
 boolean cmdNameInit() {  // seach on SPIFFS the names of the commands
   uint8_t i = 0 ;
-  const char * pchar; 
+  const char * pchar;
+  uint16_t nbrIconChar = 740; // for 3.2", there must be 740 bytes in an icon file
+  uint32_t readIdx ;
+  uint8_t cmdIdx ;
+  boolean validIcon = true; // store if the content of an icon file is valid
+  char hex[3] = "__" ; // keep 2 bytes from icon file for conversion Hex to bin
+  char * p;            // detect when conversion hex to bin is wrong
+              
+  #if defined(TFT_SIZE) && (TFT_SIZE == 4)
+  nbrIconChar = 1300 ;  // for 3.2", there must be 1300 bytes in an icon file
+  #endif
   for (i = 0 ; i< 11 ; i++ ){
     cmdName[i][0] = 0 ; // clear fill name   
   }
@@ -31,26 +45,70 @@ boolean cmdNameInit() {  // seach on SPIFFS the names of the commands
         return false ;
     }
     File file = root.openNextFile();
-    while(file){
+    File fIcon;
+    char fIconName[] = "/icon_.txt"  ; // Name is supposed to be iconX.txt; / is added because required by spiffs
+    while(file){           // process only Cmdx_yyyyyy.zzzzz files
         pchar = file.name() ;
         if(pchar[1] == 'C' && pchar[2] == 'm' && pchar[3] == 'd' && (( pchar[4] >= '1' && pchar[4] <= '9') || pchar[4] == 'A' || pchar[4] == 'B' ) && pchar[5] == '_' ) {
             if ( pchar[4] <= '9' ) {
-              strncpy( &cmdName[pchar[4] - '1'][0] , &pchar[6] , 16) ;
-              cmdName[pchar[4] - '1'][16] = 0 ;              // for safety fill a 0 in last position because strncpy do not do it when source is to long
+              cmdIdx = pchar[4] - '1' ;
             } else {
-              strncpy( &cmdName[pchar[4] - 'A' + 9 ][0] , &pchar[6] , 16) ;
-              cmdName[pchar[4] - 'A' + 9 ][16] = 0 ;              // for safety fill a 0 in last position because strncpy do not do it when source is to long
+              cmdIdx = pchar[4] - 'A' + 9 ;
             }
-        }
+            strncpy( &cmdName[cmdIdx][0] , &pchar[6] , 16) ; // save the name part (so skip the "CmdX_ part"
+            cmdName[cmdIdx][16] = 0 ;              // for safety fill a 0 in last position because strncpy do not do it when source is to long
+            //Serial.println("Handling a cmd file at init") ;
+            fIconName[5] = pchar[4] ; // replace the "_" by the digit/letter in the Icon name to search
+            //Serial.print("File name on SPIFFS ="); Serial.println(fIconName);
+            fIcon.close();
+            fIcon = SPIFFS.open(fIconName ) ; // try to open the file
+            if ( fIcon) { // when icon file exist, upload the data
+                  //Serial.println("Icon file will be read from SPIFFS") ; 
+                  readIdx = 0 ;
+                  while(fIcon.available() ){
+                        while (  fIcon.available()  && ( fIcon.read() != 'x') ) { // read up to a 'x'
+                          //Serial.print("skip when readIdx=") ;Serial.println(readIdx) ;
+                        }; 
+                        if ( fIcon.available()) {
+                          hex[0]= fIcon.read() ;
+                        } else {
+                          validIcon = false ;
+                        }
+                        if ( fIcon.available()) {
+                          hex[1]= fIcon.read() ; 
+                        } else {
+                          validIcon = false ;
+                        }
+                        //Serial.print("hex =") ;Serial.println(hex) ;
+                        long value = strtoul (hex, &p,16); 
+                        if ( * p != 0 ) {  
+                            validIcon = false ;
+                        } else {
+                          if (readIdx < nbrIconChar) {
+                            cmdIcons[cmdIdx][readIdx] = (char) value;
+                          }
+                          readIdx++;
+                        }  
+                  }
+                  //Serial.print("readIdx ="); Serial.println(readIdx); delay(2000);
+                  if ( readIdx != nbrIconChar ) validIcon = false ;
+                  cmdIconExist[cmdIdx] = validIcon ; // flag to say that an icon exist and is valid 
+                  //Serial.println("Icon has been read from SPIFFS") ;
+            }
+            fIcon.close() ;
+        } // end if (fIcon)
         file = root.openNextFile();
     }
+    
   file.close() ;
   root.close() ;
+  //Serial.println("end of cmdnameinit");
   return true ;
 }
 
 
-void deleteFileLike (const char * path) {       // path does not start with "/")
+void deleteFileLike (const char * path) {       // path does not start with "/" but is a format CmdX_name.yyyy)
+                                                // we have to delete also files having a name "iconX.yyyyy (does not take care of yyyy
     const char * pchar; 
     File root = SPIFFS.open("/");
     if(!root){
@@ -64,13 +122,17 @@ void deleteFileLike (const char * path) {       // path does not start with "/")
         if(pchar[1] == 'C' && pchar[2] == 'm' && pchar[3] == 'd' && pchar[4] == path[3] && pchar[5] == '_' ) {
             SPIFFS.remove(pchar );          // delete file having a name that begins with Cmdx_ (with same x)
         }
+        if (pchar[1] == 'i' && pchar[2] == 'c' && pchar[3] == 'o' && pchar[4] == 'n' && pchar[5] == path[3] && pchar[6] == '.' ) {
+            SPIFFS.remove(pchar );          // delete file having a name that begins with iconx. (with same x)
+        }
         file = root.openNextFile();
     }
     file.close() ;
     root.close() ;
 }
 
-boolean createFileCmd( const char * fileName){
+boolean createFileCmd( const char * fileName){  // fileName does not begin with "/"
+                                                // this function does not create the file to save the icon; it is done in another function
     char fileNamePlus[32] ;
     strcpy( fileNamePlus , "/") ; // copy "/" into fileNamePlus
     strncat (fileNamePlus , fileName , 30) ; // add max 30 char of fileName to fileNamePlus.
@@ -91,6 +153,30 @@ boolean writeFileCmd( char sdChar) {      // write a char to an opened file
 void closeFileCmd() {
   createdFile.close() ;    
 }
+
+boolean createFileIcon( const char * fileName){  // fileName does not begin with "/"                                           
+    char fileNamePlus[32] ;
+    strcpy( fileNamePlus , "/") ; // copy "/" into fileNamePlus
+    strncat (fileNamePlus , fileName , 30) ; // add max 30 char of fileName to fileNamePlus.
+    createdFile.close() ;
+    createdFile = SPIFFS.open( fileNamePlus, FILE_WRITE);
+    if(!createdFile){
+        fillMsg(_FAILED_TO_CREATE_CMD );
+        createdFile.close() ;
+        return false;
+    }
+    return true ;
+}
+
+boolean writeFileIcon( char sdChar) {      // write a char to an opened file
+  return createdFile.print( sdChar) ; 
+}
+
+void closeFileIcon() {
+  createdFile.close() ;    
+}
+
+
 
 boolean spiffsOpenCmdFile( char * spiffsCmdName ) {      // open a cmd file to be send to GRBL
   cmdFileToRead.close() ;

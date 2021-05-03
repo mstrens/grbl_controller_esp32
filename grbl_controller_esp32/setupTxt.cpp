@@ -17,6 +17,9 @@ M_pLabel mAlarms[_MAX_ALARMS];
 extern SdFat32 sd;
 
 extern char cmdName[11][17] ;
+extern uint8_t cmdIcons[11][1300] ;    // store the icons of the commands buttons (if any) 1300 = an icon of 100X100
+extern boolean cmdIconExist[11];       // store a flag to say if an icon exist or not for a cmd
+
 extern char fileNames[4][23] ; // 22 car per line + "\0"
 extern char grblFileNamesTft[4][40]; // contains only the 4 names to be displayed on TFT (needed because name is altered during btn drawing 
 
@@ -164,17 +167,17 @@ mButton[_BACK].pIcon = backIcon  ;
 //mButton[_LEFT].pIcon = leftIcon  ;
 //mButton[_RIGHT].pIcon = rightIcon  ;
 mButton[_UP].pIcon = upIcon  ;
-//mButton[_CMD1].pLabel = &cmdName[0][0] ;
-//mButton[_CMD2].pLabel = &cmdName[1][0] ;
-//mButton[_CMD3].pLabel = &cmdName[2][0] ;
-//mButton[_CMD4].pLabel = &cmdName[3][0] ;
-//mButton[_CMD5].pLabel = &cmdName[4][0] ;
-//mButton[_CMD6].pLabel = &cmdName[5][0] ;
-//mButton[_CMD7].pLabel = &cmdName[6][0] ;
-//mButton[_CMD8].pLabel = &cmdName[7][0] ;
-//mButton[_CMD9].pLabel = &cmdName[8][0] ;
-//mButton[_CMD10].pLabel = &cmdName[9][0] ;
-//mButton[_CMD11].pLabel = &cmdName[10][0] ;
+if( cmdIconExist[0] ) { mButton[_CMD1].pIcon = &cmdIcons[0][0] ; } // cmdName is unchanged but will not be used. 
+if( cmdIconExist[1] ) { mButton[_CMD2].pIcon = &cmdIcons[1][0] ; }
+if( cmdIconExist[2] ) { mButton[_CMD3].pIcon = &cmdIcons[2][0] ; }
+if( cmdIconExist[3] ) { mButton[_CMD4].pIcon = &cmdIcons[3][0] ; }
+if( cmdIconExist[4] ) { mButton[_CMD5].pIcon = &cmdIcons[4][0] ; }
+if( cmdIconExist[5] ) { mButton[_CMD6].pIcon = &cmdIcons[5][0] ; }
+if( cmdIconExist[6] ) { mButton[_CMD7].pIcon = &cmdIcons[6][0] ; }
+if( cmdIconExist[7] ) { mButton[_CMD8].pIcon = &cmdIcons[7][0] ; }
+if( cmdIconExist[8] ) { mButton[_CMD9].pIcon = &cmdIcons[8][0] ; }
+if( cmdIconExist[9] ) { mButton[_CMD10].pIcon = &cmdIcons[9][0] ; }
+if( cmdIconExist[10] ) { mButton[_CMD11].pIcon = &cmdIcons[10][0] ; }
 mButton[_MORE_PAUSE].pIcon = morePauseIcon ;
 //mButton[_FILE0].pLabel = fileNames[0] ;  // labels are defined during execution in a table
 //mButton[_FILE1].pLabel = fileNames[1] ;

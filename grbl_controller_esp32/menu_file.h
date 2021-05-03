@@ -15,6 +15,7 @@ void closeAllFiles() ;
 boolean setFileToRead ( uint8_t fileIdx ) ;
 boolean sdMoveUp() ;
 boolean fileIsCmd() ;           // check if the file is a cmd and if so, copy it into the SPIFFS, return true if it is cmd file
+boolean iconFileExist(char * fileName ) ;// check if a file named IconXXXXXX.bmp exists where xxxx is part of the CMD file name (CmdXXXXXXXX.yyyy)
 boolean createFile(char * fileName) ;
 void setShowBuffer() ; // fill the show buffer and some variables when we enter the sd show screen
 void setNextShowBuffer() ; // this is call when we press the next btn on sd show

@@ -27,6 +27,7 @@ extern SdFat32 sd;
 //extern File fileToRead ;
 extern SdBaseFile aDir[DIR_LEVEL_MAX] ;
 //extern SdBaseFile fileToRead ;
+SdBaseFile sdFileIcon ;
 
 extern M_Button mButton[_MAX_BTN] ;
 extern uint8_t statusPrinting ;
@@ -274,6 +275,8 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
                                 //             5 is the digit of the Cmd (must be between 1 and 9, A or B)
                                 //             name is the name given to the button (must be less than 16 char and begin with a letter a...z or A...Z)
                                 //             xxx is the extension and is discarded
+                                // when the filename is CmdX_delete...., then it means that we have to delete a cmd on SPIFSS
+                                // when file is a cmd file, we look also for an icon file on the SD card with the same name but with "Cmd" replaced by "Icon" and if found, we create a incoX.txt file
   char fileName[32] ;
   char * pchar ;
   int sdChar = 0 ;
@@ -284,8 +287,6 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
   if ( ! ( strlen(fileName) >= 6 && fileName[0] == 'C' && fileName[1] == 'm' && fileName[2] == 'd' &&  
             ( ( fileName[3] >= '1' && fileName[3] <= '9' ) || fileName[3] == 'A' || fileName[3] == 'B' ) &&  
             fileName[4] == '_' && isalpha(fileName[5]) ) ){
-  //  if ( strlen(fileName) < 6 || fileName[0] != 'C' || fileName[1] != 'm' || fileName[2] != 'd' || fileName[3] < '1' || fileName[3] > '7' || fileName[4] != '_' || (!isalpha(fileName[5]) )  ){
-    
     fillStringMsg( fileName , BUTTON_TEXT );
     return false ;
   }
@@ -301,6 +302,7 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
       aDir[dirLevel+1].close() ; // close the file from SD card
       return true ;
   }  
+  // we continue only if a Cmd file has to be created
   if ( ! createFileCmd(fileName ) ) {      // then create the new file name
        fillMsg(_CMD_NOT_CREATED ) ;
        aDir[dirLevel+1].close() ; // close the file from SD card
@@ -311,15 +313,61 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
       sdChar = aDir[dirLevel+1].read() ;
       if ( sdChar < 0 ) {
         fillMsg(_CMD_PART_NOT_READ ) ;
-        break ;
+        aDir[dirLevel+1].close() ; // close the file from SD card
+        closeFileCmd() ;
+        return true ;
       } else if ( ! writeFileCmd( (char) sdChar) ) {  // write the char in SPIFFS; on error, break
         fillMsg(_CMD_COULD_NOT_SAVE ) ;
-        break ; 
+        aDir[dirLevel+1].close() ; // close the file from SD card
+        closeFileCmd() ;
+        return true ; 
       }
   } // end while
   aDir[dirLevel+1].close() ; // close the file from SD card
   closeFileCmd() ;
+  // at this point Cmd has been created but we still have to look for a Icon file in the same dir.
+  // on SD card, icon file has the same name but Cmd is replaced by Icon and extension must be txt.
+  if ( ! iconFileExist(fileName ) ) { // stop here if there is no iconFile ; this function fill 
+    //Serial.println("icon file not found for cmd");
+    return true ;
+  }
+  // sdFfileIcon is supposed to contains the file object form SD card, it is supposed to be already opened 
+  //Serial.println("icon file found for cmd");
+  char spiffsFileIconName[32] = "iconX.txt" ;
+  spiffsFileIconName[4] = fileName[3] ; // replace X with the letter of the Cmd file
+  if ( ! createFileIcon(spiffsFileIconName ) ) {      // then create the new file name
+       fillMsg(_CMD_NOT_CREATED ) ;
+       sdFileIcon.close() ; // close the file from SD card
+       return true ;
+  }
+  fillMsg(_CMD_CREATED , SCREEN_NORMAL_TEXT ) ;
+  while ( sdFileIcon.available() > 0 ) {
+      sdChar = sdFileIcon.read() ;
+      if ( sdChar < 0 ) {
+        fillMsg(_CMD_PART_NOT_READ ) ;
+        sdFileIcon.close() ; // close the file from SD card
+        closeFileIcon() ;
+        return true ;
+      } else if ( ! writeFileIcon( (char) sdChar) ) {  // write the char in SPIFFS; on error, break
+        fillMsg(_CMD_COULD_NOT_SAVE ) ;
+        sdFileIcon.close() ; // close the file from SD card
+        closeFileIcon() ;     // close the file on SPIFFS
+        return true ; 
+      }
+  } // end while
+  sdFileIcon.close() ; // close the file from SD card
+  closeFileIcon() ;     // close the file on SPIFFS
   return true ;  
+}
+
+boolean iconFileExist(char * fileName ) { // file name contains the name of the Cmd file (no / before, extension is removed)
+                                          // we first have to construct the Icon file name to search replacing Cmd by Icon and the extension by .txt
+  char sdFileIconName[40];
+  strcpy(sdFileIconName , "Icon" );
+  strncat (sdFileIconName , &fileName[3] , 30) ; // add max 30 char of fileName starting from pos 3.
+  strncat( sdFileIconName, ".txt" , 32);
+  //Serial.print("Icon file Name =") ;  Serial.println(sdFileIconName);
+  return sdFileIcon.open( &aDir[dirLevel], sdFileIconName ,  O_READ) ;  
 }
 
 
