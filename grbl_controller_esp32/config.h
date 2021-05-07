@@ -2,8 +2,8 @@
 #define _config_h
 
 
-#define ESP32_VERSION "vers.2.0.r"
-#define VERSION_TEXT "Firmware vers. 2.0.v ( 3 may 2021)"
+#define ESP32_VERSION "vers.2.0.x"
+#define VERSION_TEXT "Firmware vers. 2.0.x ( 7 may 2021)"
 
 
 // decide if you will use Wifi or not (and how)
@@ -34,12 +34,14 @@
 // select your language between EN, FR, DE
 #define LANGUAGE EN
 
-//#define AA_AXIS    // uncomment if you want that the firmware handles 4 axes instead of 3 ;(The GRBL STM32 firmware has to be compiled/flashed with the same option)
+// uncomment if you want that the firmware handles 4 axes instead of 3 ;(The GRBL STM32 firmware has to be compiled/flashed with the same option)
+//#define AA_AXIS    
 
-#define TFT_CARD_VERSION 1
-// define the version of the TFT board being used ; it can be 1 or 2 (1 uses 4 pins header to connect to GRbl; 2 use RJ45 connector)               
+// select the version of the TFT board being used ; it can be 1 or 2 (1 uses 4 pins header to connect to GRbl; 2 use RJ45 connector)               
+#define TFT_CARD_VERSION 1 
 
-#define TFT_SIZE 3   // define size of display : must be 3 (for 3.2) or 4     
+// define size of display : must be 3 (for 3.2) or 4
+#define TFT_SIZE 3        
 
 // Set REPEAT_CAL to true instead of false to run calibration again, otherwise it will only be done once.
 // Repeat calibration if you change the screen rotation.
@@ -49,7 +51,8 @@
 // it seems that 5000 (mm/min) is a good value for RS-CNC32
 #define MAX_XY_SPEED_FOR_JOGGING 5000 
 
-#define USE_ICONS // comment this line if you want that the buttons uses text instead of icons.
+// comment this line if you want that the buttons use texts instead of icons.
+#define USE_ICONS 
 
 // note: this project allows to define up to 11 GRBL set of commands (macros) that can be called from setup screen.
 // Those are defined by the user on a sd card and loaded on request into the ESP32 flash memory system (SPIFFS)
@@ -64,6 +67,7 @@
 // After reset, there will be a button named xxxxxxxxx in the "Setup" + "CMD" menu
 // If you upload a file having the same button position(digit 1...9, A or B) as an existing button, the new file will replace the button name and content of the previous button. 
 // To delete a button create and execute a file having a name like Cmd3_delete where 3 is the button position (digit 1...9, A or B) to delete. 
+// It is also possible to design you own icons for those commands. See the tutorial on www.makerfr.com
 
 // select color between (or define your own) 
 // TFT_BLACK       0x0000      /*   0,   0,   0 */

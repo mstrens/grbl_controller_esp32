@@ -169,7 +169,10 @@ boolean createFileIcon( const char * fileName){  // fileName does not begin with
 }
 
 boolean writeFileIcon( char sdChar) {      // write a char to an opened file
-  return createdFile.print( sdChar) ; 
+  if ( sdChar != ' ') {                    // in order to save char on spiffs, we do not write a char = space
+    return createdFile.print( sdChar) ;
+  }
+  return true;   
 }
 
 void closeFileIcon() {
