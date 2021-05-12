@@ -262,6 +262,7 @@ void loop() {
 // Si on a reçu de nouvelles données de GRBL, active un flag pour faire un réaffichage partiel de l'écran
 // réaffiche l'écran (complètement ou partiellement) et fait un reset de flags
 //#if defined ( ESP32_ACT_AS_STATION ) || defined (ESP32_ACT_AS_AP)
+  static char prevMachine = '?';
   if ( wifiType > 0) {   // handle the wifi if foreseen
     processWifi();
     checkTelnetConnection();
@@ -293,27 +294,31 @@ void loop() {
   }
 
   if (newGrblStatusReceived == true) {
-    if ( ( runningFromGrblSd ) && (machineStatus[0] == 'H' ) && ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_FROM_GRBL ) ){
-      statusPrinting = PRINTING_FROM_GRBL_PAUSED ;
-      updateFullPage = true ; // We want to update the buttons
-    } else if ( ( runningFromGrblSd ) && (machineStatus[0] != 'H' ) && ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_FROM_GRBL_PAUSED ) ){
-      statusPrinting = PRINTING_FROM_GRBL ;
-      updateFullPage = true ; // We want to update the buttons
-    } else if ( ( runningFromGrblSd == false ) && ( statusPrinting == PRINTING_FROM_GRBL || statusPrinting == PRINTING_FROM_GRBL_PAUSED)){
-     statusPrinting = PRINTING_STOPPED ;
-     updateFullPage = true ; // We want to update the buttons 
-    } else if( statusPrinting == PRINTING_FROM_SD  && machineStatus[0] == 'H' ) { // If printing from SD and GRBL is paused
-      // set PRINTING_PAUSED
-      statusPrinting = PRINTING_PAUSED ;
-      updateFullPage = true ; // We want to get the resume button 
-    } else if( statusPrinting == PRINTING_PAUSED  && machineStatus[0] != 'H' ) { // If printing from SD and GRBL is paused
-      // set PRINTING_PAUSED
-      statusPrinting = PRINTING_STOPPED ;
-      updateFullPage = true ; // We want to get the resume button 
-    } else if ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP || currentPage == _P_TOOL 
+    if ( prevMachine != machineStatus[0] ) {  // when machinestatus changes, it happens that we have to change the statusprinting
+                                                  // it is important to check that there is a change because it can be that we receive a (late) status in reply to an ? send before last change of statusprinting
+        if ( ( runningFromGrblSd ) && (machineStatus[0] == 'H' ) && ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_FROM_GRBL ) ){
+          statusPrinting = PRINTING_FROM_GRBL_PAUSED ;
+          updateFullPage = true ; // We want to update the buttons
+        } else if ( ( runningFromGrblSd ) && (machineStatus[0] != 'H' ) && ( statusPrinting == PRINTING_STOPPED || statusPrinting == PRINTING_FROM_GRBL_PAUSED ) ){
+          statusPrinting = PRINTING_FROM_GRBL ;
+          updateFullPage = true ; // We want to update the buttons
+        } else if ( ( runningFromGrblSd == false ) && ( statusPrinting == PRINTING_FROM_GRBL || statusPrinting == PRINTING_FROM_GRBL_PAUSED)){
+         statusPrinting = PRINTING_STOPPED ;
+         updateFullPage = true ; // We want to update the buttons 
+        } else if( statusPrinting == PRINTING_FROM_SD  && machineStatus[0] == 'H' ) { // If printing from SD and GRBL is paused
+          // set PRINTING_PAUSED
+          statusPrinting = PRINTING_PAUSED ;
+          updateFullPage = true ; // We want to get the resume button 
+        } else if( statusPrinting == PRINTING_PAUSED  && machineStatus[0] != 'H' ) { // If pause et not hold
+          // set PRINTING_PAUSED
+          statusPrinting = PRINTING_FROM_SD ;
+          updateFullPage = true ; // We want to get the resume button
+        }
+    }       
+    if ( currentPage == _P_INFO || currentPage == _P_MOVE || currentPage == _P_SETXYZ || currentPage == _P_SETUP || currentPage == _P_TOOL 
               || currentPage == _P_OVERWRITE || currentPage == _P_COMMUNICATION) { //force a refresh if a message has been received from GRBL and we are in a info screen or in a info screen
         updatePartPage = true ;
-    } // end else if
+    } 
   }
       
   newGrblStatusReceived = false ;
@@ -331,9 +336,9 @@ void loop() {
   lastMsgChanged = false ; // lastMsgChanged is used in drawPartPage; so, it can not be set on false before
   updateFullPage = false ;
   updatePartPage = false ;
-  //static char prevMachine ;
+  
   //if ( prevMachine != machineStatus[0] ) {
-  //  prevMachine = machineStatus[0] ;
+    prevMachine = machineStatus[0] ;
   //  Serial.println( machineStatus ) ;
   //}
   yield();
