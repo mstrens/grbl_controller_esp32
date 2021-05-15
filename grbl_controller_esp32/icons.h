@@ -168,7 +168,21 @@ const uint8_t yesIcon[] = {
 const uint8_t noIcon[] = {
 #include "icons/bmp74/no_button.h"  
 };
-
+const uint8_t setCalIcon[] = {
+#include "icons/bmp74/calibrate_button.h"  
+};
+const uint8_t GoChangeIcon[] = {
+#include "icons/bmp74/go_to_change_button.h"  
+};
+const uint8_t setChangeIcon[] = {
+#include "icons/bmp74/set_change_button.h"  
+};
+const uint8_t setProbeIcon[] = {
+#include "icons/bmp74/set_zprobe_button.h"  
+};
+const uint8_t GoProbeIcon[] = {
+#include "icons/bmp74/zprobe_button.h"  
+};
 
 //********************************************* 4" TFT
 #elif defined(TFT_SIZE) and (TFT_SIZE == 4)

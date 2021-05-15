@@ -2,8 +2,8 @@
 #define _config_h
 
 
-#define ESP32_VERSION "vers.2.0.y"
-#define VERSION_TEXT "Firmware vers. 2.0.y ( 12 may 2021)"
+#define ESP32_VERSION "vers.2.0.z"
+#define VERSION_TEXT "Firmware vers. 2.0.z ( 15 may 2021)"
 
 
 // decide if you will use Wifi or not (and how)
