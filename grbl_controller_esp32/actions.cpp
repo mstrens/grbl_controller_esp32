@@ -602,7 +602,7 @@ void fSdGrblMove(uint8_t param) {     // param contient _PG_PREV ou _PG_NEXT
           char * lastDirBeginAt ;
           lastDirBeginAt = grblDirFilter + strlen(grblDirFilter) - 2 ; // point to the car before the last one (last is a '/')
           while ( *lastDirBeginAt != '/' && lastDirBeginAt > grblDirFilter) lastDirBeginAt-- ; // search the last '/' before the last position
-          *lastDirBeginAt++ ; //point to the first char after '/' 
+          //*lastDirBeginAt++ ; //point to the first char after '/' 
           *lastDirBeginAt = '\0' ;  //replace this char by a string terminator
           currentPage = _P_SD_GRBL_WAIT ; // will go to the page that force to read again the file list 
         }    

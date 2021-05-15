@@ -236,11 +236,8 @@ void parseMsgLine(char * line) {  // parse Msg line from GRBL
           parseGrblFilesStatus = PARSING_FILE_NAMES_DONE ; // mark that all lines have been read ; it allows main loop to handle the received list
           //Serial.println("End of lile list");
           //Serial.print("Nr of entries=");Serial.println(grblFileIdx);
-          int i = 0; 
-          for ( i  ; i < grblFileIdx ; i++) {
+          //for (int i = 0; i < grblFileIdx ; i++)
             //Serial.print("file ="); Serial.println(grblFileNames[i]);
-          }
-          
         }
         return; // do not log the SD lines
      
@@ -332,7 +329,6 @@ void parseSatusLine(char * line) {
 
    char * pBegin ;
    char * pEndType ;
-   uint8_t i = 0 ;
    //Serial.print("line len") ; Serial.println(strlen(line)); 
    //Serial.print("line[len-2]= "); Serial.println(line[strlen(line) -2]);
    if ( line[strlen(line) -2] != '>' ) return ; // discard if last char is not '>'
@@ -347,21 +343,20 @@ void parseSatusLine(char * line) {
           pEndType = strchr(pBegin , ':') ;
           if (pEndType ) {
               decodeFloat(pEndType+1) ;
-              i = 0 ;
               if ( strncmp( pBegin, "MPos:" , strlen("MPos:") ) == 0 ) {
-                  for (i ; i<4 ; i++) {
+                  for (uint8_t i = 0; i<4 ; i++) {
                     mposXYZA[i] = decodedFloat[i] ;
                     wposXYZA[i] = mposXYZA[i] - wcoXYZA[i] ;
                     MPosOrWPos = 'M' ;
                   }      
               } else if ( strncmp( pBegin, "WPos:" , strlen("WPos:") )== 0 ) {
-                  for (i ; i<4 ; i++) {
+                  for (uint8_t i = 0 ; i<4 ; i++) {
                     wposXYZA[i] = decodedFloat[i] ;
                     mposXYZA[i] = wposXYZA[i] + wcoXYZA[i] ;
                     MPosOrWPos = 'W' ;
                   }  
               } else if ( strncmp( pBegin, "WCO:" , strlen("WCO:") ) ==0 ){
-                  for (i ; i<4 ; i++) {
+                  for (uint8_t i = 0 ; i<4 ; i++) {
                       wcoXYZA[i] =  decodedFloat[i] ;
                       if ( MPosOrWPos == 'W') {                  // we previously had a WPos so we update MPos
                         mposXYZA[i] = wposXYZA[i] + wcoXYZA[i] ;  
@@ -861,12 +856,12 @@ int fromGrblAvailable(){    // return the number of char in the read buffer
       return fromTelnetAvailable();
       break;
   } 
+  return 0;
 }
 
 int fromGrblRead(){       // return the first character in the read buffer
   switch (grblLink) {
     case GRBL_LINK_SERIAL:
-      
       return Serial2.read();
     case GRBL_LINK_BT :
       //Serial.println("read BT"); 
@@ -874,6 +869,7 @@ int fromGrblRead(){       // return the first character in the read buffer
     case GRBL_LINK_TELNET :
       return fromTelnetRead();
   }
+  return 0;
 }
 
 
