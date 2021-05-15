@@ -24,7 +24,7 @@ void clearScreen() ; // clear tft screen
 
 
 void blankTft(const char * titel , uint16_t x , uint16_t y ) ; // clear tft screen
-void drawLineText( char * text, uint16_t x, uint16_t y, uint8_t font , uint8_t fontSize, uint16_t color) ;
+void drawLineText( const char * text, uint16_t x, uint16_t y, uint8_t font , uint8_t fontSize, uint16_t color) ;
 void clearLine( uint16_t y , uint8_t font , uint8_t fontSize , uint16_t color ) ; // clear a line based on font and font Size.
 void printTft(const char * text) ;
 void drawLogo() ;

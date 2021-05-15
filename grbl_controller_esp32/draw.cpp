@@ -296,7 +296,6 @@ void mButtonDraw(uint8_t pos , uint8_t btnIdx) {  // draw a button at position (
   int32_t _w = BTN_SIZE ;  // dimensions are changed here below when it is a button for a file name
   int32_t _h = BTN_SIZE ;
   int32_t fill = BUTTON_BACKGROUND ;
-  int32_t outline = BUTTON_BORDER_NOT_PRESSED ;
   int32_t text = BUTTON_TEXT ;
   const char * pbtnLabel ;
   const uint8_t * pbtnIcon ;  
@@ -439,13 +438,11 @@ void mButtonClear(uint8_t pos , uint8_t btnIdx) {  // clear one button at positi
   int32_t _xl , _yl ;
   int32_t _w = BTN_SIZE ;  // dimensions are changed here below when it is a button for a file name
   int32_t _h = BTN_SIZE ;
-  boolean isFileName = false ;
   boolean convertPosIsTrue ;
   if (  (currentPage == _P_SD && btnIdx >= _FILE0 && btnIdx <= _FILE3  ) ||
         ( currentPage == _P_SD_GRBL  && btnIdx >= _FILE0_GRBL && btnIdx <= _FILE3_GRBL)  ){ // if it is a button for a file name
     _w = 2*BTN_H_MARGIN + 2*BTN_SIZE ; //74+6+80 ;
     _h = BTN_FILE_HEIGHT ; //56 ;
-    isFileName = true ;      
   }  
   if (  currentPage == _P_SD || currentPage == _P_SD_GRBL) {
     convertPosIsTrue =  convertPosToXY( pos , &_xl, &_yl , btnDefFiles ) ;          //  Convert position index to colonne and line (top left corner) 
@@ -588,7 +585,7 @@ void drawLogo() {
   tft.drawString( VERSION_TEXT , hCoord(160) , vCoord(220) ) ; 
 }
 
-void drawLineText( char * text, uint16_t x, uint16_t y, uint8_t font , uint8_t fontSize, uint16_t color) { // texte, x, y , font, size, color
+void drawLineText( const char * text, uint16_t x, uint16_t y, uint8_t font , uint8_t fontSize, uint16_t color) { // texte, x, y , font, size, color
   tft.setTextFont( font ); // use Font2 = 16 pixel X 7 probably
   tft.setTextColor(color ,  TFT_BLACK) ; // when oly 1 parameter, background = fond);
   tft.setTextSize(fontSize) ;           // char is 2 X magnified => 
@@ -1496,7 +1493,7 @@ void fConfirmYesNoBase() { // should display the name of the file to be printed 
   } else if ( fileToExecuteIdx >=10 && fileToExecuteIdx <=13 ) {
     pfileName = grblFileNames[fileToExecuteIdx-10] ;
   } else {
-    *pfileName = NULL ;
+    pfileName = NULL ;
   }
   tft.setFreeFont (LABELS9_FONT) ;
   tft.setTextSize(1) ;
