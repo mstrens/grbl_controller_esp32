@@ -27,6 +27,7 @@
 // durant l'impression, afficher le nbr de min depuis le début (ne pas compter quand c'est en pause.
 // pouquoi ne peut-on pas faire un move qaund on est en pause (l'icone est présente mais semble ne pas focntionner)
 // quand le PC est relié via serial à la carte grbl, il semble que les commandes $$ du pc ne passent pas.(alors que le pc recôit bien les répônses au ? envoyé par le TFT
+// vérifier si le pause provoque l'arrêt du moteur (d'après la doc grbl ce n'est pas le cas; peut être cela a t'il été ajouté dans la version STM32)
 /*
 Gestion r-cnc avec touch screen et esp32 avec carte sd.
 

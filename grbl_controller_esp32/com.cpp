@@ -118,7 +118,6 @@ boolean runningFromGrblSd = false ; // indicator saying that we are running a jo
 void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if statusprinting = PRINTING_FROM_PC and decode the data (look for "OK", for <xxxxxx> sentence
                                        // fill machineStatus[] and wposXYZA[]
   #define MAX_LINE_LENGTH_FROM_GRBL 200
-  
   static char lineToDecode[MAX_LINE_LENGTH_FROM_GRBL] = {'\0'} ;
   static uint8_t c;
   //static uint32_t millisLastGetGBL = 0 ;
@@ -173,6 +172,7 @@ $x=val and $Nx=line indicate a settings printout from a $ and $N user query, res
  */
 
 void decodeGrblLine(char * line){  // decode a full line when CR or LF is received ; line is in lineToDecode 
+  //Serial.print("line len to decode"); Serial.println(strlen(line));
   int lengthLine = strlen(line) ;
   if ( lengthLine == 0) return ;  // Exit if the line is empty
   if (line[0] == 'o' && line[1] == 'k' && lengthLine == 3){ // for OK, 
@@ -333,6 +333,7 @@ void parseSatusLine(char * line) {
    char * pBegin ;
    char * pEndType ;
    //uint8_t i = 0 ;
+   //Serial.print("line="); Serial.println(line);
    //Serial.print("line len") ; Serial.println(strlen(line)); 
    //Serial.print("line[len-2]= "); Serial.println(line[strlen(line) -2]);
    if ( line[strlen(line) -2] != '>' ) return ; // discard if last char is not '>'
@@ -471,6 +472,7 @@ void sendToGrbl( void ) {
     currSendMillis = millis() ;                   // ask GRBL current status every X millis sec. GRBL replies with a message with status and position
     if ( currSendMillis > nextSendMillis) {
        nextSendMillis = currSendMillis + 300 ;
+       //Serial.println("Send ?");
        toGrbl('?') ; 
     }
   }
@@ -861,7 +863,7 @@ int fromGrblAvailable(){    // return the number of char in the read buffer
       availableChar = fromTelnetAvailable();
       break;
   }
-  return availableChar = 0;
+  return availableChar;
 }
 
 int fromGrblRead(){       // return the first character in the read buffer

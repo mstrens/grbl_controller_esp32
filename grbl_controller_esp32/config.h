@@ -2,8 +2,8 @@
 #define _config_h
 
 
-#define ESP32_VERSION "vers.2.1.a"
-#define VERSION_TEXT "Firmware vers. 2.1.a ( 15 may 2021)"
+#define ESP32_VERSION "vers.2.1.b"
+#define VERSION_TEXT "Firmware vers. 2.1.b ( 16 may 2021)"
 
 
 // decide if you will use Wifi or not (and how)
@@ -14,7 +14,7 @@
 
 // for ESP32_ACT_AS_STATION , set the password to get access to your access point (router)
 // for ESP_ACT_AS_AP, set the password you want to use to protect your ESP32 ( can be empty)
-#define MY_PASSWORD "your_passwoord" // replace by your password 
+#define MY_PASSWORD "your_password" // replace by your password 
 
 // if you use Wifi, you can (optional) define a fix IP address. Then you have to define 3 parameters
 // If one of next 3 parameters is "", it means that you do not want to use a fix local IP address.
@@ -38,7 +38,7 @@
 //#define AA_AXIS    
 
 // select the version of the TFT board being used ; it can be 1 or 2 (1 uses 4 pins header to connect to GRbl; 2 use RJ45 connector)               
-#define TFT_CARD_VERSION 1 
+#define TFT_CARD_VERSION 1
 
 // define size of display : must be 3 (for 3.2) or 4
 #define TFT_SIZE 3        
