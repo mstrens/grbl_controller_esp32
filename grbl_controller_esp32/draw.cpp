@@ -61,7 +61,7 @@ extern char cmdName[11][17] ;          // contains the names of the commands
 
 extern uint8_t statusPrinting ;
 extern float wposXYZA[4] ;
-extern float mposXYZA[3] ;
+extern float mposXYZA[4] ;
 extern char machineStatus[9];
 extern float feedSpindle[2] ;  
 extern float overwritePercent[3] ; // first is for feedrate, second for rapid (G0...), third is for RPM
