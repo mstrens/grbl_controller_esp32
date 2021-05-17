@@ -326,7 +326,7 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
   aDir[dirLevel+1].close() ; // close the file from SD card
   closeFileCmd() ;
   // at this point Cmd has been created but we still have to look for a Icon file in the same dir.
-  // on SD card, icon file has the same name but Cmd is replaced by Icon and extension must be txt.
+  // on SD card, icon file has the same name but Cmd is replaced by Icon and extension must be "h".
   if ( ! iconFileExist(fileName ) ) { // stop here if there is no iconFile ; this function fill 
     //Serial.println("icon file not found for cmd");
     return true ;
@@ -361,11 +361,11 @@ boolean fileIsCmd() {           // check if the file in aDir[dirLevel+1] is a cm
 }
 
 boolean iconFileExist(char * fileName ) { // file name contains the name of the Cmd file (no / before, extension is removed)
-                                          // we first have to construct the Icon file name to search replacing Cmd by Icon and the extension by .txt
+                                          // we first have to construct the Icon file name to search replacing Cmd by Icon and the extension by .h
   char sdFileIconName[40];
   strcpy(sdFileIconName , "Icon" );
   strncat (sdFileIconName , &fileName[3] , 30) ; // add max 30 char of fileName starting from pos 3.
-  strncat( sdFileIconName, ".txt" , 32);
+  strncat( sdFileIconName, ".h" , 32);
   //Serial.print("Icon file Name =") ;  Serial.println(sdFileIconName);
   return sdFileIcon.open( &aDir[dirLevel], sdFileIconName ,  O_READ) ;  
 }
