@@ -255,7 +255,7 @@ void fMove( uint8_t param ) { // param contains the touch being pressed or the r
       if (distance == 100 && ( typeOfMove == _ZP || typeOfMove == _ZM ) ) distance =10;  
       char sdistance[20];
       sprintf(sdistance, "%.4f" , distance);
-      bufferise2Grbl(sdistance) ; bufferise2Grbl(" F100\n", 's');
+      bufferise2Grbl(sdistance) ; bufferise2Grbl(" F1000\n", 's');
       //Serial2.print(distance) ; Serial2.println (" F100") ;
       //Serial.print("move for button") ; Serial.print(justPressedBtn) ;Serial.print(" ") ;  Serial.print(distance) ; Serial.println (" F100") ;
       

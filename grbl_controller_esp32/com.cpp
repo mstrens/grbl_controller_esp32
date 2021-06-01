@@ -887,7 +887,9 @@ int fromGrblRead(){       // return the first character in the read buffer
 void startGrblCom(uint8_t comMode){
   preferences.putChar("grblLink", comMode) ;
   // First stop BT or Telnet
-  if (grblLink == GRBL_LINK_BT){
+  if (grblLink == GRBL_LINK_SERIAL) {
+    Serial2.end(); // disable UART because USB on GRBL_ESP32 use also the UART 
+  }else if (grblLink == GRBL_LINK_BT){
     //Serial.println("in startGrblCom we will stop bt");
     //delay(200);
     btGrblStop();
@@ -898,6 +900,10 @@ void startGrblCom(uint8_t comMode){
   }
   if (comMode == GRBL_LINK_SERIAL) {
     grblLink = GRBL_LINK_SERIAL ;
+    Serial2.begin(115200, SERIAL_8N1, SERIAL2_RXPIN, SERIAL2_TXPIN); // initialise le port série vers grbl
+    Serial2.setRxBufferSize(1024);
+    pinMode (SERIAL2_RXPIN, INPUT_PULLUP ); // added to force a level when serial wire is not connected
+  
     while (Serial2.available()>0) Serial2.read() ; // clear the serial2 buffer
     //fillMsg(_GRBL_SERIAL_CONNECTED);  
   } else if (comMode == GRBL_LINK_BT) {

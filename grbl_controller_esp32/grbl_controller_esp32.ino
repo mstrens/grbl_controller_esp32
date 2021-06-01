@@ -235,6 +235,8 @@ void setup() {
 //  grblLastMessage[2]= 0x82 ;
 //  grblLastMessage[3]= 0x83 ;
   clearScreen() ;
+  startGrblCom(grblLink);
+  /*
   if (grblLink == GRBL_LINK_SERIAL) {
       while (Serial2.available()>0) Serial2.read() ; // clear the serial2 buffer
       toGrbl( (char) 0x18 ) ;  // send a soft reset
@@ -246,10 +248,13 @@ void setup() {
       btGrblInit();  // this start the connection over Bluetooth
   }
   // Configure Grbl
+   */
+  if (grblLink == GRBL_LINK_SERIAL ) toGrbl( (char) 0x18 ) ;  // send a soft reset at start up when in serial mode (not sure it can be done in other mode)
   toGrbl("$10=3\n\r");
   //Serial2.println("$10=3");   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
   delay(200);    // wait that all char are sent
-  //while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
+  //while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent
+   
 }
 
 //******************************** Main loop ***************************************
