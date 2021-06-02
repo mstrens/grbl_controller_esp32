@@ -198,9 +198,9 @@ void setup() {
   //Serial.print(" setup: rxfifo size before interrupt="); Serial.println(dev->conf1.rxfifo_full_thrhd) ;
   
     // initialise le port série vers grbl
-  Serial2.begin(115200, SERIAL_8N1, SERIAL2_RXPIN, SERIAL2_TXPIN); // initialise le port série vers grbl
-  Serial2.setRxBufferSize(1024);
-  pinMode (SERIAL2_RXPIN, INPUT_PULLUP ); // added to force a level when serial wire is not connected
+  //Serial2.begin(115200, SERIAL_8N1, SERIAL2_RXPIN, SERIAL2_TXPIN); // initialise le port série vers grbl
+  //Serial2.setRxBufferSize(1024);
+  //pinMode (SERIAL2_RXPIN, INPUT_PULLUP ); // added to force a level when serial wire is not connected
   //pinMode(TFT_LED_PIN , OUTPUT) ;
   //digitalWrite(TFT_LED_PIN , HIGH) ;
   
