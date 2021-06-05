@@ -504,12 +504,12 @@ void updateBtnState( void) {
     if ( prevBt0 != bt0 ) { // compare bt0 with previous,
         prevBt0 = bt0 ;     // if different, only save the new state but do not handel  
     } else {  // traite uniquement si 2 fois le même bouton consécutivement 
-      if ( currentBtn != bt0 ) {    // en cas de changement, active justPressedBtn et justReleasedBtn et reset waitReleased
+      if ( currentBtn != bt0 ) {    // en cas de changement, active justPressedBtn et justReleasedBtn 
 //      Serial.print(" x=") ; Serial.print(x) ; Serial.print("  y=") ; Serial.print(y) ; Serial.print("  bt=") ; Serial.println(bt0) ; 
          justPressedBtn = bt0 ;
          justReleasedBtn = currentBtn ;
          currentBtn = bt0 ;
-         waitReleased = false ;
+         //waitReleased = false ;
          beginChangeBtnMillis = touchMillis ;  // save the timestamp when bt has just changed
          longPressedBtn = 0 ;              // reset long press 
       } else {                  // same button pressed
@@ -539,7 +539,7 @@ void drawUpdatedBtn( ) {   // update the color of the buttons on a page (based o
 
 void executeMainActionBtn( ) {   // find and execute main action for ONE button (if any)
   uint8_t actionBtn = 0 ;
-  if ( ( justPressedBtn ) && ( (mPages[currentPage].actions[justPressedBtn - 1] == _JUST_PRESSED ) \
+  if (  ( justPressedBtn  ) && ( (mPages[currentPage].actions[justPressedBtn - 1] == _JUST_PRESSED ) \
                             || (mPages[currentPage].actions[justPressedBtn - 1 ] == _JUST_LONG_PRESSED ) \
                             || (mPages[currentPage].actions[justPressedBtn - 1 ] == _JUST_LONG_PRESSED_RELEASED )) ) {
     actionBtn = justPressedBtn  ;
@@ -551,6 +551,7 @@ void executeMainActionBtn( ) {   // find and execute main action for ONE button 
                                     || ( mPages[currentPage].actions[justReleasedBtn - 1 ] == _JUST_LONG_PRESSED_RELEASED ) ) ) {
     actionBtn =  justReleasedBtn ;
   }
+  
   if ( actionBtn) {
     (*mPages[currentPage].pfNext[actionBtn - 1 ])(mPages[currentPage].parameters[actionBtn - 1 ]) ;// execute the action with the predefined parameter
   }
@@ -1733,7 +1734,7 @@ boolean checkCalibrateOnSD(void){
           Serial.println("[MSG:failed to open calibrate.txt]" ) ;
           return false;  
       }
-      Serial.println("calibrate.txt exist on SD" ) ;      
+      Serial.println("[MSG:calibrate.txt exist on SD]" ) ;      
       calibrateFile.close() ;
       return true ;
 }

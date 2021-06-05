@@ -59,11 +59,11 @@ bool telnetGrblInit(){
     telnetConnected = true ;
     drawMsgOnTft(mText[_TELNET_CONNECTED_WITH_GRBL].pLabel, " " );
     fillMsg(_TELNET_CONNECTED_WITH_GRBL, SCREEN_NORMAL_TEXT);
-    //Serial.println("[MSG: Connected to grbl using Telnet]");
+    Serial.println("[MSG: Connected to grbl using Telnet]");
   } else {
     telnetConnected = false ;
     drawMsgOnTft(mText[_UNABLE_TO_CONNECT_TO_GRBL_TELNET].pLabel , mText[_WIFI_CONNECTED].pLabel );
-    //Serial.println("Unable to connect to GRBL Telnet; Wifi is connected");
+    Serial.println("Unable to connect to GRBL Telnet; Wifi is connected");
     fillMsg(_UNABLE_TO_CONNECT_TO_GRBL_TELNET);
   } 
   return telnetConnected ;
@@ -77,6 +77,7 @@ void telnetGrblStop(){
 }
 
 void toTelnet(char c) {
+  //Serial.print("send telnet="); Serial.println( (uint8_t) c);
   grblClient.print(c);
   /*
   if ( (millis() - wifiGrblMillis) > 2000){
@@ -100,6 +101,7 @@ void toTelnet(char c) {
 }
 
 void toTelnet(const char * data) {
+  //Serial.print("In toTelnet data=") ; Serial.println(data) ;
   grblClient.print(data);
   /*
   if ( (millis() - wifiGrblMillis) > 2000){

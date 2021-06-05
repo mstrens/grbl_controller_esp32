@@ -395,7 +395,7 @@ void parseSatusLine(char * line) {
           }
       } // exit While
       millisLastGetGBL = millis();
-      newGrblStatusReceived = true;     
+      newGrblStatusReceived = true;   
    } // end if
 }
 
@@ -486,7 +486,7 @@ void sendToGrbl( void ) {
 void sendFromSd() {        // send next char from SD; close file at the end
       int sdChar ;
       waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // set time out on 
-      while ( aDir[dirLevel+1].available() > 0 && (! waitOk) && statusPrinting == PRINTING_FROM_SD && Serial2.availableForWrite() > 2 ) {
+      while ( aDir[dirLevel+1].available() > 0 && (! waitOk) && statusPrinting == PRINTING_FROM_SD && ( (grblLink == GRBL_LINK_SERIAL)?Serial2.availableForWrite() > 2: true) ) {
           sdChar = aDir[dirLevel+1].read() ;
           if ( sdChar < 0 ) {
             statusPrinting = PRINTING_ERROR  ;
@@ -516,7 +516,7 @@ void sendFromSd() {        // send next char from SD; close file at the end
 void sendFromCmd() {
     int sdChar ;
     waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // set time out on 
-    while ( spiffsAvailableCmdFile() > 0 && (! waitOk) && statusPrinting == PRINTING_CMD && Serial2.availableForWrite() > 2 ) {
+    while ( spiffsAvailableCmdFile() > 0 && (! waitOk) && statusPrinting == PRINTING_CMD && ( ( grblLink ==GRBL_LINK_SERIAL) ? Serial2.availableForWrite() > 2 : true )) {
       sdChar = (int) spiffsReadCmdFile() ;
       if( sdChar != 13){
           toGrbl((char) sdChar ) ;
@@ -600,11 +600,14 @@ void sendFromString(){
 void sendJogCancelAndJog(void) {
     static uint32_t exitMillis ;
     if ( jogCancelFlag ) {
+      //Serial.println("jogCancelFlag is true");
       if ( jog_status == JOG_NO ) {
         //Serial.println("send a jog cancel");
         toGrbl((char) 0x85) ; toGrbl("G4P0\n\r") ;
         //Serial2.print( (char) 0x85) ; Serial2.print("G4P0") ; Serial2.print( (char) 0x0A) ;    // to be execute after a cancel jog in order to get an OK that says that grbl is Idle.
-        while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
+        if (grblLink == GRBL_LINK_SERIAL) {
+          while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
+        }
         //Serial2.flush() ;             // wait that all outgoing char are really sent.!!! in ESP32 it also clear the RX buffer what is not expected in arduino logic
         
         waitOk = true ;
@@ -752,7 +755,9 @@ boolean sendJogCmd(uint32_t startTime) {
                 
         bufferise2Grbl(" F"); bufferise2Grbl(sspeedMove);bufferise2Grbl("\n\r",'s') ;
         //Serial2.print(" F"); Serial2.print(speedMove); Serial2.print( (char) 0x0A) ;
-        while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
+        if (grblLink == GRBL_LINK_SERIAL) {
+          while (Serial2.availableForWrite() != 0x7F ) ;                        // wait that all char are sent 
+        }
         //Serial2.flush() ;       // wait that all char are really sent
         
         //Serial.print("Send cmd jog " ); Serial.print(distanceMove) ; Serial.print(" " ); Serial.print(speedMove) ;Serial.print(" " ); Serial.println(millis() - startTime );
@@ -829,8 +834,6 @@ void bufferise2Grbl(const char * data , char beginEnd){  // group data in a buff
   if (beginEnd == 'b') {
     bufferIdx = 0;
     buffer[bufferIdx] = '\0' ;
-    //Serial.println("begin to buffer");
-    //delay(100);
   }
   uint8_t i = 0;
   while ( ( data[i] != '\0') && ( i < 254 ) && (bufferIdx < 255 )) {
@@ -839,10 +842,8 @@ void bufferise2Grbl(const char * data , char beginEnd){  // group data in a buff
     buffer[bufferIdx] = '\0' ;
     i++;
   }
-  //Serial.print("buffer=") ; Serial.println(buffer);
-  //delay(100);
   if (beginEnd == 's') {
-    Serial.print("sending buf="); Serial.print(buffer); Serial.println("EndOfText");
+    //Serial.print("sending buf="); Serial.print(buffer); Serial.println("EndOfText");
     toGrbl(buffer) ;
   }
 }
@@ -884,36 +885,45 @@ int fromGrblRead(){       // return the first character in the read buffer
 }
 
 
-void startGrblCom(uint8_t comMode){
+void startGrblCom(uint8_t comMode , boolean forceStart){
   preferences.putChar("grblLink", comMode) ;
+  //Serial.print("in startGrblCom grblLink = ");Serial.println(grblLink); delay(200);
+  //Serial.print("in startGrblCom comMode = ");Serial.println(comMode); delay(200);
+  
   // First stop BT or Telnet
-  if (grblLink == GRBL_LINK_SERIAL) {
+  if (grblLink == GRBL_LINK_SERIAL  && comMode != grblLink ) {
     Serial2.end(); // disable UART because USB on GRBL_ESP32 use also the UART
     pinMode( SERIAL2_TXPIN , INPUT);
-  }else if (grblLink == GRBL_LINK_BT){
-    //Serial.println("in startGrblCom we will stop bt");
-    //delay(200);
+    //Serial.println("in startGrblCom Serial has been stopped"); delay(200);
+  }else if (grblLink == GRBL_LINK_BT  && comMode != grblLink){
+    //Serial.println("in startGrblCom we will stop bt"); delay(200);
     btGrblStop();
-    //Serial.println("in startGrblCom bt has been stopped");
-    //delay(200); 
-  } else if (grblLink == GRBL_LINK_TELNET) {
+    //Serial.println("in startGrblCom bt has been stopped"); delay(200); 
+  } else if (grblLink == GRBL_LINK_TELNET && comMode != grblLink) {
+    //Serial.println("in startGrblCom we will stop telnet"); delay(200);
     telnetGrblStop();
+    //Serial.println("in startGrblCom telnet has been stopped"); delay(200);
   }
-  if (comMode == GRBL_LINK_SERIAL) {
+  if (comMode == GRBL_LINK_SERIAL  && ( comMode != grblLink || forceStart ) ) {
     grblLink = GRBL_LINK_SERIAL ;
     Serial2.begin(115200, SERIAL_8N1, SERIAL2_RXPIN, SERIAL2_TXPIN); // initialise le port série vers grbl
     Serial2.setRxBufferSize(1024);
     pinMode (SERIAL2_RXPIN, INPUT_PULLUP ); // added to force a level when serial wire is not connected
     while (Serial2.available()>0) Serial2.read() ; // clear the serial2 buffer
-    //fillMsg(_GRBL_SERIAL_CONNECTED);  
-  } else if (comMode == GRBL_LINK_BT) {
+    //Serial.println("in startGrblCom Serial has been started"); delay(200);
+    fillMsg(_GRBL_SERIAL_CONNECTED);  
+  } else if ( comMode == GRBL_LINK_BT  && (comMode != grblLink || forceStart ) ) {
     grblLink = GRBL_LINK_BT ;
     //Serial.println("in startGrblCom we call btgrblInit");
     //delay(200);
     btGrblInit();
-  } else if (comMode == GRBL_LINK_TELNET) {
+    //Serial.println("in startGrblCom BT has been started"); delay(200);
+    
+  } else if ( comMode == GRBL_LINK_TELNET   && ( comMode != grblLink || forceStart ) ){
     grblLink = GRBL_LINK_TELNET ;
     telnetGrblInit();
+    //Serial.println("in startGrblCom telnet has been started"); delay(200);
+    
   }  
 }
 

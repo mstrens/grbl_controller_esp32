@@ -235,7 +235,7 @@ void setup() {
 //  grblLastMessage[2]= 0x82 ;
 //  grblLastMessage[3]= 0x83 ;
   clearScreen() ;
-  startGrblCom(grblLink);
+  startGrblCom(grblLink, true);
   /*
   if (grblLink == GRBL_LINK_SERIAL) {
       while (Serial2.available()>0) Serial2.read() ; // clear the serial2 buffer
@@ -249,7 +249,10 @@ void setup() {
   }
   // Configure Grbl
    */
-  if (grblLink == GRBL_LINK_SERIAL ) toGrbl( (char) 0x18 ) ;  // send a soft reset at start up when in serial mode (not sure it can be done in other mode)
+  if (grblLink == GRBL_LINK_SERIAL ) {
+    toGrbl( (char) 0x18 ) ;  // send a soft reset at start up when in serial mode (not sure it can be done in other mode)
+    delay(100); 
+  }
   toGrbl("$10=3\n\r");
   //Serial2.println("$10=3");   // $10=3 is used in order to get available space in GRBL buffer in GRBL status messages; il also means we are asking GRBL to sent always MPos.
   delay(200);    // wait that all char are sent
@@ -281,7 +284,11 @@ void loop() {
   } 
  updateBtnState();  // check touch screen and update justPressedBtn ,justReleasedBtn , longPressedBtn and beginChangeBtnMillis
  drawUpdatedBtn() ;        // update color of button if pressed/released, apply actions foreseen for buttons (e.g. change currentPage) 
- executeMainActionBtn () ; // 
+ if ( waitReleased == true && justReleasedBtn ) {
+  waitReleased = false ;
+ } else if ( waitReleased == false) {
+  executeMainActionBtn () ;  
+ }
 
  // handle nunchuk if implemented
   if ( nunchukOK && statusPrinting == PRINTING_STOPPED && ( machineStatus[0] == 'I' || machineStatus[0] == 'J' || machineStatus[0] == '?') )  {  //read only if the GRBL status is Idle or Jog or ?? (this last is only for testing without GRBL
@@ -335,9 +342,8 @@ void loop() {
   
   if (  ( updateFullPage ) ) {
     drawFullPage() ; 
-
   } else if ( updatePartPage ) {   
-    drawPartPage() ;                           // si l'écran doit être mis à jour, exécute une fonction plus limitée qui ne redessine pas les boutons        
+    drawPartPage() ;                           // si l'écran doit être mis à jour, exécute une fonction plus limitée qui ne redessine pas les boutons
   }    
   lastMsgChanged = false ; // lastMsgChanged is used in drawPartPage; so, it can not be set on false before
   updateFullPage = false ;

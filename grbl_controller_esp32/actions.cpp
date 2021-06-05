@@ -73,7 +73,7 @@ uint32_t prevAutoMoveMillis ;
 #define SOFT_RESET 0x18 
 
 void fGoToPage(uint8_t param) {
-//  Serial.print( "go to page : " ) ; Serial.println( param) ; // just for testing // to do
+  //Serial.print( "go to page : " ) ; Serial.println( param) ; // just for testing // to do
   prevPage = currentPage ;
   currentPage = param ;
   updateFullPage = true ; 
@@ -205,6 +205,7 @@ void fDist( uint8_t param ) {
 }  
 
 void fMove( uint8_t param ) { // param contains the touch being pressed or the released if no touch has been pressed
+    //Serial.println("running fMove");
     float distance = 0.01 ;
     //uint32_t moveMillis = millis() ;
     //static uint32_t prevMoveMillis ;
@@ -574,15 +575,15 @@ void fOverModify (uint8_t BtnParam) {
 
 void fSerial(uint8_t param) { // activate GRBL over Serial2
   // to do ; unactivate other comm and change GrblLink
-  startGrblCom(GRBL_LINK_SERIAL);
+  startGrblCom(GRBL_LINK_SERIAL, false);
 }
 void fBluetooth(uint8_t param) { // activate GRBL over Bluetooth
   // to do ; unactivate other comm and change GrblLink
-  startGrblCom(GRBL_LINK_BT);
+  startGrblCom(GRBL_LINK_BT, false);
 }
 void fTelnet(uint8_t param) { // activate GRBL over Telnet
   // to do ; unactivate other comm and change GrblLink
-  startGrblCom(GRBL_LINK_TELNET);
+  startGrblCom(GRBL_LINK_TELNET, false );
 }
 
 void fSdGrblMove(uint8_t param) {     // param contient _PG_PREV ou _PG_NEXT

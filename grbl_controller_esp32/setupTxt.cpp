@@ -228,7 +228,7 @@ fillMPage (_P_SETUP , 0 , _UNLOCK , _JUST_PRESSED , fUnlock , 0) ;
 fillMPage (_P_SETUP , 4 , _HOME , _JUST_PRESSED , fHome , 0) ;
 fillMPage (_P_SETUP , 5 , _RESET , _JUST_PRESSED , fReset , 0) ;
 fillMPage (_P_SETUP , 6 , _CMD , _JUST_PRESSED , fGoToPage , _P_CMD ) ;
-fillMPage (_P_SETUP , 7 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE ) ;
+fillMPage (_P_SETUP , 7 , _MOVE , _JUST_PRESSED , fGoToPage , _P_MOVE ) ; 
 fillMPage (_P_SETUP , 8 , _SET_WCS , _JUST_PRESSED , fGoToPage , _P_SETXYZ ) ;
 fillMPage (_P_SETUP , 9 , _TOOL , _JUST_PRESSED , fGoToPage , _P_TOOL ) ;
 fillMPage (_P_SETUP , 10 , _COMMUNICATION , _JUST_PRESSED , fGoToPage , _P_COMMUNICATION ) ;
@@ -355,7 +355,7 @@ fillMPage (_P_COMMUNICATION , 8 , _SERIAL , _JUST_PRESSED , fSerial , 0) ;
 fillMPage (_P_COMMUNICATION , 9 , _BLUETOOTH , _JUST_PRESSED , fBluetooth , 0) ;
 fillMPage (_P_COMMUNICATION , 10 , _TELNET , _JUST_PRESSED , fTelnet , 0) ;
 #endif
-fillMPage (_P_COMMUNICATION , 11 , _INFO , _JUST_PRESSED , fGoToPage , _P_INFO ) ;
+fillMPage (_P_COMMUNICATION , 11 , _INFO , _JUST_PRESSED , fGoToPageAndClearMsg , _P_INFO ) ;
 
 mPages[_P_SD_GRBL_WAIT].titel = "" ;  // this screen has only 10 buttons instead of 12
 mPages[_P_SD_GRBL_WAIT].pfBase = fSdGrblWaitBase ;   // cette fonction doit provoque l'envoi d'une commande Ã  GRBL

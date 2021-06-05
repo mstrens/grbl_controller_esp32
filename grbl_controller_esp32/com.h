@@ -48,6 +48,6 @@ void bufferise2Grbl(const char * data , char beginEnd = 'c');
 int fromGrblAvailable();
 int fromGrblRead();
 void btInit() ;
-void startGrblCom(uint8_t comMode);
+void startGrblCom(uint8_t comMode, boolean forceStart);
 #endif                                       
 
