@@ -54,7 +54,7 @@ bool telnetGrblInit(){
         //Serial.println("[MSG: fail to connect to GRBL Telnet; WiFi not connected]");
     };
   drawMsgOnTft( mText[_TRY_TO_CONNECT_WITH_TELNET].pLabel , mText[_WAIT_1_MIN].pLabel );
-  if (grblClient.connect(GRBL_TELNET_IP, 23,5000)) {
+  if (grblClient.connect(GRBL_TELNET_IP, 23,25000)) {
     grblClient.setNoDelay(true);
     telnetConnected = true ;
     drawMsgOnTft(mText[_TELNET_CONNECTED_WITH_GRBL].pLabel, " " );
