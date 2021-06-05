@@ -778,14 +778,9 @@ void fillAlarmMsg( const char * alarmMsg ) {   //alarmMsg contains "ALARM:xx"
 }
 */
 void fillStringExecuteMsg( uint8_t buttonMessageIdx ) {   // buttonMessageIdx contains the number of the button
-   //Serial.print("param= ") ; Serial.println(buttonMessageIdx ) ;  // to debug
    if ( buttonMessageIdx >= _SETX || buttonMessageIdx <= _GO_PROBE) {
-      buttonMessageIdx -= _SETX ;
-      //fillMsg( stringExecuteMsg[buttonMessageIdx] , BUTTON_TEXT ) ;
       fillMsg( buttonMessageIdx - _SETX +  _SETX_EXECUTED , SCREEN_NORMAL_TEXT ) ;
    } else {
-      //buttonMessageIdx = _GO_PROBE - _SETX + 1 ;
-      //fillMsg( stringExecuteMsg[buttonMessageIdx] ) ;
       fillMsg( _UNKNOWN_BTN_EXECUTED , SCREEN_NORMAL_TEXT ) ;
    }
    //Serial.print("index of table= ") ; Serial.println(buttonMessageIdx ) ;  // to debug
