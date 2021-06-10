@@ -888,6 +888,7 @@ void startGrblCom(uint8_t comMode , boolean forceStart){
   // First stop BT or Telnet
   if (grblLink == GRBL_LINK_SERIAL  && comMode != grblLink ) {
     Serial2.end(); // disable UART because USB on GRBL_ESP32 use also the UART
+    pinMatrixOutDetach(SERIAL2_TXPIN    , false, false);
     pinMode( SERIAL2_TXPIN , INPUT);
     //Serial.println("in startGrblCom Serial has been stopped"); delay(200);
   }else if (grblLink == GRBL_LINK_BT  && comMode != grblLink){
