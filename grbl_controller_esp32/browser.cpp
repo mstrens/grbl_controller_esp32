@@ -14,6 +14,7 @@
 #include "browser.h"
 #include <Preferences.h>
 #include "draw.h"
+#include "actions.h"
 #include "setupTxt.h"
 String  webpage = "";
 WebServer server(80);
@@ -31,8 +32,16 @@ String gatewayStr = ""; // used to store the IP address values in string (for SD
 String subnetStr = ""; // used to store the IP address values in string (for SD, preferences, config)
 String grbl_Telnet_IPStr =  ""; // used to store the GRBL IP address values in string (for SD, preferences, config)
 extern Preferences preferences ; // used to save the WIFi parameters  
+extern volatile uint8_t statusPrinting  ;
+
+
+extern float runningPercent ;
+extern uint32_t sdFileSize ;
+extern uint32_t sdNumberOfCharSent ;
 
 File32 root ; // used for Directory 
+
+String onetimeMessage = "";
 
 void initWifi() {
   uint32_t startMillis = millis();
@@ -94,13 +103,15 @@ void initWifi() {
     ///////////////////////////// Server Commands 
     server.on("/",         HomePage);
     server.on("/download", File_Download);
-    server.on("/upload",   File_Upload);
+    //server.on("/upload",   File_Upload);
     server.on("/fupload",  HTTP_POST,[](){ server.send(200);}, handleFileUpload);
     //server.on("/stream",   File_Stream);
     server.on("/delete",   File_Delete);
-    server.on("/dir",      sd_dir);
+    server.on("/browse",      sd_dir);
     server.on("/confirmDelete",      confirmDelete);
-    server.on("/confirmDownload",      confirmDownload);
+    server.on("/status", serverStatus);
+    server.on("/execute", serverExecuteFile);
+    server.on("/createDir", serverCreateDir);
     ///////////////////////////// End of Request commands
     server.begin();
     //Serial.println("HTTP server started");  
@@ -192,7 +203,8 @@ boolean checkWifiOnSD(void){
       char subnetChar[50] = {0} ;
       char grbl_Telnet_IPChar[50] = {0};        
       if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
-          //Serial.println( __CARD_MOUNT_FAILED  ) ;
+          Serial.println( __CARD_MOUNT_FAILED  ) ;
+          Serial.println(sd.card()->errorCode());
           return false;       
       }
       //if ( ! SD.exists( "/" ) ) { // check if root exist
@@ -297,6 +309,9 @@ boolean getWifiIp( char * ipBuf ) {          // return true if wifi status = con
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void HomePage(){
   SendHTML_Header();
+  webpage += F("<a href='/browse'><button style='font-size: 75%'>Browse Files</button></a><br>");
+  webpage += F("<a href='/status'><button style='font-size: 75%'>Status (json)</button></a><br>");
+  
 //  webpage += F("<a href='/download'><button>Download</button></a>");
 //  webpage += F("<a href='/upload'><button>Upload</button></a>");
 //  webpage += F("<a href='/stream'><button>Stream</button></a>");
@@ -306,7 +321,12 @@ void HomePage(){
   SendHTML_Content();
   SendHTML_Stop(); // Stop is needed because no content length was sent
 }
-
+String getParent(String path)
+{
+  if(path.length()<1)
+    return "/";
+  return path.substring(0, path.lastIndexOf("/", path.length()-(path.charAt(path.length()-1)=='/'?2:1)));
+}
 //--------------------------------------------------------------------------
 boolean checkSd() {
   if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
@@ -326,18 +346,11 @@ void confirmDelete(){
     if (server.hasArg("fileName")) SelectInput("Confirm filename to delete","delete","delete" , server.arg(0)); 
   }
 }
-
-void confirmDownload(){ 
-  if (server.args() > 0 ) { // check that arguments were received
-    if (server.hasArg("fileName")) SelectInput("Confirm filename to download","download","download" , server.arg(0)); 
-  }
-}
-
-
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void File_Download(){ // This gets called twice, the first pass selects the input, the second pass then processes the command line arguments
   if (server.args() > 0 ) { // Arguments were received
-    if (server.hasArg("download")) DownloadFile(server.arg(0));
+    if (server.hasArg("file")) 
+      DownloadFile(server.arg("file"));
   }
   else SelectInput("Enter filename to download","download","download","");
 }
@@ -369,7 +382,7 @@ void DownloadFile(String filename){
   } 
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-void File_Upload(){
+/*void File_Upload(){
   append_page_header();
   webpage += F("<h3>Select File to Upload</h3>"); 
   webpage += F("<FORM action='/fupload' method='post' enctype='multipart/form-data'>");
@@ -378,6 +391,47 @@ void File_Upload(){
   webpage += F("<a href='/'>[Back]</a><br><br>");
   append_page_footer();
   server.send(200, "text/html",webpage);
+}*/
+
+void serverCreateDir(){
+  if (!server.hasArg("directoryName"))
+  { 
+//      SelectInput("Name of directory to create","/createDir","def" , server.arg(0)); 
+      SendHTML_Header();
+      webpage += F("<h3>Name of directory to create</h3>"); 
+  webpage += F("<FORM action='/createDir' method='post'>");
+  webpage += F("<input type='hidden' name='parentDir' value='"); webpage +=server.arg("parentDir"); webpage +=F("'>"); 
+  webpage += F("<input type='text' name='directoryName' value=''>"); 
+  webpage += F("<input type='submit' name='Create' value='Submit' class='buttons' ><br>");
+ // webpage += F("<a href='/'>[Back]</a><br><br>");
+  append_page_footer();
+  SendHTML_Content();
+  SendHTML_Stop();
+
+  }
+  else
+  {
+    Serial.print("create dir: ");
+    Serial.print(server.arg("parentDir"));
+    Serial.print(", ");
+    Serial.println(server.arg("directoryName"));
+
+    if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
+            reportError("Fail to mount SD card - SD card present?" );
+        } else { 
+          String path = String(server.arg("parentDir"))+"/"+String(server.arg("directoryName"));
+          if(sd.mkdir(path))
+          {
+            onetimeMessage = F("<h3>Directory sucessfully created</h3>");
+          }
+          else
+          {
+              onetimeMessage = F("Failed to create directory");
+          }
+          webpage = "<head><meta http-equiv=\"refresh\" content=\"0; URL=/browse?dir=" + path + "\"/></head>";
+          server.send(200, "text/html", webpage);
+        }  
+  }
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 File32 UploadFile;
@@ -389,7 +443,26 @@ void handleFileUpload(){ // upload a new file to the Filing system
                                                 // For further information on 'status' structure, there are other reasons such as a failed transfer that could be used
       if(uploadfile.status == UPLOAD_FILE_START) {
         errorWhileUploading = false ;
+        Serial.print(F("filename "));
+        Serial.println(uploadfile.filename.c_str());
+        Serial.print(F("server.args() "));
+        Serial.println(server.args());
+        Serial.print(F("server.hasArg(dir) "));
+        Serial.println(server.hasArg("dir"));
+        Serial.print(F("server.arg(dir) "));
+        Serial.println(server.arg("dir1"));
+        
+        
         String filename = uploadfile.filename;
+//        for(int i=0; i<server.args(); i++)
+        
+        if(server.hasArg("dir"))
+//        if(server.args()>0 && server.hasArg(F("dir")))
+        {
+          filename = server.arg("dir")+"/"+filename;
+        }
+        Serial.print(F("File upload to "));
+        Serial.println(filename.c_str());
         sd.remove(filename.c_str());                  // Remove a previous version, otherwise data is appended the file again
         UploadFile.close() ;
         //UploadFile = sd.open(filename.c_str() , 0X11);  // Open the file for writing in SPIFFS (create it, if doesn't exist)
@@ -431,16 +504,36 @@ void handleFileUpload(){ // upload a new file to the Filing system
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void sd_dir(){ 
   if (checkSd() ) { 
+    String dir = "";
+    if (server.args() > 0 && server.hasArg("dir")) 
+    {
+        dir = server.arg("dir");        
+    }
+    if(dir.length()<1)
+      dir = "/";
+      
     root.close() ;
-    root = sd.open("/");
+    root = sd.open(dir.c_str());
     if (root) {
       root.rewind();
       SendHTML_Header();
       //webpage += F("<h3 class='rcorners_m'>SD Card Contents</h3><br>");
-      webpage += F("<h3></h3><br>");
+      webpage += "<h3>"+dir+"</h3><br>";
+      if (onetimeMessage.length() > 0)
+      {
+          webpage += "<p>" + onetimeMessage + "</p>";
+          onetimeMessage = "";
+      }
+      webpage += F("<div>");
+      webpage += F("<FORM action='/fupload' method='post' enctype='multipart/form-data' style='display:inline-flex'>");
+      webpage += "<input type='hidden' name='dir' value='"+dir+"'>";
+      webpage += F("<input class='buttons' style='width:80%' type='file' name='fupload' id = 'fupload' value=''>");
+      webpage += F("<button class='buttons' style='width:20%' type='submit'>Upload</button><br></form>");
+      webpage += "<a href=\"/createDir?parentDir="+dir+"\"><button style='font-size:85%'>Create dir</button></a>";
+      webpage += F("</div>");
       webpage += F("<table align='center'>");
       webpage += F("<tr><th>Name/Type</th><th style='width:20%'>Type File/Dir</th><th>File Size</th><th>Delete</th><th>Download</th></tr>");
-      printDirectory("/",0);
+      printDirectory(dir.c_str(),0);
       webpage += F("</table>");
       SendHTML_Content(); 
     } else {
@@ -457,7 +550,10 @@ void sd_dir(){
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void printDirectory(const char * dirname, uint8_t levels){
   File32 root1 = sd.open(dirname);
-  char fileName[23] ;
+  String directory = String(dirname);
+  if(!directory.endsWith("/"))
+    directory = directory+"/";
+  char fileName[33] ;
   //String fileNameS ;
   if(!root1){
     root1.close() ;
@@ -467,21 +563,47 @@ void printDirectory(const char * dirname, uint8_t levels){
     root1.close() ;
     return;
   }
+  File32 file1 ;
+
+  if(directory.length()>1)
+  {
+    String parentDir = getParent(directory);
+//    String parentDir = directory.substring(0, directory.lastIndexOf("/", directory.length()-2));
+    if(parentDir.length()==0)
+      parentDir = "/";
+    webpage += "<tr><td><a href=\"/browse?dir="+parentDir+"\">..</td><td>Dir</td><td></td><td></td><td></td></tr>";
+            //printDirectory(fileName, levels-1);
+  }
   root1.rewind();
   //P("print Directory:  dirname is a directory") ;
-  File32 file1 ;
   while(file1.openNext(&root1)){
     if (webpage.length() > 1000) {
       SendHTML_Content();
     }
-    file1.getName(fileName , 22);
-    //fileNameS = fileName ;
-    //P(fileName);
-    //if ( file1.isDir()) P("is dir") ;
-    if(file1.isDir()){
-      webpage += "<tr><td>" +String(fileName)+ "</td><td>Dir</td><td></td><td></td><td></td></tr>";
-            //printDirectory(fileName, levels-1);
-    } else {
+    file1.getName(fileName , 32);
+    if(file1.isDir())
+    {
+      if(strcmp(fileName, "System Volume Information")==0)
+      {
+        // Skip this directory
+      }
+      else
+      {
+        webpage += "<tr><td><a href=\"/browse?dir="+directory+String(fileName)+"\">" +String(fileName)+ "</td><td>Dir</td><td></td>";
+        webpage += "<td><form action='/confirmDelete'> <input type='hidden' name='fileName' value='" + directory+String(fileName) +  "' ><input type='submit' value='Delete' ></form></td>" ;
+      webpage += "<td></td>" ;
+      webpage +=  "</tr>";
+      }
+    }   
+    file1.close();   
+  }
+  root1.rewind();
+  while(file1.openNext(&root1)){
+    if (webpage.length() > 1000) {
+      SendHTML_Content();
+    }
+    file1.getName(fileName , 32);
+    if(!file1.isDir()){
       int bytes = file1.size();
       String fsize = "";
       if (bytes < 1024)                     fsize = String(bytes)+" B";
@@ -490,12 +612,13 @@ void printDirectory(const char * dirname, uint8_t levels){
       else                                  fsize = String(bytes/1024.0/1024.0/1024.0,3)+" GB";
       webpage += "<tr><td>"  + String(fileName) +  "</td><td>File</td><td>" + fsize + "</td>"; //</tr>";
       //<td onClick="location.href='http://www.stackoverflow.com';"> Cell content goes here </td>
-      webpage += "<td><form action='/confirmDelete'> <input type='hidden' name='fileName' value='" + String(fileName) +  "' ><input type='submit' value='Delete' ></form></td>" ;
-      webpage += "<td><form action='/confirmDownload'> <input type='hidden' name='fileName' value='" + String(fileName) +  "' ><input type='submit' value='Download' ></form></td>" ;
+      webpage += "<td><form action='/confirmDelete'> <input type='hidden' name='fileName' value='" + directory+String(fileName) +  "' ><input type='submit' value='Delete' ></form></td>" ;
+      webpage += "<td><form action='/download'> <input type='hidden' name='file' value='" + directory+String(fileName) +  "' ><input type='submit' value='Download' ></form></td>" ;
       webpage +=  "</tr>";
     }   
     file1.close();   
   }
+ 
   file1.close();
 }
 
@@ -509,32 +632,48 @@ void File_Delete(){
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void SD_file_delete(String filename) { // Delete the file 
   if (checkSd() ) { 
-    SendHTML_Header();  
     File32 dataFile = sd.open( filename.c_str() ); //  
     if (dataFile) {
-      if (sd.remove( filename.c_str() )) {
-        //Serial.println(F("File deleted successfully"));
-        webpage += "<h3>File '" +filename+ "' has been erased</h3>"; 
+      if(dataFile.isDir())
+      {
+        if(sd.rmdir(filename.c_str()))
+          onetimeMessage = "<h3>Directory '" +filename+ "' has been erased</h3>"; 
+         else
+          onetimeMessage = "<h3>Directory '"  +filename+ "' could not be erased! Non empty?</h3>";
+      }
+      else if (sd.remove( filename.c_str() )) {
+        onetimeMessage = "<h3>File '" +filename+ "' has been erased</h3>"; 
       } else { 
-        webpage += "<h3>File '"  +filename+ "' could not be erased !!!!!</h3>";
+        onetimeMessage = "<h3>File '"  +filename+ "' could not be erased !!!!!</h3>";
       }
     } else {
-      webpage += "<h3>File '" +filename+ "' does not exist !!!!!</h3>";
+      onetimeMessage = "<h3>File '" +filename+ "' does not exist !!!!!</h3>";
     }
-    append_page_footer(); 
-    SendHTML_Content();
-    SendHTML_Stop();
+    //webpage = "<head><meta http-equiv=\"refresh\" content=\"0; URL=/browse?dir=" + filename.substring(0, filename.lastIndexOf("/", filename.length() - 2)) + "\"/></head>";
+    
+    webpage = "<head><meta http-equiv=\"refresh\" content=\"0; URL=/browse?dir=" + getParent(filename) + "\"/></head>";
+    server.send(200, "text/html", webpage);
   } 
 } 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void SendNoCacheHeaders()
+{
+    server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    server.sendHeader("Pragma", "no-cache");
+    server.sendHeader("Expires", "-1");
+}
 void SendHTML_Header(){
-  server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate"); 
-  server.sendHeader("Pragma", "no-cache"); 
-  server.sendHeader("Expires", "-1"); 
+  SendNoCacheHeaders();
   server.setContentLength(CONTENT_LENGTH_UNKNOWN); 
   server.send(200, "text/html", ""); // Empty content inhibits Content-length header so we have to close the socket ourselves. 
   append_page_header();
   server.sendContent(webpage);
+  webpage = "";
+}
+void SendJson_Header(){
+  SendNoCacheHeaders();
+  server.setContentLength(CONTENT_LENGTH_UNKNOWN); 
+  server.send(200, "application/json", ""); // Empty content inhibits Content-length header so we have to close the socket ourselves. 
   webpage = "";
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -586,7 +725,41 @@ String file_size(int bytes){
   else                              fsize = String(bytes/1024.0/1024.0/1024.0,3)+" GB";
   return fsize;
 }
+float calculateSdPercent()
+{
+    if(sdFileSize > 0)
+    return sdFileSize > 0 ? (float)sdNumberOfCharSent / sdFileSize : 100.0;
+}
 
+String getCurrentStatus()
+{
+  String status = "";
+    switch (statusPrinting)
+    {
+    case PRINTING_STOPPED:
+       status = "Idle"; break;
+    case PRINTING_FROM_SD:
+        status = String("Running program (") + (int)(calculateSdPercent()*100) + "%)"; break;
+    case PRINTING_FROM_GRBL:
+        status = String("Running program (") + runningPercent + "%)"; break;
+    case PRINTING_ERROR:
+        status = "Error on program"; break;
+    case PRINTING_PAUSED:
+    case PRINTING_FROM_GRBL_PAUSED:
+        status = "Running program (paused)"; break;
+    case PRINTING_FROM_USB:
+        status = "Running (USB)"; break;
+    case PRINTING_CMD:
+        status = "Running command"; break;
+    case PRINTING_FROM_TELNET:
+        status = "Running (telnet)"; break;
+    case PRINTING_STRING:
+        status = "Running string"; break;
+    default:
+        status = "Unknown state";
+    }
+    return status;
+}
 void append_page_header() {
   webpage  = F("<!DOCTYPE html><html>");
   webpage += F("<head>");
@@ -617,30 +790,109 @@ void append_page_header() {
 //  webpage += F(".buttonsm{border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:9%; color:white;font-size:70%;}");
 //  webpage += F(".buttonm {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:15%;color:white;font-size:70%;}");
 //  webpage += F(".buttonw {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:40%;color:white;font-size:70%;}");
-  webpage += F("a{font-size:75%;}");
+//  webpage += F("a{font-size:75%;}");
   webpage += F("p{font-size:75%;}");
-  webpage += F("</style></head><body><h1>File Server</h1>");
-//  webpage += F("<ul>");
-//  webpage += F("<li><a href='/'>Home</a></li>"); // Lower Menu bar command entries
-//  webpage += F("<li><a href='/download'>Download</a></li>"); 
-//  webpage += F("<li><a href='/upload'>Upload</a></li>"); 
-  //webpage += F("<li><a href='/stream'>Stream</a></li>"); 
-//  webpage += F("<li><a href='/delete'>Delete</a></li>"); 
-//  webpage += F("<li><a href='/dir'>Directory</a></li>");
-//  webpage += F("</ul>"); 
-  webpage += F("<a href='/dir'><button>Directory</button></a>");
-  //webpage += F("<a href='/download'><button>Download</button></a>");
-  webpage += F("<a href='/upload'><button>Upload</button></a>");
-//  webpage += F("<a href='/stream'><button>Stream</button></a>");
-  //webpage += F("<a href='/delete'><button>Delete</button></a>");
-  
+  webpage += F("</style></head><body><h1><a href=\"/\" style=\";text-decoration:none;color:inherit\">&#8962;RS-CNC32&nbsp;");
+  webpage += F("Current status: ");
+  webpage += getCurrentStatus();
+  webpage += F("</a></h1>"); 
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void append_page_footer(){ // Saves repeating many lines of code for HTML page footers
-  
-  //webpage += "<footer></footer>" ;
- // webpage += "<footer>&copy;"+String(char(byte(0x40>>1)))+String(char(byte(0x88>>1)))+String(char(byte(0x5c>>1)))+String(char(byte(0x98>>1)))+String(char(byte(0x5c>>1)));
- // webpage += String(char((0x84>>1)))+String(char(byte(0xd2>>1)))+String(char(0xe4>>1))+String(char(0xc8>>1))+String(char(byte(0x40>>1)));
- // webpage += String(char(byte(0x64/2)))+String(char(byte(0x60>>1)))+String(char(byte(0x62>>1)))+String(char(0x70>>1))+"</footer>";
   webpage += F("</body></html>");
 }
+
+void addJsonAttribute(String name, String value, boolean first)
+{
+  if(!first) 
+      webpage +=", ";
+  webpage += name + ": \""+value+"\"";
+}
+void addJsonAttribute(String name, long value, boolean first)
+{
+  if(!first) 
+      webpage +=", ";
+  webpage += name + ": "+value;
+}
+void addJsonAttribute(String name, float value, boolean first)
+{
+  if(!first) 
+      webpage +=", ";
+  webpage += name + ": "+value;
+}
+void serverExecuteFile()
+{
+  if (server.args() > 0 ) { // Arguments were received
+    if (server.hasArg("filename")) 
+    {
+      if (checkSd() ) { 
+      //SendHTML_Header();  
+      File32 dataFile = sd.open( server.arg(0).c_str() ); //  
+      if (dataFile) {
+        webpage = "ok"; 
+//        dataFile
+      } else { 
+        webpage = "not found: "+server.arg(0);
+      }
+    } else {
+      webpage = "Specify filename!";
+    }
+    }
+    
+  }
+  else SelectInput("Select a File to execute","execute","execute","");  
+
+  SendJson_Header();
+  SendHTML_Content();
+  SendHTML_Stop(); // Stop is needed because no content length was sent
+
+//  webpage = "ok";
+  fSdFilePrint(1);
+}
+
+void serverStatus(){
+  SendJson_Header();
+
+  webpage = "{";
+  String status;
+  switch(statusPrinting)
+  {
+    case PRINTING_STOPPED:
+      status = "PRINTING_STOPPED"; break;
+    case PRINTING_FROM_SD:
+      status = "PRINTING_FROM_SD"; break;
+    case PRINTING_ERROR:
+      status = "PRINTING_ERROR"; break;
+    case PRINTING_PAUSED:
+      status = "PRINTING_PAUSED"; break;
+    case PRINTING_FROM_USB:
+      status = "PRINTING_FROM_USB"; break;
+    case PRINTING_CMD:
+      status = "PRINTING_CMD"; break;
+    case PRINTING_FROM_TELNET:
+      status = "PRINTING_FROM_TELNET"; break;
+    case PRINTING_STRING:
+      status = "PRINTING_STRING"; break;
+    case PRINTING_FROM_GRBL:
+      status = "PRINTING_FROM_GRBL"; break;
+    case PRINTING_FROM_GRBL_PAUSED:
+      status = "PRINTING_FROM_GRBL_PAUSED"; break;
+    default:
+      status = "UNKNOWN";
+  }
+  addJsonAttribute("status", status, true);
+  if(statusPrinting == PRINTING_FROM_SD && sdFileSize>0)
+  {
+    addJsonAttribute("progress", calculateSdPercent(), false);
+    addJsonAttribute("fileSize", (long)sdFileSize, false);
+    addJsonAttribute("bytesSent", (long)sdNumberOfCharSent, false); 
+  }
+  if(statusPrinting == PRINTING_FROM_GRBL && sdFileSize>0)
+  {
+    addJsonAttribute("progress", runningPercent, false);
+  }
+  webpage +="}";
+  SendHTML_Content();
+  SendHTML_Stop(); // Stop is needed because no content length was sent
+}
+
