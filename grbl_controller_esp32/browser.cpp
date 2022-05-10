@@ -103,15 +103,15 @@ void initWifi() {
     ///////////////////////////// Server Commands 
     server.on("/",         HomePage);
     server.on("/download", File_Download);
-    //server.on("/upload",   File_Upload);
-    server.on("/fupload",  HTTP_POST,[](){ server.send(200);}, handleFileUpload);
-    //server.on("/stream",   File_Stream);
+    server.on("/fupload",  HTTP_POST,[](){ server.send(200,"text/plain","");}, handleFileUpload);
     server.on("/delete",   File_Delete);
     server.on("/browse",      sd_dir);
     server.on("/confirmDelete",      confirmDelete);
     server.on("/status", serverStatus);
     server.on("/execute", serverExecuteFile);
     server.on("/createDir", serverCreateDir);
+    server.on("/fileupload.js", file_fileupload_js);
+    server.on("/style.css", file_style_css);
     ///////////////////////////// End of Request commands
     server.begin();
     //Serial.println("HTTP server started");  
@@ -382,16 +382,6 @@ void DownloadFile(String filename){
   } 
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-/*void File_Upload(){
-  append_page_header();
-  webpage += F("<h3>Select File to Upload</h3>"); 
-  webpage += F("<FORM action='/fupload' method='post' enctype='multipart/form-data'>");
-  webpage += F("<input class='buttons' style='width:80%' type='file' name='fupload' id = 'fupload' value=''><br>");
-  webpage += F("<br><button class='buttons' style='width:20%' type='submit'>Upload File</button><br>");
-  webpage += F("<a href='/'>[Back]</a><br><br>");
-  append_page_footer();
-  server.send(200, "text/html",webpage);
-}*/
 
 void serverCreateDir(){
   if (!server.hasArg("directoryName"))
@@ -445,19 +435,12 @@ void handleFileUpload(){ // upload a new file to the Filing system
         errorWhileUploading = false ;
         Serial.print(F("filename "));
         Serial.println(uploadfile.filename.c_str());
-        Serial.print(F("server.args() "));
-        Serial.println(server.args());
         Serial.print(F("server.hasArg(dir) "));
-        Serial.println(server.hasArg("dir"));
-        Serial.print(F("server.arg(dir) "));
-        Serial.println(server.arg("dir1"));
-        
+        Serial.println(server.hasArg("dir"));        
         
         String filename = uploadfile.filename;
-//        for(int i=0; i<server.args(); i++)
         
-        if(server.hasArg("dir"))
-//        if(server.args()>0 && server.hasArg(F("dir")))
+        if(server.hasArg(F("dir")))
         {
           filename = server.arg("dir")+"/"+filename;
         }
@@ -467,39 +450,45 @@ void handleFileUpload(){ // upload a new file to the Filing system
         UploadFile.close() ;
         //UploadFile = sd.open(filename.c_str() , 0X11);  // Open the file for writing in SPIFFS (create it, if doesn't exist)
         //UploadFile = sd.open(filename.c_str() , O_WRITE | O_CREAT);  // Open the file for writing (create it, if doesn't exist)
-        if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) {  
-            reportError("Fail to mount SD card - SD card present?" );
+        if ( ! sd.begin(SD_CHIPSELECT_PIN , SD_SCK_MHZ(5)) ) { 
+            sendHtmlMessage(409, "Fail to mount SD card - SD card present?");
             errorWhileUploading = true ;
         } else {     
+          Serial.print("Creating file ok: ");
           UploadFile = sd.open(filename.c_str() , O_WRITE | O_CREAT);  // Open the file for writing (create it, if doesn't exist)
           if ( ! UploadFile ) errorWhileUploading = true ;
+          Serial.println(!errorWhileUploading);
         }  
       } else if (uploadfile.status == UPLOAD_FILE_WRITE)  {
+        Serial.print("Uploading file ok. chunk: ");
         if(UploadFile) { 
           int32_t bytesWritten = UploadFile.write(uploadfile.buf, uploadfile.currentSize); // Write the received bytes to the file
           if ( bytesWritten == -1) errorWhileUploading = true ; 
         } else { 
           errorWhileUploading = true ;
         }
+        Serial.print(uploadfile.currentSize);
+        Serial.print(" bytes. status: ");
+        Serial.println(!errorWhileUploading);
       } else if (uploadfile.status == UPLOAD_FILE_END) {
         if(UploadFile && ( errorWhileUploading == false) )          // If the file was successfully created
         {                                    
           UploadFile.close();   // Close the file at the end
-          webpage = "";
-          append_page_header();
-          webpage += F("<h3>File was successfully uploaded</h3>"); 
-          webpage += F("<h2>Uploaded File Name: "); webpage += uploadfile.filename+"</h2>";
-          webpage += F("<h2>File Size: "); webpage += file_size(uploadfile.totalSize) + "</h2><br>"; 
-          append_page_footer();
-          server.send(200,"text/html",webpage);
+          onetimeMessage="File was successfully uploaded. Fileame: "+uploadfile.filename+", size: "+file_size(uploadfile.totalSize);
+          sendHtmlMessage(200, onetimeMessage);
+          Serial.println("File closed");
         } 
         else
         {
           UploadFile.close(); // close for safety ; not sure it is really needed
-          reportError("<h3>Could Not Create Uploaded File (write-protected?)</h3>");
+          sendHtmlMessage(409, "Could Not Create Uploaded File (write-protected?)");
         }
       }
-  //}      
+      else if (uploadfile.status == UPLOAD_FILE_ABORTED)
+      {
+          Serial.println("File upload aborted!");
+          onetimeMessage = "File upload was aborted!";
+      }
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void sd_dir(){ 
@@ -525,10 +514,15 @@ void sd_dir(){
           onetimeMessage = "";
       }
       webpage += F("<div>");
-      webpage += F("<FORM action='/fupload' method='post' enctype='multipart/form-data' style='display:inline-flex'>");
-      webpage += "<input type='hidden' name='dir' value='"+dir+"'>";
+      webpage += F("<FORM enctype='multipart/form-data' id='upload' onsubmit='return false;'>");
+      webpage += "<input type='hidden' name='dir' id='dir' value='"+dir+"'>";
       webpage += F("<input class='buttons' style='width:80%' type='file' name='fupload' id = 'fupload' value=''>");
-      webpage += F("<button class='buttons' style='width:20%' type='submit'>Upload</button><br></form>");
+      webpage += F("<button class='buttons' style='width:20%' onclick=\"uploadFile()\">Upload</button><br>");
+      webpage += F("<progress id='progressBar' value='0' max='100' style='width:300px;'></progress>");
+      webpage += F("<h3 id='status'></h3>");
+      webpage += F("<p id='loaded_n_total'></p>");
+
+      webpage += F("</form>");
       webpage += "<a href=\"/createDir?parentDir="+dir+"\"><button style='font-size:85%'>Create dir</button></a>";
       webpage += F("</div>");
       webpage += F("<table align='center'>");
@@ -656,6 +650,10 @@ void SD_file_delete(String filename) { // Delete the file
   } 
 } 
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+void SendCacheHeaders()
+{
+    server.sendHeader("Cache-Control", "max-age=3600");
+}
 void SendNoCacheHeaders()
 {
     server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
@@ -706,6 +704,11 @@ void reportError(String textError){
   append_page_footer();
   SendHTML_Content();
   SendHTML_Stop();
+}
+void sendHtmlMessage(int statuscode, String text)
+{
+  server.send(statuscode, "text/html","<body><h2>"+text+"</h2></body>");
+  server.client().stop();
 }
 //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 void ReportFileNotPresent(String target){
@@ -765,34 +768,9 @@ void append_page_header() {
   webpage += F("<head>");
   webpage += F("<title>File Server</title>"); // NOTE: 1em = 16px
   webpage += F("<meta name='viewport' content='user-scalable=yes,initial-scale=1.0,width=device-width'>");
-  webpage += F("<style>");
-  webpage += F("body{max-width:65%;margin:0 auto;font-family:arial;font-size:105%;text-align:center;color:blue;background-color:#F7F2Fd;}");
-  webpage += F("ul{list-style-type:none;margin:0.1em;padding:0;border-radius:0.375em;overflow:hidden;background-color:#dcade6;font-size:1em;}");
-  webpage += F("li{float:left;border-radius:0.375em;border-right:0.06em solid #bbb;}last-child {border-right:none;font-size:85%}");
-  webpage += F("li a{display: block;border-radius:0.375em;padding:0.44em 0.44em;text-decoration:none;font-size:85%}");
-  webpage += F("li a:hover{background-color:#EAE3EA;border-radius:0.375em;font-size:85%}");
-  webpage += F("section {font-size:0.88em;}");
-  webpage += F("h1{color:white;border-radius:0.5em;font-size:1em;padding:0.2em 0.2em;background:#558ED5;}");
-  webpage += F("h2{color:orange;font-size:1.0em;}");
-  webpage += F("h3{font-size:0.8em;}");
-  webpage += F("table{font-family:arial,sans-serif;font-size:0.9em;border-collapse:collapse;width:85%;}"); 
-  webpage += F("th,td {border:0.06em solid #dddddd;text-align:left;padding:0.3em;border-bottom:0.06em solid #dddddd;}"); 
-  webpage += F("tr:nth-child(odd) {background-color:#eeeeee;}");
-  webpage += F(".rcorners_n {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:20%;color:white;font-size:75%;}");
-  webpage += F(".rcorners_m {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:50%;color:white;font-size:75%;}");
-  webpage += F(".rcorners_w {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:70%;color:white;font-size:75%;}");
-  webpage += F(".column{float:left;width:50%;height:45%;}");
-  webpage += F(".row:after{content:'';display:table;clear:both;}");
-  webpage += F("*{box-sizing:border-box;}");
-//  webpage += F("footer{background-color:#eedfff; text-align:center;padding:0.3em 0.3em;border-radius:0.375em;font-size:60%;}");
-  webpage += F("button{border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:20%;color:white;font-size:130%;}");
-  webpage += F(".buttons {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:15%;color:white;font-size:80%;}");
-//  webpage += F(".buttonsm{border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:9%; color:white;font-size:70%;}");
-//  webpage += F(".buttonm {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:15%;color:white;font-size:70%;}");
-//  webpage += F(".buttonw {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:40%;color:white;font-size:70%;}");
-//  webpage += F("a{font-size:75%;}");
-  webpage += F("p{font-size:75%;}");
-  webpage += F("</style></head><body><h1><a href=\"/\" style=\";text-decoration:none;color:inherit\">&#8962;RS-CNC32&nbsp;");
+  webpage += F("<script src='/fileupload.js'></script>");
+  webpage += F("<link rel='stylesheet' href='style.css'>");
+  webpage += F("</head><body><h1><a href=\"/\" style=\";text-decoration:none;color:inherit\">&#8962;RS-CNC32&nbsp;");
   webpage += F("Current status: ");
   webpage += getCurrentStatus();
   webpage += F("</a></h1>"); 
@@ -806,19 +784,19 @@ void addJsonAttribute(String name, String value, boolean first)
 {
   if(!first) 
       webpage +=", ";
-  webpage += name + ": \""+value+"\"";
+  webpage += "\""+name + "\": \""+value+"\"";
 }
 void addJsonAttribute(String name, long value, boolean first)
 {
   if(!first) 
       webpage +=", ";
-  webpage += name + ": "+value;
+  webpage += "\""+name + "\": \""+value+"\"";
 }
 void addJsonAttribute(String name, float value, boolean first)
 {
   if(!first) 
       webpage +=", ";
-  webpage += name + ": "+value;
+  webpage += "\"" + name + "\": \""+value+"\"";
 }
 void serverExecuteFile()
 {
@@ -894,5 +872,65 @@ void serverStatus(){
   webpage +="}";
   SendHTML_Content();
   SendHTML_Stop(); // Stop is needed because no content length was sent
+}
+void file_fileupload_js()
+{
+  webpage = "";
+  webpage += F("function _(el) {return document.getElementById(el);}");
+  webpage += F("function uploadFile() {");
+  webpage += F("var formdata = new FormData(_('upload'));");
+  webpage += F("var ajax = new XMLHttpRequest();");
+  webpage += F("ajax.upload.addEventListener(\"progress\", progressHandler, false);");
+  webpage += F("ajax.addEventListener(\"loadend\", completeHandler, false);");
+  webpage += F("ajax.open('POST', '/fupload',true);");
+  webpage += F("ajax.send(formdata);");
+  webpage += F("}");
+
+  webpage += F("function progressHandler(event) {");
+  webpage += F("_(\"loaded_n_total\").innerHTML = \"Uploaded \" + event.loaded + \" bytes of \" + event.total;");
+  webpage += F("var percent = (event.total > 0) ? ((event.loaded / event.total) * 100):0;");
+  webpage += F("_(\"progressBar\").value = Math.round(percent); _(\"status\").innerHTML = Math.round(percent) + \"% uploaded... please wait\";}");
+
+  webpage += F("function completeHandler(event) {_(\"status\").innerHTML = \"complete\"; _(\"progressBar\").value = 0;location.reload();}");
+ 
+  //server.setContentLength(CONTENT_LENGTH_UNKNOWN); 
+  SendCacheHeaders();
+  server.send(200, "text/javascript", webpage); // Empty content inhibits Content-length header so we have to close the socket ourselves. 
+  webpage="";
+}
+
+void file_style_css()
+{
+  webpage += F("body{max-width:65%;margin:0 auto;font-family:arial;font-size:105%;text-align:center;color:blue;background-color:#F7F2Fd;}");
+  webpage += F("ul{list-style-type:none;margin:0.1em;padding:0;border-radius:0.375em;overflow:hidden;background-color:#dcade6;font-size:1em;}");
+  webpage += F("li{float:left;border-radius:0.375em;border-right:0.06em solid #bbb;}last-child {border-right:none;font-size:85%}");
+  webpage += F("li a{display: block;border-radius:0.375em;padding:0.44em 0.44em;text-decoration:none;font-size:85%}");
+  webpage += F("li a:hover{background-color:#EAE3EA;border-radius:0.375em;font-size:85%}");
+  webpage += F("section {font-size:0.88em;}");
+  webpage += F("h1{color:white;border-radius:0.5em;font-size:1em;padding:0.2em 0.2em;background:#558ED5;}");
+  webpage += F("h2{color:orange;font-size:1.0em;}");
+  webpage += F("h3{font-size:0.8em;}");
+  webpage += F("table{font-family:arial,sans-serif;font-size:0.9em;border-collapse:collapse;width:85%;}"); 
+  webpage += F("th,td {border:0.06em solid #dddddd;text-align:left;padding:0.3em;border-bottom:0.06em solid #dddddd;}"); 
+  webpage += F("tr:nth-child(odd) {background-color:#eeeeee;}");
+  webpage += F(".rcorners_n {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:20%;color:white;font-size:75%;}");
+  webpage += F(".rcorners_m {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:50%;color:white;font-size:75%;}");
+  webpage += F(".rcorners_w {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:70%;color:white;font-size:75%;}");
+  webpage += F(".column{float:left;width:50%;height:45%;}");
+  webpage += F(".row:after{content:'';display:table;clear:both;}");
+  webpage += F("button:disabled{color:gray;background-color:lightgray;}");
+  webpage += F("*{box-sizing:border-box;}");
+//  webpage += F("footer{background-color:#eedfff; text-align:center;padding:0.3em 0.3em;border-radius:0.375em;font-size:60%;}");
+  webpage += F("button{border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:20%;color:white;font-size:130%;}");
+  webpage += F(".buttons {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:15%;color:white;font-size:80%;}");
+//  webpage += F(".buttonsm{border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:9%; color:white;font-size:70%;}");
+//  webpage += F(".buttonm {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:15%;color:white;font-size:70%;}");
+//  webpage += F(".buttonw {border-radius:0.5em;background:#558ED5;padding:0.3em 0.3em;width:40%;color:white;font-size:70%;}");
+//  webpage += F("a{font-size:75%;}");
+  webpage += F("p{font-size:75%;}");
+
+    SendCacheHeaders();
+  server.send(200, "text/css", webpage); // Empty content inhibits Content-length header so we have to close the socket ourselves. 
+  webpage="";
 }
 
