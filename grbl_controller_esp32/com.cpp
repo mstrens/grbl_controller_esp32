@@ -127,13 +127,13 @@ void getFromGrblAndForward( void ) {   //get char from GRBL, forward them if sta
 //#define DEBUG_RECEIVED_CHAR
 #ifdef DEBUG_RECEIVED_CHAR      
       Serial.print( (char) c) ;
-      //if  (c == 0x0A || c == 0x0C ) Serial.println(millis()) ;
+      //if  (c == 0x0A) Serial.println(millis()) ;
 #endif      
       if ( statusPrinting == PRINTING_FROM_USB  ) {
         Serial.print( (char) c) ;                         // forward characters from GRBL to PC when PRINTING_FROM_USB
       }
       sendViaTelnet((char) c) ;                   // forward characters from GRBL to telnet when PRINTING_FROM_TELNET
-      if ( c == 0x0A || c == 0x0C ) {
+      if ( c == 0x0A ) {
         lineToDecode[lineToDecodeIdx] = 0 ; // add a 0 to close the string
         //Serial.print("To decode="); Serial.println(lineToDecode);
         decodeGrblLine(lineToDecode) ; // decode the line
@@ -175,7 +175,8 @@ void decodeGrblLine(char * line){  // decode a full line when CR or LF is receiv
   //Serial.print("line len to decode"); Serial.println(strlen(line));
   int lengthLine = strlen(line) ;
   if ( lengthLine == 0) return ;  // Exit if the line is empty
-  if (line[0] == 'o' && line[1] == 'k' && lengthLine == 3){ // for OK, 
+  if (line[0] == 'o' && line[1] == 'k' && lengthLine <= 4){ // for OK, 
+    //Serial.println("WaitOk = False");
     waitOk = false ;
     //cntOk++;
     return;  // avoid to log this line  
@@ -518,7 +519,7 @@ void sendFromCmd() {
     waitOkWhenSdMillis = millis()  + WAIT_OK_SD_TIMEOUT ;  // set time out on 
     while ( spiffsAvailableCmdFile() > 0 && (! waitOk) && statusPrinting == PRINTING_CMD && ( ( grblLink ==GRBL_LINK_SERIAL) ? Serial2.availableForWrite() > 2 : true )) {
       sdChar = (int) spiffsReadCmdFile() ;
-      if( sdChar != 13){
+        if( sdChar != 13 && sdChar != ' ' ){             // 13 = carriage return; do not send the space.
           toGrbl((char) sdChar ) ;
           //Serial2.print( (char) sdChar ) ;
         }
@@ -563,7 +564,7 @@ void sendFromString(){
             gcvt(savedWposXYZA[2], 3, floatToString); // convert float to string
             toGrbl(floatToString) ;
             //Serial2.print(floatToString) ;
-            ///Serial.print( "wpos Z is retrieved with value = ") ; Serial.println( floatToString ) ; // to debug
+            //Serial.print( "wpos Z is retrieved with value = ") ; Serial.println( floatToString ) ; // to debug
             break;
          case 'M' : // Restore modal G20/G21/G90/G91
             toGrbl(modalAbsRel) ;
@@ -575,8 +576,8 @@ void sendFromString(){
             break;
          }   
       } else {
-        if( strChar != 13){                  // add here handling of special character for real time process; we skip \r char
-            toGrbl(strChar ) ;
+          if( strChar != 13 && strChar != ' ' ){             // 13 = carriage return; do not send the space.
+            toGrbl((char) strChar) ;
             //Serial2.print( strChar ) ;
             //Serial.print (strChar) ;  // to debug
           }
