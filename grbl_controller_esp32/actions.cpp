@@ -134,12 +134,12 @@ void fReset(uint8_t param) {
 }
 
 void fCancel(uint8_t param) {
-  if( statusPrinting == PRINTING_FROM_SD || statusPrinting == PRINTING_PAUSED   ) {
+  if( statusPrinting == PRINTING_FROM_SD || statusPrinting == PRINTING_PAUSED || statusPrinting == PRINTING_CMD || statusPrinting == PRINTING_STRING) {
     statusPrinting = PRINTING_STOPPED ;
     closeFileToRead() ;    
     toGrbl( (char) SOFT_RESET) ;
     //Serial2.print( (char) SOFT_RESET) ;
-  }  
+  } 
   currentPage = _P_INFO ;  // go to page Info
   updateFullPage = true ;  // force a redraw even if current page does not change
   waitReleased = true ;          // discard "pressed" until a release 
