@@ -136,6 +136,7 @@ void fReset(uint8_t param) {
 void fCancel(uint8_t param) {
   if( statusPrinting == PRINTING_FROM_SD || statusPrinting == PRINTING_PAUSED || statusPrinting == PRINTING_CMD || statusPrinting == PRINTING_STRING) {
     statusPrinting = PRINTING_STOPPED ;
+    pPrintString[0] = '\0';
     closeFileToRead() ;    
     toGrbl( (char) SOFT_RESET) ;
     //Serial2.print( (char) SOFT_RESET) ;
