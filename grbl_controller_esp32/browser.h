@@ -25,6 +25,12 @@ void append_page_footer();
 boolean getWifiIp( char * ipBuf ) ;
 void confirmDelete();
 void confirmDownload() ;
+void serverStatus();
+void serverExecuteFile();
+void serverCreateDir();
+void file_fileupload_js();
+void file_style_css();
+void sendHtmlMessage(int statuscode, String text);
 void retrieveWifiParam(void) ;
 boolean checkWifiOnSD(void) ; 
 #endif                                       
