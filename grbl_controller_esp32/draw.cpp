@@ -1495,7 +1495,7 @@ void fConfirmYesNoBase() { // should display the name of the file to be printed 
   if ( fileToExecuteIdx <=3 ){ //we are printing from Sd card on TFT
     pfileName = fileNames[fileToExecuteIdx] ;
   } else if ( fileToExecuteIdx >=10 && fileToExecuteIdx <=13 ) {
-    pfileName = grblFileNames[fileToExecuteIdx-10] ;
+    pfileName = grblFileNamesTft[fileToExecuteIdx-10] ;
   } else {
     pfileName = NULL ;
   }
