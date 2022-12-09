@@ -1,6 +1,6 @@
 
-#include "setupTxt.h"
 #include "config.h"
+#include "setupTxt.h"
 #include "language.h"
 #include "SdFat.h"
 #include "FS.h"
