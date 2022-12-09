@@ -97,6 +97,7 @@ boolean cmdNameInit() {  // seach on SPIFFS the names of the commands
             }
             fIcon.close() ;
         } // end if (fIcon)
+        validIcon = true;
         file = root.openNextFile();
     }
     
