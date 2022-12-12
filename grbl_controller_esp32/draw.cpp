@@ -1454,7 +1454,8 @@ void executeGrblEndOfFileReading(){
     //}
   } else {
     fGoToPage(_P_SD_GRBL) ; // will display the file list 
-  }  
+  }
+  waitReleased = false;
 }
 
 void fSdGrblBase(void) {                // cette fonction est appelée une fois la liste de fichier chargée en mémoire (donc par exemple fsdWaitGrblBase doit avoir rempli les noms)
