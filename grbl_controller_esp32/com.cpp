@@ -454,7 +454,7 @@ void sendToGrbl( void ) {
           case PRINTING_FROM_TELNET :
             while ( telnetClient.available() && statusPrinting == PRINTING_FROM_TELNET ) {
               sdChar = telnetClient.read() ;
-              sdChar = Serial.read() ;
+              toGrbl( (char) sdChar ) ;
               //Serial2.print( (char) sdChar ) ;
             } // end while       
             break ;
